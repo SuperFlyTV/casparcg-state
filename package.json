@@ -1,5 +1,5 @@
 {
-  "name": "casparcg-resolver",
+  "name": "casparcg-state",
   "version": "0.0.1",
   "description": "Node.js Javascript/Typescript library for keeping and resolving a given state of CasparCG into commands for casparcg-connection.",
   "main": "js/index.js",
@@ -14,10 +14,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.org/superflytv/casparcg-resolver"
+    "url": "https://bitbucket.org/superflytv/casparcg-state"
   },
   "bugs": {
-    "url": "https://bitbucket.org/superflytv/casparcg-resolver/issues"
+    "url": "https://bitbucket.org/superflytv/casparcg-state/issues"
   },
   "license": "UNLICENSED",
   "private": true,
@@ -45,6 +45,7 @@
     "resolve"
   ],
   "dependencies": {
+    "casparcg-connection": "^0.13.1"
   },
   "devDependencies": {
     "@types/node": "^6.0.46",

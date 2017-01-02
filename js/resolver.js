@@ -1,8 +1,8 @@
 "use strict";
 /** */
-var Resolver = (function () {
-    function Resolver() {
+var State = (function () {
+    function State() {
     }
-    return Resolver;
+    return State;
 }());
-exports.Resolver = Resolver;
+exports.State = State;

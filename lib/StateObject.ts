@@ -1,27 +1,19 @@
-export namespace State {
+export namespace StateObject {
 	/** */
-	export class CasparCGState {
-		/** */
+	export class CasparCG {
 		channels: Array<Channel> = [new Channel()];
 	}
 
 	/** */
 	export class Channel {
-		/** */
 		channelNo: number;
-
-		/** */
 		videoMode: string; 	// @todo: string literal
-
-		/** */
 		layers: Array<Layer> = [];
 	}
 
 	/** */
 	export class Layer {
-		/** */
 		layerNo: number;
-
 		content: string; 		// @todo: string literal
 		media: string | TransitionObject;
 		templateType?: string;	// @todo: string literal

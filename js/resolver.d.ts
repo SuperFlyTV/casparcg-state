@@ -1,3 +1,3 @@
 /** */
-export declare class Resolver {
+export declare class State {
 }
