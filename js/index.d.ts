@@ -1,2 +1,2 @@
-export * from "./State";
 export * from "./lib/StateObject";
+export * from "./CasparCGState";

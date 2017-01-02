@@ -6,7 +6,7 @@ export namespace StateObject {
 
 	/** */
 	export class Channel {
-		channelNo: number;
+		channelNo: number = 1;
 		videoMode: string; 	// @todo: string literal
 		layers: Array<Layer> = [];
 	}

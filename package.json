@@ -45,10 +45,14 @@
     "resolve"
   ],
   "dependencies": {
-    "casparcg-connection": "^0.13.1"
+    "casparcg-connection": "^0.13.1",
+    "deep-diff": "^0.3.4",
+    "underscore": "^1.8.3"
   },
   "devDependencies": {
+    "@types/deep-diff": "0.0.29",
     "@types/node": "^6.0.46",
+    "@types/underscore": "^1.7.36",
     "del": "^2.2.1",
     "gulp": "^3.9.1",
     "gulp-typescript": "^2.10.0",
