@@ -1,0 +1,58 @@
+{
+  "name": "casparcg-resolver",
+  "version": "0.0.1",
+  "description": "Node.js Javascript/Typescript library for keeping and resolving a given state of CasparCG into commands for casparcg-connection.",
+  "main": "js/index.js",
+  "typings": "js/index.d.ts",
+  "scripts": {
+    "postversion": "npm run test && npm run doc",
+    "test": "JASMINE_CONFIG_PATH=jasmine.json jasmine-ts 'tests/**/*[sS]pec.ts'",
+    "gulp": "gulp",
+    "build": "gulp build",
+    "cleanbuild": "gulp clean && gulp build",
+    "clean": "gulp clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/superflytv/casparcg-resolver"
+  },
+  "bugs": {
+    "url": "https://bitbucket.org/superflytv/casparcg-resolver/issues"
+  },
+  "license": "unlicensed",
+  "directories": {
+    "lib": "src/"
+  },
+  "author": {
+    "name": "Jesper Stærkær",
+    "email": "jesper@superfly.tv",
+    "url": "http://superfly.tv"
+  },
+  "homepage": "http://superfly.tv",
+  "keywords": [
+    "casparcg",
+    "caspar",
+    "caspercg",
+    "amcp",
+    "broadcast",
+    "graphics",
+    "superfly",
+    "connection",
+    "middleware",
+    "osc",
+    "state",
+    "resolve"
+  ],
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "^6.0.46",
+    "del": "^2.2.1",
+    "gulp": "^3.9.1",
+    "gulp-typedoc": "^2.0.0",
+    "gulp-typescript": "^2.10.0",
+    "gulp-watch": "^4.3.5",
+    "tslint": "^3.13.0",
+    "typescript": "^2.0.6"
+  }
+}
