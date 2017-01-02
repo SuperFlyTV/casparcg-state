@@ -19,7 +19,8 @@
   "bugs": {
     "url": "https://bitbucket.org/superflytv/casparcg-resolver/issues"
   },
-  "license": "unlicensed",
+  "license": "UNLICENSED",
+  "private": true,
   "directories": {
     "lib": "src/"
   },
@@ -49,7 +50,6 @@
     "@types/node": "^6.0.46",
     "del": "^2.2.1",
     "gulp": "^3.9.1",
-    "gulp-typedoc": "^2.0.0",
     "gulp-typescript": "^2.10.0",
     "gulp-watch": "^4.3.5",
     "tslint": "^3.13.0",

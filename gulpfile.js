@@ -2,8 +2,7 @@
 var gulp        = require('gulp'),
     typescript  = require('typescript'),
     ts          = require('gulp-typescript'),
-    del         = require('del'),
-    typedoc     = require('gulp-typedoc');
+    del         = require('del')
 
 var project = ts.createProject('tsconfig.json', {typescript: typescript});
 var DIST_DIR = 'js/';
