@@ -35,7 +35,7 @@ export class CasparCGState {
 
 		if (config && config.getMediaDurationCallback) {
 			this._getMediaDuration = (clip: string, channelNo: number, layerNo: number) => {
-				config.getMediaDurationCallback(clip, (duration: number) => {
+				config!.getMediaDurationCallback!(clip, (duration: number) => {
 					this.applyState(channelNo, layerNo, {duration: duration});
 				});
 			};
@@ -93,8 +93,8 @@ export class CasparCGState {
 						layer.content = "video";		// @todo: string literal
 						layer.media = command._objectParams["clip"] ? (<string>command._objectParams["clip"]) : "";
 					}
-					layer.duration = this._getMediaDuration();
 					layer.playTime = this._getCurrentTimeFunction();
+					this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
 					break;
 			}
 		});

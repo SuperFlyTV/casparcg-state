@@ -8,11 +8,22 @@ var Layer = StateObject_1.StateObject.Layer;
 var CasparCGState = (function () {
     /** */
     function CasparCGState(config) {
+        var _this = this;
         if (config && config.currentTime) {
             this._getCurrentTimeFunction = config.currentTime;
         }
         else {
             this._getCurrentTimeFunction = function () { return Date.now() / 1000; };
+        }
+        if (config && config.getMediaDurationCallback) {
+            this._getMediaDuration = function (clip, channelNo, layerNo) {
+                config.getMediaDurationCallback(clip, function (duration) {
+                    _this.applyState(channelNo, layerNo, { duration: duration });
+                });
+            };
+        }
+        else {
+            this._getMediaDuration = function (clip, channelNo, layerNo) { clip; _this.applyState(channelNo, layerNo, { duration: null }); };
         }
     }
     /** */
@@ -61,8 +72,8 @@ var CasparCGState = (function () {
                         layer.content = "video"; // @todo: string literal
                         layer.media = command._objectParams["clip"] ? command._objectParams["clip"] : "";
                     }
-                    layer.duration = _this._getMediaDuration();
                     layer.playTime = _this._getCurrentTimeFunction();
+                    _this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
                     break;
             }
         });

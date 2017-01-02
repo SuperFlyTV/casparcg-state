@@ -13,7 +13,7 @@ export declare class CasparCGState {
     /** */
     constructor(config?: {
         currentTime?: () => number;
-        getMediaDurationCallback: () => void;
+        getMediaDurationCallback?: (clip: string, callback: (duration: number) => void) => void;
     });
     /** */
     initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210): void;
@@ -27,7 +27,7 @@ export declare class CasparCGState {
     applyCommands(commands: Array<IAMCPCommandVO>): void;
     /** */
     applyState(channelNo: number, layerNo: number, stateData: {
-        [key: string]: Object;
+        [key: string]: any;
     }): void;
     /** */
     private ensureLayer(channel, layerNo);

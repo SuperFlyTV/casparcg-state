@@ -44,6 +44,12 @@ var StateObject;
         function TransitionObject() {
             this.transition = { type: "", duration: 0, ease: "linear" }; // @todo: string literal on ease
         }
+        TransitionObject.prototype.valueOf = function () {
+            return this._value;
+        };
+        TransitionObject.prototype.toString = function () {
+            return this._value.toString();
+        };
         return TransitionObject;
     }());
     StateObject.TransitionObject = TransitionObject;

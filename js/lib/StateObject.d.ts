@@ -42,5 +42,7 @@ export declare namespace StateObject {
             duration: number;
             ease: string;
         };
+        valueOf(): string | number | boolean;
+        toString(): string;
     }
 }
