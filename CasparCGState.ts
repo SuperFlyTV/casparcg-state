@@ -7,7 +7,7 @@ import {Command as CommandNS} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
 /** */
-export class State {
+export class CasparCGState {
 
 	private currentState: CasparCG;
 
@@ -44,7 +44,7 @@ export class State {
 
 	/** */
 	getDiff(newState: CasparCG): Array<IAMCPCommandVO> {
-		return State.diffStates(this.currentState, newState);
+		return CasparCGState.diffStates(this.currentState, newState);
 	}
 
 	/** */
