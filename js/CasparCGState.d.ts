@@ -35,4 +35,8 @@ export declare class CasparCGState {
     getDiff(newState: CasparCG): Array<IAMCPCommandVO>;
     /** */
     static diffStates(oldState: CasparCG, newState: CasparCG): Array<IAMCPCommandVO>;
+    /** */
+    valueOf(): CasparCG;
+    /** */
+    toString(): string;
 }

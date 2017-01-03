@@ -86,7 +86,6 @@ export class CasparCGState {
 			if (!channel) {
 				throw new Error(`Missing channel with channel number "${command.channel}"`);
 			}
-
 			switch (command._commandName) {
 				case "PlayCommand":
 					layer = this.ensureLayer(channel, command.layer);
@@ -104,7 +103,11 @@ export class CasparCGState {
 
 	/** */
 	applyState(channelNo: number, layerNo: number, stateData: {[key: string]: any}): void {
-		console.log(channelNo, layerNo, stateData);
+		channelNo;
+		layerNo;
+		stateData;
+
+		console.log("apply state (async?): ", stateData);
 	}
 
 	/** */
@@ -125,11 +128,21 @@ export class CasparCGState {
 
 	/** */
 	static diffStates(oldState: CasparCG, newState: CasparCG): Array<IAMCPCommandVO> {
-		console.log(oldState, newState);
+		oldState;
+		newState;
 
 		let commands: Array<IAMCPCommandVO> = [];
-
 		return commands;
+	}
+
+	/** */
+	valueOf(): CasparCG {
+		return this.getState({full: true});
+	}
+
+	/** */
+	toString(): string {
+		return JSON.stringify(this.getState({full: true}));
 	}
 
 }

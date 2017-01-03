@@ -4,7 +4,7 @@ export * from "./CasparCGState";
 
 
 /* =========================================*/
-/* ========== TEST CODE ====================*/
+/* ========== TEST CODE ====================*
 
 
 import {Command  as CommandNS, AMCP} from "casparcg-connection";
@@ -48,3 +48,4 @@ console.log(JSON.stringify(myState0));
 console.log("myState1 (should be the same as myState0)");
 console.log(JSON.stringify(myState1));
 
+*/
