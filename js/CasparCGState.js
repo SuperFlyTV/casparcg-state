@@ -84,7 +84,10 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.prototype.applyState = function (channelNo, layerNo, stateData) {
-        console.log(channelNo, layerNo, stateData);
+        channelNo;
+        layerNo;
+        stateData;
+        console.log("apply state (async?): ", stateData);
     };
     /** */
     CasparCGState.prototype.ensureLayer = function (channel, layerNo) {
@@ -102,9 +105,18 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.diffStates = function (oldState, newState) {
-        console.log(oldState, newState);
+        oldState;
+        newState;
         var commands = [];
         return commands;
+    };
+    /** */
+    CasparCGState.prototype.valueOf = function () {
+        return this.getState({ full: true });
+    };
+    /** */
+    CasparCGState.prototype.toString = function () {
+        return JSON.stringify(this.getState({ full: true }));
     };
     return CasparCGState;
 }());
