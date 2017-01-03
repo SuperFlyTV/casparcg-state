@@ -2,6 +2,10 @@ import * as _ from "underscore";
 // state NS
 import {StateObject as StateNS} from "./lib/StateObject";
 import CasparCG = StateNS.CasparCG;
+import StateObjectStorage = StateNS.StateObjectStorage;
+
+
+
 import Channel = StateNS.Channel;
 import Layer = StateNS.Layer;
 // import Mixer = StateNS.Mixer;
@@ -20,21 +24,28 @@ import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
 export class CasparCGState {
 
-	private _currentState: CasparCG = new CasparCG();
+	//private _currentState: CasparCG = new CasparCG(); // replaced by this._currentStateStorage
+
+	private _currentStateStorage: StateObjectStorage = new StateObjectStorage();
+
 	private _getCurrentTimeFunction: () => number;
 	private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void;
 
 
 	/** */
-	constructor(config?: {currentTime?: () => number, getMediaDurationCallback?: (clip: string, callback: (duration: number) => void) => void}) {
-		// sets callback for handling time messurement
+	constructor(config?: {
+		currentTime?: 				() 												=> number, 
+		getMediaDurationCallback?: 	(clip: string, callback: (duration: number) 	=> void) => void
+		externalStorage?:			(action: string, data: Object | null) 			=> CasparCG
+	}) {
+		// set the callback for handling time messurement
 		if (config && config.currentTime) {
 			this._getCurrentTimeFunction = config.currentTime;
 		} else {
 			this._getCurrentTimeFunction = () => {return Date.now() / 1000; };
 		}
 
-		// setting callback for handling media duration query
+		// set the callback for handling media duration query
 		if (config && config.getMediaDurationCallback) {
 			this._getMediaDuration = (clip: string, channelNo: number, layerNo: number) => {
 				config!.getMediaDurationCallback!(clip, (duration: number) => {
@@ -44,44 +55,61 @@ export class CasparCGState {
 		} else {
 			this._getMediaDuration = (clip: string, channelNo: number, layerNo: number) => {clip; this.applyState(channelNo, layerNo, {duration: null}); };
 		}
+		
+		// set the callback for handling externalStorage
+		if (config && config.externalStorage) {
+			this._currentStateStorage.assignExternalStorage(config.externalStorage);
+		}
 	}
 
 	/** */
 	initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210) {
+		let currentState = this._currentStateStorage.fetchState();
+
 		_.each(config.channels, (channel, i) => {
-			let existingChannel = _.findWhere(this._currentState.channels, {channelNo: i + 1});
+			let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
 			if (!existingChannel) {
 				existingChannel = new Channel();
 				existingChannel.channelNo = i + 1;
-				this._currentState.channels.push(existingChannel);
+				currentState.channels.push(existingChannel);
 			}
 
 			existingChannel.videoMode = channel["videoMode"];	// @todo: fix this shit
 			existingChannel.layers = [];
 		});
+
+		// Save new state:
+		this._currentStateStorage.storeState(currentState);
 	}
 
 	/** */
 	setState(state: CasparCG): void {
-		this._currentState = state;
+		this._currentStateStorage.storeState(state);
 	}
 
 	/** */
 	getState(options: {full: boolean} = {full: true}): CasparCG {
-		// return full state
-		if (options.full) {
-			return this._currentState;
-		}
+		
+		let currentState = this._currentStateStorage.fetchState();
 
-		// strip defaults and return slim state
-		return this._currentState; // @todo: iterate and generate;
+		// return state without defaults added:
+		if (!options.full) {
+			return currentState;
+		} else {
+			// add defaults to state and then return it:
+			// @todo: iterate and generate default values;
+			return currentState;
+		}
 	}
 
 	/** */
 	applyCommands(commands: Array<IAMCPCommandVO>): void {
 		// iterates over commands and applies new state to current state
+
+		let currentState = this._currentStateStorage.fetchState();
+
 		commands.forEach((command) => {
-			let channel: Channel | undefined = _.findWhere(this._currentState.channels, {channelNo: command.channel});
+			let channel: Channel | undefined = _.findWhere(currentState.channels, {channelNo: command.channel});
 			let layer: Layer | undefined;
 			if (!channel) {
 				throw new Error(`Missing channel with channel number "${command.channel}"`);
@@ -100,6 +128,9 @@ export class CasparCGState {
 					break;
 			}
 		});
+
+		// Save new state:
+		this._currentStateStorage.storeState(currentState);
 	}
 
 	/** */
@@ -120,7 +151,8 @@ export class CasparCGState {
 
 	/** */
 	getDiff(newState: CasparCG): Array<IAMCPCommandVO> {
-		return CasparCGState.diffStates(this._currentState, newState);
+		let currentState = this._currentStateStorage.fetchState();
+		return CasparCGState.diffStates(currentState, newState);
 	}
 
 	/** */
