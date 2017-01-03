@@ -43,8 +43,8 @@ myTestState1.setState(myState0);
 
 let myState1: stateNS.CasparCG = myTestState1.getState();
 
-console.log('myState0');
-console.log(myState0);
-console.log('myState1 (should be the same as myState0)');
-console.log(myState1); 
+console.log("myState0");
+console.log(JSON.stringify(myState0));
+console.log("myState1 (should be the same as myState0)");
+console.log(JSON.stringify(myState1));
 

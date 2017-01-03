@@ -20,19 +20,21 @@ import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
 export class CasparCGState {
 
-	private _currentState: CasparCG;
+	private _currentState: CasparCG = new CasparCG();
 	private _getCurrentTimeFunction: () => number;
 	private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void;
 
 
 	/** */
 	constructor(config?: {currentTime?: () => number, getMediaDurationCallback?: (clip: string, callback: (duration: number) => void) => void}) {
+		// sets callback for handling time messurement
 		if (config && config.currentTime) {
 			this._getCurrentTimeFunction = config.currentTime;
 		} else {
 			this._getCurrentTimeFunction = () => {return Date.now() / 1000; };
 		}
 
+		// setting callback for handling media duration query
 		if (config && config.getMediaDurationCallback) {
 			this._getMediaDuration = (clip: string, channelNo: number, layerNo: number) => {
 				config!.getMediaDurationCallback!(clip, (duration: number) => {

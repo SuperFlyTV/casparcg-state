@@ -2,6 +2,7 @@
 var _ = require("underscore");
 // state NS
 var StateObject_1 = require("./lib/StateObject");
+var CasparCG = StateObject_1.StateObject.CasparCG;
 var Channel = StateObject_1.StateObject.Channel;
 var Layer = StateObject_1.StateObject.Layer;
 /** */
@@ -9,12 +10,15 @@ var CasparCGState = (function () {
     /** */
     function CasparCGState(config) {
         var _this = this;
+        this._currentState = new CasparCG();
+        // sets callback for handling time messurement
         if (config && config.currentTime) {
             this._getCurrentTimeFunction = config.currentTime;
         }
         else {
             this._getCurrentTimeFunction = function () { return Date.now() / 1000; };
         }
+        // setting callback for handling media duration query
         if (config && config.getMediaDurationCallback) {
             this._getMediaDuration = function (clip, channelNo, layerNo) {
                 config.getMediaDurationCallback(clip, function (duration) {
