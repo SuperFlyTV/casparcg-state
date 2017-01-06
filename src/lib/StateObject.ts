@@ -71,21 +71,21 @@ export namespace StateObject {
 
 		fetchState(): CasparCG {
 			if (this._externalStorage) {
-				return this._externalStorage('fetch',null);
+				return this._externalStorage("fetch", null);
 			} else {
 				/*return _Clone(this._internalState); */
 				return _.clone(this._internalState); // temprary, we should do a deep clone here
-				
+
 			}
 		};
 		storeState(data: CasparCG): void {
 			if (this._externalStorage) {
-				this._externalStorage('store', data );
+				this._externalStorage("store", data );
 			} else {
 				this._internalState = data;
 			}
 		}
-		
+
 	}
 
 }

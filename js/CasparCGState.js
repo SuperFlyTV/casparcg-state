@@ -2,7 +2,7 @@
 var _ = require("underscore");
 // state NS
 var StateObject_1 = require("./lib/StateObject");
-var CasparCG = StateObject_1.StateObject.CasparCG;
+var StateObjectStorage = StateObject_1.StateObject.StateObjectStorage;
 var Channel = StateObject_1.StateObject.Channel;
 var Layer = StateObject_1.StateObject.Layer;
 /** */
@@ -10,15 +10,16 @@ var CasparCGState = (function () {
     /** */
     function CasparCGState(config) {
         var _this = this;
-        this._currentState = new CasparCG();
-        // sets callback for handling time messurement
+        // private _currentState: CasparCG = new CasparCG(); // replaced by this._currentStateStorage
+        this._currentStateStorage = new StateObjectStorage();
+        // set the callback for handling time messurement
         if (config && config.currentTime) {
             this._getCurrentTimeFunction = config.currentTime;
         }
         else {
             this._getCurrentTimeFunction = function () { return Date.now() / 1000; };
         }
-        // setting callback for handling media duration query
+        // set the callback for handling media duration query
         if (config && config.getMediaDurationCallback) {
             this._getMediaDuration = function (clip, channelNo, layerNo) {
                 config.getMediaDurationCallback(clip, function (duration) {
@@ -29,41 +30,52 @@ var CasparCGState = (function () {
         else {
             this._getMediaDuration = function (clip, channelNo, layerNo) { clip; _this.applyState(channelNo, layerNo, { duration: null }); };
         }
+        // set the callback for handling externalStorage
+        if (config && config.externalStorage) {
+            this._currentStateStorage.assignExternalStorage(config.externalStorage);
+        }
     }
     /** */
     CasparCGState.prototype.initStateFromConfig = function (config) {
-        var _this = this;
+        var currentState = this._currentStateStorage.fetchState();
         _.each(config.channels, function (channel, i) {
-            var existingChannel = _.findWhere(_this._currentState.channels, { channelNo: i + 1 });
+            var existingChannel = _.findWhere(currentState.channels, { channelNo: i + 1 });
             if (!existingChannel) {
                 existingChannel = new Channel();
                 existingChannel.channelNo = i + 1;
-                _this._currentState.channels.push(existingChannel);
+                currentState.channels.push(existingChannel);
             }
             existingChannel.videoMode = channel["videoMode"]; // @todo: fix this shit
             existingChannel.layers = [];
         });
+        // Save new state:
+        this._currentStateStorage.storeState(currentState);
     };
     /** */
     CasparCGState.prototype.setState = function (state) {
-        this._currentState = state;
+        this._currentStateStorage.storeState(state);
     };
     /** */
     CasparCGState.prototype.getState = function (options) {
         if (options === void 0) { options = { full: true }; }
-        // return full state
-        if (options.full) {
-            return this._currentState;
+        var currentState = this._currentStateStorage.fetchState();
+        // return state without defaults added:
+        if (!options.full) {
+            return currentState;
         }
-        // strip defaults and return slim state
-        return this._currentState; // @todo: iterate and generate;
+        else {
+            // add defaults to state and then return it:
+            // @todo: iterate and generate default values;
+            return currentState;
+        }
     };
     /** */
     CasparCGState.prototype.applyCommands = function (commands) {
-        var _this = this;
         // iterates over commands and applies new state to current state
+        var _this = this;
+        var currentState = this._currentStateStorage.fetchState();
         commands.forEach(function (command) {
-            var channel = _.findWhere(_this._currentState.channels, { channelNo: command.channel });
+            var channel = _.findWhere(currentState.channels, { channelNo: command.channel });
             var layer;
             if (!channel) {
                 throw new Error("Missing channel with channel number \"" + command.channel + "\"");
@@ -81,6 +93,8 @@ var CasparCGState = (function () {
                     break;
             }
         });
+        // Save new state:
+        this._currentStateStorage.storeState(currentState);
     };
     /** */
     CasparCGState.prototype.applyState = function (channelNo, layerNo, stateData) {
@@ -101,7 +115,8 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.prototype.getDiff = function (newState) {
-        return CasparCGState.diffStates(this._currentState, newState);
+        var currentState = this._currentStateStorage.fetchState();
+        return CasparCGState.diffStates(currentState, newState);
     };
     /** */
     CasparCGState.diffStates = function (oldState, newState) {

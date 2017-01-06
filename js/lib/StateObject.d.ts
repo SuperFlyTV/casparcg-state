@@ -45,4 +45,16 @@ export declare namespace StateObject {
         valueOf(): string | number | boolean;
         toString(): string;
     }
+    /**
+    * StateObjectStorage is used for exposing the internal state variable
+    * By default, it is storing the state as an internal variable,
+    * byt may be using an external storage function for fetching/storing the state.
+    */
+    class StateObjectStorage {
+        private _internalState;
+        private _externalStorage;
+        assignExternalStorage(fcn: (action: string, data: Object | null) => CasparCG): void;
+        fetchState(): CasparCG;
+        storeState(data: CasparCG): void;
+    }
 }

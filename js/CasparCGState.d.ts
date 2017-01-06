@@ -7,13 +7,14 @@ import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
 import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
 export declare class CasparCGState {
-    private _currentState;
+    private _currentStateStorage;
     private _getCurrentTimeFunction;
     private _getMediaDuration;
     /** */
     constructor(config?: {
         currentTime?: () => number;
         getMediaDurationCallback?: (clip: string, callback: (duration: number) => void) => void;
+        externalStorage?: (action: string, data: Object | null) => CasparCG;
     });
     /** */
     initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210): void;

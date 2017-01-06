@@ -24,7 +24,7 @@ import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
 export class CasparCGState {
 
-	//private _currentState: CasparCG = new CasparCG(); // replaced by this._currentStateStorage
+	// private _currentState: CasparCG = new CasparCG(); // replaced by this._currentStateStorage
 
 	private _currentStateStorage: StateObjectStorage = new StateObjectStorage();
 
@@ -34,7 +34,7 @@ export class CasparCGState {
 
 	/** */
 	constructor(config?: {
-		currentTime?: 				() 												=> number, 
+		currentTime?: 				() 												=> number,
 		getMediaDurationCallback?: 	(clip: string, callback: (duration: number) 	=> void) => void
 		externalStorage?:			(action: string, data: Object | null) 			=> CasparCG
 	}) {
@@ -55,7 +55,7 @@ export class CasparCGState {
 		} else {
 			this._getMediaDuration = (clip: string, channelNo: number, layerNo: number) => {clip; this.applyState(channelNo, layerNo, {duration: null}); };
 		}
-		
+
 		// set the callback for handling externalStorage
 		if (config && config.externalStorage) {
 			this._currentStateStorage.assignExternalStorage(config.externalStorage);
@@ -89,7 +89,7 @@ export class CasparCGState {
 
 	/** */
 	getState(options: {full: boolean} = {full: true}): CasparCG {
-		
+
 		let currentState = this._currentStateStorage.fetchState();
 
 		// return state without defaults added:
