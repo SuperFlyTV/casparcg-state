@@ -45,7 +45,7 @@
     "resolve"
   ],
   "dependencies": {
-    "casparcg-connection": "^0.13.1",
+    "casparcg-connection": "^0.14.0",
     "deep-diff": "^0.3.4",
     "underscore": "^1.8.3"
   },
