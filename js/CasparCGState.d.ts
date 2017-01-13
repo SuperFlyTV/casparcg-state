@@ -7,6 +7,7 @@ import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
 import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
 export declare class CasparCGState {
+    private minTimeSincePlay;
     private _currentStateStorage;
     private _getCurrentTimeFunction;
     private _getMediaDuration;
@@ -34,8 +35,9 @@ export declare class CasparCGState {
     private ensureLayer(channel, layerNo);
     /** */
     getDiff(newState: CasparCG): Array<IAMCPCommandVO>;
+    private compareAttrs(obj0, obj1, attrs, strict?);
     /** */
-    static diffStates(oldState: CasparCG, newState: CasparCG): Array<IAMCPCommandVO>;
+    diffStates(oldState: CasparCG, newState: CasparCG): Array<IAMCPCommandVO>;
     /** */
     valueOf(): CasparCG;
     /** */

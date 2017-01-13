@@ -6,7 +6,7 @@ export declare namespace StateObject {
     /** */
     class Channel {
         channelNo: number;
-        videoMode: string;
+        videoMode: string | null;
         layers: Array<Layer>;
     }
     /** */
@@ -16,10 +16,14 @@ export declare namespace StateObject {
         media: string | TransitionObject;
         templateType?: string;
         playing: boolean;
+        looping: boolean;
         playTime: number;
+        pauseTime: number;
         duration: number;
         next: Next | null;
         mixer: Mixer;
+        templateFcn: string;
+        templateData: Object | null;
     }
     /** */
     class Mixer {
@@ -30,6 +34,7 @@ export declare namespace StateObject {
     class Next {
         content: string;
         media: string | TransitionObject;
+        looping: boolean;
         playTime: number;
         duration: number;
         auto: boolean;
@@ -41,6 +46,7 @@ export declare namespace StateObject {
             type: string;
             duration: number;
             ease: string;
+            direction?: string;
         };
         valueOf(): string | number | boolean;
         toString(): string;
