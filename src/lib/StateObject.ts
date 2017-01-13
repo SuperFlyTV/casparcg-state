@@ -9,7 +9,7 @@ export namespace StateObject {
 	/** */
 	export class Channel {
 		channelNo: number = 1;
-		videoMode: string; 	// @todo: string literal
+		videoMode: string | null; 	// @todo: string literal
 		layers: Array<Layer> = [];
 	}
 
@@ -17,13 +17,17 @@ export namespace StateObject {
 	export class Layer {
 		layerNo: number;
 		content: string; 		// @todo: string literal
-		media: string | TransitionObject;
-		templateType?: string;	// @todo: string literal
+		media: string | TransitionObject; // clip or templatename
+		templateType?: string;	// @todo: string literal 'flash', 'html'
 		playing: boolean;
-		playTime: number;
+		looping: boolean;
+		playTime: number; // timestamp when content started playing
+		pauseTime: number; // timestamp when content stopped playing (was paused)
 		duration: number;
 		next: Next | null;
 		mixer: Mixer;
+		templateFcn: string; // 'play', 'update', 'stop' or else (invoke)
+		templateData: Object | null;
 	}
 
 	/** */
@@ -36,6 +40,7 @@ export namespace StateObject {
 	export class Next {
 		content: string; 		// @todo: string literal
 		media: string | TransitionObject;
+		looping: boolean;
 		playTime: number;
 		duration: number;
 		auto: boolean;
@@ -44,7 +49,7 @@ export namespace StateObject {
 	/** */
 	export class TransitionObject {
 		_value: string | number | boolean;
-		transition: {type: string, duration: number; ease: string} = {type: "", duration: 0, ease: "linear"}; // @todo: string literal on ease
+		transition: {type: string, duration: number; ease: string, direction?: string} = {type: "", duration: 0, ease: "linear"}; // @todo: string literal on ease
 		valueOf(): string | number | boolean {
 			return this._value;
 		}
