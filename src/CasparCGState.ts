@@ -9,8 +9,8 @@ import StateObjectStorage = StateNS.StateObjectStorage;
 import Channel = StateNS.Channel;
 import Layer = StateNS.Layer;
 // import Mixer = StateNS.Mixer;
-// import Next = StateNS.Next;
-// import TransitionObject = StateNS.TransitionObject;
+import Next = StateNS.Next;
+import TransitionObject = StateNS.TransitionObject;
 
 // AMCP NS
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
@@ -135,17 +135,28 @@ export class CasparCGState {
 
 					let playDeltaTime = (seek||0)/channelFPS;
 
+
 					if (command._objectParams['clip']) {
+						layer.content = 'media';
 						layer.playing = (cmdName == 'PlayCommand');
 
-						layer.content = 'media';		// @todo: string literal
-						layer.media = <string>command._objectParams['clip'];
-						
+						if (command._objectParams['transition']) {
+							layer.media = new TransitionObject();
+							layer.media._value = <string>command._objectParams['clip'];
+
+							if(command._objectParams['transition']) layer.media.transition.type = <string>command._objectParams['transition'];
+							if(command._objectParams['transitionDuration']) layer.media.transition.duration = +command._objectParams['transitionDuration'];
+							if(command._objectParams['transitionEasing']) layer.media.transition.easeing = <string>command._objectParams['transitionEasing'];
+							if(command._objectParams['transitionDirection']) layer.media.transition.direction = <string>command._objectParams['transitionDirection'];
+						} else{
+							layer.media = <string>command._objectParams['clip'];
+						}
+
 						layer.looping = !!command._objectParams['loop'];
 
 						layer.playTime = this._getCurrentTimeFunction()-playDeltaTime;
 						this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
-
+						
 					} else {
 						if (cmdName == 'PlayCommand' && layer.content == 'media' && layer.media && layer.pauseTime && layer.playTime) {
 							// resuming a paused clip
@@ -181,14 +192,29 @@ export class CasparCGState {
 					break;
 				case "LoadbgCommand":
 					layer = this.ensureLayer(channel, command.layer);
-					layer.next = new StateNS.Next();
+					layer.next = new Next();
 					
 					if (command._objectParams['clip']) {
 						layer.next.content = 'media';
-						layer.next.media = <string>command._objectParams['clip'];
+
+						if (command._objectParams['transition']) {
+							layer.media = new TransitionObject();
+							layer.media._value = <string>command._objectParams['clip'];
+
+							if(command._objectParams['transition']) layer.media.transition.type = <string>command._objectParams['transition'];
+							if(command._objectParams['transitionDuration']) layer.media.transition.duration = +command._objectParams['transitionDuration'];
+							if(command._objectParams['transitionEasing']) layer.media.transition.easeing = <string>command._objectParams['transitionEasing'];
+							if(command._objectParams['transitionDirection']) layer.media.transition.direction = <string>command._objectParams['transitionDirection'];
+						} else{
+							layer.next.media = <string>command._objectParams['clip'];
+						}
+
+						
 
 						layer.next.looping = !!command._objectParams['loop'];
 					}
+
+					
 
 					break;
 				case "CGAddCommand":
@@ -319,7 +345,7 @@ export class CasparCGState {
 		// Added things:
 		_.each(newState.channels, (channel,channelKey) => {
 
-			let channelFps = 50; // todo: fix this, based on channel.videoMode
+			let channelFps = 50; // @todo: fix this, based on channel.videoMode
 
 
 			let oldChannel = oldState.channels[channelKey] || (new Channel);
@@ -346,7 +372,7 @@ export class CasparCGState {
 						if (typeof layer.media == 'object' && layer.media.transition) {
 							options.transition 			= layer.media.transition.type;
 							options.transitionDuration 	= Math.round(layer.media.transition.duration*channelFps);
-							options.transitionEasing 	= layer.media.transition.ease;
+							options.transitionEasing 	= layer.media.transition.easeing;
 							options.transitionDirection = layer.media.transition.direction;
 						}
 

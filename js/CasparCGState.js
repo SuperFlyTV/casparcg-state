@@ -6,8 +6,8 @@ var StateObjectStorage = StateObject_1.StateObject.StateObjectStorage;
 var Channel = StateObject_1.StateObject.Channel;
 var Layer = StateObject_1.StateObject.Layer;
 // import Mixer = StateNS.Mixer;
-// import Next = StateNS.Next;
-// import TransitionObject = StateNS.TransitionObject;
+var Next = StateObject_1.StateObject.Next;
+var TransitionObject = StateObject_1.StateObject.TransitionObject;
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
 /** */
@@ -97,9 +97,23 @@ var CasparCGState = (function () {
                     var seek = command._objectParams['seek'];
                     var playDeltaTime = (seek || 0) / channelFPS;
                     if (command._objectParams['clip']) {
+                        layer.content = 'media';
                         layer.playing = (cmdName == 'PlayCommand');
-                        layer.content = 'media'; // @todo: string literal
-                        layer.media = command._objectParams['clip'];
+                        if (command._objectParams['transition']) {
+                            layer.media = new TransitionObject();
+                            layer.media._value = command._objectParams['clip'];
+                            if (command._objectParams['transition'])
+                                layer.media.transition.type = command._objectParams['transition'];
+                            if (command._objectParams['transitionDuration'])
+                                layer.media.transition.duration = +command._objectParams['transitionDuration'];
+                            if (command._objectParams['transitionEasing'])
+                                layer.media.transition.easeing = command._objectParams['transitionEasing'];
+                            if (command._objectParams['transitionDirection'])
+                                layer.media.transition.direction = command._objectParams['transitionDirection'];
+                        }
+                        else {
+                            layer.media = command._objectParams['clip'];
+                        }
                         layer.looping = !!command._objectParams['loop'];
                         layer.playTime = _this._getCurrentTimeFunction() - playDeltaTime;
                         _this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
@@ -138,10 +152,24 @@ var CasparCGState = (function () {
                     break;
                 case "LoadbgCommand":
                     layer = _this.ensureLayer(channel, command.layer);
-                    layer.next = new StateObject_1.StateObject.Next();
+                    layer.next = new Next();
                     if (command._objectParams['clip']) {
                         layer.next.content = 'media';
-                        layer.next.media = command._objectParams['clip'];
+                        if (command._objectParams['transition']) {
+                            layer.media = new TransitionObject();
+                            layer.media._value = command._objectParams['clip'];
+                            if (command._objectParams['transition'])
+                                layer.media.transition.type = command._objectParams['transition'];
+                            if (command._objectParams['transitionDuration'])
+                                layer.media.transition.duration = +command._objectParams['transitionDuration'];
+                            if (command._objectParams['transitionEasing'])
+                                layer.media.transition.easeing = command._objectParams['transitionEasing'];
+                            if (command._objectParams['transitionDirection'])
+                                layer.media.transition.direction = command._objectParams['transitionDirection'];
+                        }
+                        else {
+                            layer.next.media = command._objectParams['clip'];
+                        }
                         layer.next.looping = !!command._objectParams['loop'];
                     }
                     break;
@@ -258,7 +286,7 @@ var CasparCGState = (function () {
         // ==============================================================================
         // Added things:
         _.each(newState.channels, function (channel, channelKey) {
-            var channelFps = 50; // todo: fix this, based on channel.videoMode
+            var channelFps = 50; // @todo: fix this, based on channel.videoMode
             var oldChannel = oldState.channels[channelKey] || (new Channel);
             _.each(channel.layers, function (layer, layerKey) {
                 var oldLayer = oldChannel.layers[layerKey] || (new Layer);
@@ -272,7 +300,7 @@ var CasparCGState = (function () {
                         if (typeof layer.media == 'object' && layer.media.transition) {
                             options.transition = layer.media.transition.type;
                             options.transitionDuration = Math.round(layer.media.transition.duration * channelFps);
-                            options.transitionEasing = layer.media.transition.ease;
+                            options.transitionEasing = layer.media.transition.easeing;
                             options.transitionDirection = layer.media.transition.direction;
                         }
                         if (layer.content == 'media') {

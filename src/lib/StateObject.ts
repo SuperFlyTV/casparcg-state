@@ -49,7 +49,7 @@ export namespace StateObject {
 	/** */
 	export class TransitionObject {
 		_value: string | number | boolean;
-		transition: {type: string, duration: number; ease: string, direction?: string} = {type: "", duration: 0, ease: "linear"}; // @todo: string literal on ease
+		transition: {type: string, duration: number, easeing: string, direction?: string} = {type: "", duration: 0, easeing: "linear"}; // @todo: string literal on ease
 		valueOf(): string | number | boolean {
 			return this._value;
 		}

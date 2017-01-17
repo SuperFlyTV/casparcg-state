@@ -43,7 +43,7 @@ var StateObject;
     /** */
     var TransitionObject = (function () {
         function TransitionObject() {
-            this.transition = { type: "", duration: 0, ease: "linear" }; // @todo: string literal on ease
+            this.transition = { type: "", duration: 0, easeing: "linear" }; // @todo: string literal on ease
         }
         TransitionObject.prototype.valueOf = function () {
             return this._value;

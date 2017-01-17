@@ -45,7 +45,7 @@ export declare namespace StateObject {
         transition: {
             type: string;
             duration: number;
-            ease: string;
+            easeing: string;
             direction?: string;
         };
         valueOf(): string | number | boolean;
