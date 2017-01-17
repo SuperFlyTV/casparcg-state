@@ -394,7 +394,7 @@ export class CasparCGState {
 							if (layer.playing) {
 
 								cmd = new AMCP.PlayCommand(_.extend(options,{
-									clip: layer.media,
+									clip: layer.media.toString(),
 									seek: Math.max(0,Math.floor(timeSincePlay*channelFps)),
 									loop: !!layer.looping
 								}));
@@ -403,7 +403,7 @@ export class CasparCGState {
 									cmd = new AMCP.PauseCommand(options);
 								} else {
 									cmd = new AMCP.LoadCommand(_.extend(options,{
-										clip: layer.media,
+										clip: layer.media.toString(),
 										seek: Math.max(0,Math.floor(timeSincePlay*channelFps)),
 										loop: !!layer.looping
 									}));
@@ -412,7 +412,7 @@ export class CasparCGState {
 						} else if (layer.content == 'template') {
 
 							cmd = new AMCP.CGAddCommand(_.extend(options,{
-								templateName: layer.media,
+								templateName: layer.media.toString(),
 								playOnLoad: layer.playing,
 								data: layer.templateData||undefined
 							}));

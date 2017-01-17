@@ -316,7 +316,7 @@ var CasparCGState = (function () {
                             }
                             if (layer.playing) {
                                 cmd = new casparcg_connection_1.AMCP.PlayCommand(_.extend(options, {
-                                    clip: layer.media,
+                                    clip: layer.media.toString(),
                                     seek: Math.max(0, Math.floor(timeSincePlay * channelFps)),
                                     loop: !!layer.looping
                                 }));
@@ -327,7 +327,7 @@ var CasparCGState = (function () {
                                 }
                                 else {
                                     cmd = new casparcg_connection_1.AMCP.LoadCommand(_.extend(options, {
-                                        clip: layer.media,
+                                        clip: layer.media.toString(),
                                         seek: Math.max(0, Math.floor(timeSincePlay * channelFps)),
                                         loop: !!layer.looping
                                     }));
@@ -336,7 +336,7 @@ var CasparCGState = (function () {
                         }
                         else if (layer.content == 'template') {
                             cmd = new casparcg_connection_1.AMCP.CGAddCommand(_.extend(options, {
-                                templateName: layer.media,
+                                templateName: layer.media.toString(),
                                 playOnLoad: layer.playing,
                                 data: layer.templateData || undefined
                             }));
