@@ -12,8 +12,8 @@ export declare namespace StateObject {
     /** */
     class Layer {
         layerNo: number;
-        content: string;
-        media: string | TransitionObject;
+        content: string | null;
+        media: string | TransitionObject | null;
         templateType?: string;
         playing: boolean;
         looping: boolean;
@@ -27,8 +27,8 @@ export declare namespace StateObject {
     }
     /** */
     class Mixer {
-        opacity: number | TransitionObject;
-        volume: number | TransitionObject;
+        opacity?: number | TransitionObject;
+        volume?: number | TransitionObject;
     }
     /** */
     class Next {
@@ -39,16 +39,27 @@ export declare namespace StateObject {
         duration: number;
         auto: boolean;
     }
+    class Transition {
+        type: string;
+        duration: number;
+        easing: string;
+        direction: string;
+        /**
+         *
+         */
+        constructor(type?: string, duration?: number, easing?: string, direction?: string);
+    }
     /** */
     class TransitionObject {
         _value: string | number | boolean;
-        transition: {
-            type: string;
-            duration: number;
-            easeing: string;
-            direction?: string;
-        };
+        inTransition: Transition;
+        changeTransition: Transition;
+        outTransition: Transition;
+        /** */
+        constructor(value?: string | number | boolean);
+        /** */
         valueOf(): string | number | boolean;
+        /** */
         toString(): string;
     }
     /**

@@ -16,8 +16,8 @@ export namespace StateObject {
 	/** */
 	export class Layer {
 		layerNo: number;
-		content: string; 		// @todo: string literal
-		media: string | TransitionObject; // clip or templatename
+		content: string | null; 		// @todo: string literal
+		media: string | TransitionObject | null; // clip or templatename
 		templateType?: string;	// @todo: string literal 'flash', 'html'
 		playing: boolean;
 		looping: boolean;
@@ -32,8 +32,8 @@ export namespace StateObject {
 
 	/** */
 	export class Mixer {
-		opacity: number | TransitionObject;
-		volume: number | TransitionObject;
+		opacity?: number | TransitionObject;
+		volume?: number | TransitionObject;
 	}
 
 	/** */
@@ -46,13 +46,54 @@ export namespace StateObject {
 		auto: boolean;
 	}
 
+	export class Transition {
+
+		type: string = "mix";
+		duration: number = 0;
+		easing: string = "linear";
+		direction: string = "right";
+
+		/**
+		 * 
+		 */
+		constructor(type?: string, duration?:number, easing?: string, direction?: string) {
+
+			// @todo: for all: string literal
+			if(type) {
+				this.type = type;
+			}
+			if(duration) {
+				this.duration = duration;
+			}
+			if(easing) {
+				this.easing = easing;
+			}
+			if(direction) {
+				this.direction = direction;
+			}
+		}
+	}
+
 	/** */
 	export class TransitionObject {
 		_value: string | number | boolean;
-		transition: {type: string, duration: number, easeing: string, direction?: string} = {type: "", duration: 0, easeing: "linear"}; // @todo: string literal on ease
+		inTransition: Transition;
+		changeTransition: Transition;
+		outTransition: Transition;
+
+		/** */
+		constructor(value?: string | number | boolean){
+			if(value){
+				this._value = value;
+			}
+		}
+
+		/** */
 		valueOf(): string | number | boolean {
 			return this._value;
 		}
+
+		/** */
 		toString(): string {
 			return this._value.toString();
 		}

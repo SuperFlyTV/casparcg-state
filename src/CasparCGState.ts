@@ -3,6 +3,7 @@ import * as _ from "underscore";
 import {StateObject as StateNS} from "./lib/StateObject";
 import CasparCG = StateNS.CasparCG;
 import StateObjectStorage = StateNS.StateObjectStorage;
+import Transition = StateNS.Transition;
 
 
 
@@ -106,15 +107,16 @@ export class CasparCGState {
 	}
 
 	/** */
-	applyCommands(commands: Array<IAMCPCommandVO>): void {
+	applyCommands(commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}>): void {
 		// iterates over commands and applies new state to current state
 
 		let currentState = this._currentStateStorage.fetchState();
 
 
-		commands.forEach((command) => {
+		commands.forEach((i) => {
+			let command: IAMCPCommandVO = i.cmd;
 			console.log('state: applyCommand '+command._commandName);
-			console.log(command._objectParams);
+			// console.log(command._objectParams);
 
 
 			let channel: Channel | undefined = _.findWhere(currentState.channels, {channelNo: command.channel});
@@ -140,16 +142,9 @@ export class CasparCGState {
 						layer.content = 'media';
 						layer.playing = (cmdName == 'PlayCommand');
 
+						layer.media = new TransitionObject(<string>command._objectParams['clip']);
 						if (command._objectParams['transition']) {
-							layer.media = new TransitionObject();
-							layer.media._value = <string>command._objectParams['clip'];
-
-							if(command._objectParams['transition']) layer.media.transition.type = <string>command._objectParams['transition'];
-							if(command._objectParams['transitionDuration']) layer.media.transition.duration = +command._objectParams['transitionDuration'];
-							if(command._objectParams['transitionEasing']) layer.media.transition.easeing = <string>command._objectParams['transitionEasing'];
-							if(command._objectParams['transitionDirection']) layer.media.transition.direction = <string>command._objectParams['transitionDirection'];
-						} else{
-							layer.media = <string>command._objectParams['clip'];
+							layer.media.inTransition = new Transition(<string>command._objectParams['transition'], +command._objectParams['transitionDuration'], <string>command._objectParams['transitionEasing'], <string>command._objectParams['transitionDirection']);
 						}
 
 						layer.looping = !!command._objectParams['loop'];
@@ -166,6 +161,12 @@ export class CasparCGState {
 							layer.playTime = this._getCurrentTimeFunction()-playedTime; // "move" the clip to new start time
 						}
 					}
+
+
+					if(i.additionalLayerState && i.additionalLayerState.media) {
+						_.extend(layer.media, {outTransition: i.additionalLayerState.media["outTransition"]});
+					}
+
 					break;
 				case "PauseCommand":
 					layer = this.ensureLayer(channel, command.layer);
@@ -185,8 +186,8 @@ export class CasparCGState {
 				case "StopCommand":
 					layer = this.ensureLayer(channel, command.layer);
 					layer.playing = false;
-					layer.content = '';
-					layer.media = '';
+					layer.content = null;
+					layer.media = null;
 					layer.playTime = 0;
 					layer.pauseTime = 0;
 					break;
@@ -197,19 +198,10 @@ export class CasparCGState {
 					if (command._objectParams['clip']) {
 						layer.next.content = 'media';
 
+						layer.media = new TransitionObject(<string>command._objectParams['clip']);
 						if (command._objectParams['transition']) {
-							layer.media = new TransitionObject();
-							layer.media._value = <string>command._objectParams['clip'];
-
-							if(command._objectParams['transition']) layer.media.transition.type = <string>command._objectParams['transition'];
-							if(command._objectParams['transitionDuration']) layer.media.transition.duration = +command._objectParams['transitionDuration'];
-							if(command._objectParams['transitionEasing']) layer.media.transition.easeing = <string>command._objectParams['transitionEasing'];
-							if(command._objectParams['transitionDirection']) layer.media.transition.direction = <string>command._objectParams['transitionDirection'];
-						} else{
-							layer.next.media = <string>command._objectParams['clip'];
+							layer.media.inTransition = new Transition(<string>command._objectParams['transition'], +command._objectParams['transitionDuration'], <string>command._objectParams['transitionEasing'], <string>command._objectParams['transitionDirection']);
 						}
-
-						
 
 						layer.next.looping = !!command._objectParams['loop'];
 					}
@@ -276,14 +268,19 @@ export class CasparCGState {
 					layer = this.ensureLayer(channel, command.layer);
 					// todo: what's the difference between this and StopCommand?
 					layer.playing = false;
-					layer.content = '';
-					layer.media = '';
+					layer.content = null;
+					layer.media = null;
 					layer.playTime = 0;
 					layer.pauseTime = 0;
 					layer.templateData = null;
-
 					break;
-				
+
+				/*case "MixerOpacityCommand":
+					layer = this.ensureLayer(channel, command.layer);
+					if (command._objectParams['method']) {
+						// @todo: in the fuuuuuutuuuuuuureeeeee
+					}
+					break;*/
 			}
 		});
 
@@ -296,8 +293,9 @@ export class CasparCGState {
 		channelNo;
 		layerNo;
 		stateData;
-
-		console.log("apply state (async?): ", stateData);
+		/*let channel: Channel = _.findWhere(this.getState().channels, {channelNo: channelNo});
+		let layer: Layer = _.findWhere(channel.layers, {layerNo: layerNo});
+		_.extend(layer, stateData);*/
 	}
 
 	/** */
@@ -316,7 +314,7 @@ export class CasparCGState {
 	}
 
 	/** */
-	getDiff(newState: CasparCG): Array<IAMCPCommandVO> {
+	getDiff(newState: CasparCG): Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> {
 		let currentState = this._currentStateStorage.fetchState();
 		return this.diffStates(currentState, newState);
 	}
@@ -335,18 +333,18 @@ export class CasparCGState {
 		return areSame;
 	}
 	/** */
-	public diffStates(oldState: CasparCG, newState: CasparCG): Array<IAMCPCommandVO> {
+	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> {
 		
 		console.log('diffStates,');
 
-		let commands: Array<IAMCPCommandVO> = [];
+		let commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
 		let time:number = this._getCurrentTimeFunction();
 		// ==============================================================================
 		// Added things:
 		_.each(newState.channels, (channel,channelKey) => {
-
+			// @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
 			let channelFps = 50; // @todo: fix this, based on channel.videoMode
-
+			// @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
 
 			let oldChannel = oldState.channels[channelKey] || (new Channel);
 
@@ -354,48 +352,58 @@ export class CasparCGState {
 				let oldLayer:Layer = oldChannel.layers[layerKey] || (new Layer);
 
 				if (layer) {
-
-					
-
-
 					if (
 						!this.compareAttrs(layer,oldLayer,['content','media','templateType','playTime'])
 					) {
-						console.log('Something should be played')
-
 						let cmd;
+						let additionalLayerState: Layer = new Layer();
 						let options:any = {};
 
 						options.channel = channel.channelNo;
 						options.layer = layer.layerNo;
 						
-						if (typeof layer.media == 'object' && layer.media.transition) {
-							options.transition 			= layer.media.transition.type;
-							options.transitionDuration 	= Math.round(layer.media.transition.duration*channelFps);
-							options.transitionEasing 	= layer.media.transition.easeing;
-							options.transitionDirection = layer.media.transition.direction;
+						if (typeof layer.media == 'object' && layer.media !== null) {
+							
+
+
+
+
+
+							// @todo: discuss how to preserve persistent state, this might get ugly????????
+							additionalLayerState.media = new TransitionObject();
+							if(layer.media.outTransition) additionalLayerState.media.outTransition = layer.media.outTransition;
+							
+							let transition: Transition | undefined;
+
+							if(oldLayer.playing && layer.media.changeTransition){
+								transition = layer.media.changeTransition;
+							}else if(layer.media.inTransition){
+								transition = layer.media.inTransition;
+							}
+
+							if(transition){
+								options.transition 			= transition.type;
+								options.transitionDuration 	= Math.round(transition.duration*channelFps);
+								options.transitionEasing 	= transition.easing;
+								options.transitionDirection = transition.direction;
+							}
 						}
 
-						if (layer.content == 'media') {
+						if (layer.content == 'media' && layer.media !== null) {
 
 							let timeSincePlay = (layer.pauseTime || time ) - layer.playTime;
 							if (timeSincePlay < this.minTimeSincePlay) {
 								timeSincePlay = 0;
 							}
-							console.log('timeSincePlay '+timeSincePlay)
-							console.log(time+'  '+layer.playTime)
-							
-							 
 
 							if (layer.looping) {
 								// we don't support looping and seeking at the same time right now..
 								timeSincePlay = 0;
 							}
 							if (layer.playing) {
-
 								cmd = new AMCP.PlayCommand(_.extend(options,{
 									clip: layer.media.toString(),
-									seek: Math.max(0,Math.floor(timeSincePlay*channelFps)),
+									seek: Math.max(0,Math.floor(timeSincePlay*channelFps)), 
 									loop: !!layer.looping
 								}));
 							} else {
@@ -409,7 +417,7 @@ export class CasparCGState {
 									}));
 								}
 							}
-						} else if (layer.content == 'template') {
+						} else if (layer.content == 'template' && layer.media !== null) {
 
 							cmd = new AMCP.CGAddCommand(_.extend(options,{
 								templateName: layer.media.toString(),
@@ -423,24 +431,33 @@ export class CasparCGState {
 							}
 						}
 						if (cmd) {
-							console.log(cmd.serialize());
-							commands.push(cmd.serialize());
+							// console.log(cmd.serialize());
+							commands.push({cmd: cmd.serialize(), additionalLayerState: additionalLayerState});
 						}
+						
 					} else if (
 						layer.content == 'template' 
 						&& !this.compareAttrs(layer,oldLayer,['templateFcn'])
 					) {
 						// todo: implement CGUpdateCommand etc..
 					}
+
 				}
 			});
 		});
 		// ==============================================================================
 		// Removed things:
-		_.each(oldState.channels, (oldChannel,channelKey) => {
-			let channel = newState.channels[channelKey] || (new Channel);
 
-			if (!channel.layers.length) {
+
+		
+
+		_.each(oldState.channels, (oldChannel,channelKey) => {
+			let newChannel = newState.channels[channelKey] || (new Channel);
+
+			//console.log("oooooold", oldChannel.layers);
+			
+
+			/*if (!channel.layers.length) {
 				if (oldChannel.layers.length) {
 					console.log('clear channel '+channel.channelNo);
 					// ClearCommand:
@@ -450,37 +467,47 @@ export class CasparCGState {
 
 					commands.push(cmd.serialize());
 				}
-			} else {
+			} else {*/
 				_.each(oldChannel.layers,(oldLayer,layerKey) => {
-					oldLayer;
+					// @todo: foooooo
+					let channelFps:number = 50;
+					let newLayer:Layer = newChannel.layers[layerKey] || (new Layer);
+					if (newLayer) {
 
-					let layer:Layer = channel.layers[layerKey] || (new Layer);
-					if (layer) {
+						
 
-						if (!layer.content && oldLayer.content) {
+						if (!newLayer.content && oldLayer.content) {
 							let cmd;
-							
-							console.log('clear layer '+layer.layerNo);
-							// ClearCommand:
-							cmd = new AMCP.ClearCommand({
-								channel: channel.channelNo,
-								layer: layer.layerNo,
-							});
-
-							
-							if (cmd) {
-								commands.push(cmd.serialize());
+							if(typeof oldLayer.media === 'object'  && oldLayer.media !== null){
+								if(oldLayer.media.outTransition){
+									cmd = new AMCP.PlayCommand({
+										channel: oldChannel.channelNo,
+										layer: oldLayer.layerNo,
+										clip: "empty",
+										transition: oldLayer.media.outTransition.type,
+										transitionDuration: Math.round(+(oldLayer.media.outTransition.duration)*channelFps),
+										transitionEasing: oldLayer.media.outTransition.easing,
+										transitionDirection: oldLayer.media.outTransition.direction
+									});
+								}
 							}
+
+							if (!cmd) {
+								console.log('clear layer ' + oldLayer.layerNo);
+								// ClearCommand:
+								cmd = new AMCP.ClearCommand({
+									channel: oldChannel.channelNo,
+									layer: oldLayer.layerNo,
+								});
+							}
+							commands.push({cmd: cmd.serialize()});
 						}
 					}
 				});
-			}
+			//}
 
 
 		});
-		
-
-
 		return commands;
 	}
 
@@ -493,5 +520,4 @@ export class CasparCGState {
 	toString(): string {
 		return JSON.stringify(this.getState({full: true}));
 	}
-
 }
