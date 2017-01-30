@@ -1,16 +1,28 @@
 import * as _ from "underscore";
 
 export namespace StateObject {
+	
+
+	/** */
+	export class Mappings {
+		layers: {[GLayer:string]: Mapping} = {}
+	}
+	export class Mapping {
+		channel: number
+		layer: number
+	}
+	
+
 	/** */
 	export class CasparCG {
-		channels: Array<Channel> = [new Channel()];
+		channels: { [channel: string]: Channel} = {}//Array<Channel> = [new Channel()];
 	}
 
 	/** */
 	export class Channel {
 		channelNo: number = 1;
 		videoMode: string | null; 	// @todo: string literal
-		layers: Array<Layer> = [];
+		layers: { [layer: string]: Layer} = {} //layers: Array<Layer> = [];
 	}
 
 	/** */
@@ -21,7 +33,7 @@ export namespace StateObject {
 		templateType?: string;	// @todo: string literal 'flash', 'html'
 		playing: boolean;
 		looping: boolean;
-		playTime: number; // timestamp when content started playing
+		playTime: number | null; // timestamp when content started playing
 		pauseTime: number; // timestamp when content stopped playing (was paused)
 		duration: number;
 		next: Next | null;

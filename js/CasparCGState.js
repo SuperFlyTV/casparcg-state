@@ -46,14 +46,16 @@ var CasparCGState = (function () {
     CasparCGState.prototype.initStateFromConfig = function (config) {
         var currentState = this._currentStateStorage.fetchState();
         _.each(config.channels, function (channel, i) {
-            var existingChannel = _.findWhere(currentState.channels, { channelNo: i + 1 });
+            //let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
+            var existingChannel = currentState.channels[(i + 1) + ''];
             if (!existingChannel) {
                 existingChannel = new Channel();
                 existingChannel.channelNo = i + 1;
-                currentState.channels.push(existingChannel);
+                //currentState.channels.push(existingChannel);
+                currentState.channels[existingChannel.channelNo] = existingChannel;
             }
             existingChannel.videoMode = channel["videoMode"]; // @todo: fix this shit
-            existingChannel.layers = [];
+            existingChannel.layers = {};
         });
         // Save new state:
         this._currentStateStorage.storeState(currentState);
@@ -84,11 +86,15 @@ var CasparCGState = (function () {
         commands.forEach(function (i) {
             var command = i.cmd;
             console.log('state: applyCommand ' + command._commandName);
-            // console.log(command._objectParams);
-            var channel = _.findWhere(currentState.channels, { channelNo: command.channel });
+            console.log(command._objectParams);
+            //console.log(i.additionalLayerState)
+            var channel = currentState.channels[command.channel + ''];
             var layer;
             if (!channel) {
-                throw new Error("Missing channel with channel number \"" + command.channel + "\"");
+                // Create new empty channel:
+                channel = new Channel();
+                channel.channelNo = command.channel;
+                currentState.channels[channel.channelNo + ''] = channel;
             }
             var channelFPS = 50; // todo: change this
             var cmdName = command._commandName;
@@ -106,7 +112,12 @@ var CasparCGState = (function () {
                             layer.media.inTransition = new Transition(command._objectParams['transition'], +command._objectParams['transitionDuration'], command._objectParams['transitionEasing'], command._objectParams['transitionDirection']);
                         }
                         layer.looping = !!command._objectParams['loop'];
-                        layer.playTime = _this._getCurrentTimeFunction() - playDeltaTime;
+                        if (i.additionalLayerState) {
+                            layer.playTime = i.additionalLayerState.playTime;
+                        }
+                        else {
+                            layer.playTime = _this._getCurrentTimeFunction() - playDeltaTime;
+                        }
                         _this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
                     }
                     else {
@@ -128,12 +139,12 @@ var CasparCGState = (function () {
                     break;
                 case "ClearCommand":
                     if (command.layer > 0) {
-                        channel.layers = [];
-                        break;
-                    }
-                    else {
                         layer = _this.ensureLayer(channel, command.layer);
                         layer.next = null;
+                    }
+                    else {
+                        channel.layers = {};
+                        break;
                     }
                 // no break;
                 case "StopCommand":
@@ -233,11 +244,11 @@ var CasparCGState = (function () {
         if (!(layerNo > 0)) {
             throw "State.ensureLayer: tried to get layer '" + layerNo + "' on channel '" + channel + "'";
         }
-        var layer = _.findWhere(channel.layers, { layerNo: layerNo });
+        var layer = channel.layers[layerNo + ''];
         if (!layer) {
             layer = new Layer();
             layer.layerNo = layerNo;
-            channel.layers.push(layer);
+            channel.layers[layer.layerNo + ''] = layer;
         }
         return layer;
     };
@@ -248,16 +259,29 @@ var CasparCGState = (function () {
     };
     CasparCGState.prototype.compareAttrs = function (obj0, obj1, attrs, strict) {
         var areSame = true;
+        var getValue = function (val) {
+            if (_.isObject(val))
+                return val.valueOf();
+            return val;
+        };
         if (strict) {
             _.each(attrs, function (a) {
-                if (obj0[a] !== obj1[a])
+                if (obj0[a].valueOf() !== obj1[a].valueOf())
                     areSame = false;
             });
         }
         else {
             _.each(attrs, function (a) {
-                if (obj0[a] != obj1[a])
+                if (getValue(obj0[a]) != getValue(obj1[a])) {
                     areSame = false;
+                }
+                //if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
+                /*
+                console.log('not same:')
+                console.log(obj0[a])
+                console.log(obj1[a])
+                */
+                //} 
             });
         }
         return areSame;
@@ -265,7 +289,8 @@ var CasparCGState = (function () {
     /** */
     CasparCGState.prototype.diffStates = function (oldState, newState) {
         var _this = this;
-        console.log('diffStates,');
+        console.log('diffStates -----------------------------');
+        //console.log(newState)
         var commands = [];
         var time = this._getCurrentTimeFunction();
         // ==============================================================================
@@ -274,21 +299,20 @@ var CasparCGState = (function () {
             // @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
             var channelFps = 50; // @todo: fix this, based on channel.videoMode
             // @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
-            var oldChannel = oldState.channels[channelKey] || (new Channel);
+            var oldChannel = oldState.channels[channelKey + ''] || (new Channel);
             _.each(channel.layers, function (layer, layerKey) {
-                var oldLayer = oldChannel.layers[layerKey] || (new Layer);
+                var oldLayer = oldChannel.layers[layerKey + ''] || (new Layer);
                 if (layer) {
+                    console.log('new layer ' + channelKey + '-' + layerKey);
+                    console.log(layer);
+                    console.log('old layer');
+                    console.log(oldLayer);
                     if (!_this.compareAttrs(layer, oldLayer, ['content', 'media', 'templateType', 'playTime'])) {
                         var cmd = void 0;
-                        var additionalLayerState = new Layer();
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
                         if (typeof layer.media == 'object' && layer.media !== null) {
-                            // @todo: discuss how to preserve persistent state, this might get ugly????????
-                            additionalLayerState.media = new TransitionObject();
-                            if (layer.media.outTransition)
-                                additionalLayerState.media.outTransition = layer.media.outTransition;
                             var transition = void 0;
                             if (oldLayer.playing && layer.media.changeTransition) {
                                 transition = layer.media.changeTransition;
@@ -312,15 +336,19 @@ var CasparCGState = (function () {
                                 // we don't support looping and seeking at the same time right now..
                                 timeSincePlay = 0;
                             }
+                            if (_.isNull(layer.playTime)) {
+                                timeSincePlay = null;
+                            }
                             if (layer.playing) {
                                 cmd = new casparcg_connection_1.AMCP.PlayCommand(_.extend(options, {
                                     clip: layer.media.toString(),
-                                    seek: Math.max(0, Math.floor(timeSincePlay * channelFps)),
+                                    seek: Math.max(0, Math.floor((timeSincePlay || 0) * channelFps)),
                                     loop: !!layer.looping
                                 }));
                             }
                             else {
-                                if (layer.pauseTime && (time - layer.pauseTime) < _this.minTimeSincePlay) {
+                                if ((layer.pauseTime && (time - layer.pauseTime) < _this.minTimeSincePlay)
+                                    || _.isNull(timeSincePlay)) {
                                     cmd = new casparcg_connection_1.AMCP.PauseCommand(options);
                                 }
                                 else {
@@ -346,7 +374,7 @@ var CasparCGState = (function () {
                         }
                         if (cmd) {
                             // console.log(cmd.serialize());
-                            commands.push({ cmd: cmd.serialize(), additionalLayerState: additionalLayerState });
+                            commands.push({ cmd: cmd.serialize(), additionalLayerState: layer });
                         }
                     }
                     else if (layer.content == 'template'
@@ -374,7 +402,7 @@ var CasparCGState = (function () {
             _.each(oldChannel.layers, function (oldLayer, layerKey) {
                 // @todo: foooooo
                 var channelFps = 50;
-                var newLayer = newChannel.layers[layerKey] || (new Layer);
+                var newLayer = newChannel.layers[layerKey + ''] || (new Layer);
                 if (newLayer) {
                     if (!newLayer.content && oldLayer.content) {
                         var cmd = void 0;

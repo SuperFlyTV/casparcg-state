@@ -3,9 +3,23 @@ var _ = require("underscore");
 var StateObject;
 (function (StateObject) {
     /** */
+    var Mappings = (function () {
+        function Mappings() {
+            this.layers = {};
+        }
+        return Mappings;
+    }());
+    StateObject.Mappings = Mappings;
+    var Mapping = (function () {
+        function Mapping() {
+        }
+        return Mapping;
+    }());
+    StateObject.Mapping = Mapping;
+    /** */
     var CasparCG = (function () {
         function CasparCG() {
-            this.channels = [new Channel()];
+            this.channels = {}; //Array<Channel> = [new Channel()];
         }
         return CasparCG;
     }());
@@ -14,7 +28,7 @@ var StateObject;
     var Channel = (function () {
         function Channel() {
             this.channelNo = 1;
-            this.layers = [];
+            this.layers = {}; //layers: Array<Layer> = [];
         }
         return Channel;
     }());

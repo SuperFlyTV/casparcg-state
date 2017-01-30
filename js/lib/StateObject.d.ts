@@ -1,13 +1,27 @@
 export declare namespace StateObject {
     /** */
+    class Mappings {
+        layers: {
+            [GLayer: string]: Mapping;
+        };
+    }
+    class Mapping {
+        channel: number;
+        layer: number;
+    }
+    /** */
     class CasparCG {
-        channels: Array<Channel>;
+        channels: {
+            [channel: string]: Channel;
+        };
     }
     /** */
     class Channel {
         channelNo: number;
         videoMode: string | null;
-        layers: Array<Layer>;
+        layers: {
+            [layer: string]: Layer;
+        };
     }
     /** */
     class Layer {
@@ -17,7 +31,7 @@ export declare namespace StateObject {
         templateType?: string;
         playing: boolean;
         looping: boolean;
-        playTime: number;
+        playTime: number | null;
         pauseTime: number;
         duration: number;
         next: Next | null;

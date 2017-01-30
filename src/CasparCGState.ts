@@ -71,15 +71,17 @@ export class CasparCGState {
 		let currentState = this._currentStateStorage.fetchState();
 
 		_.each(config.channels, (channel, i) => {
-			let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
+			//let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
+			let existingChannel = currentState.channels[(i+1)+''];
 			if (!existingChannel) {
 				existingChannel = new Channel();
 				existingChannel.channelNo = i + 1;
-				currentState.channels.push(existingChannel);
+				//currentState.channels.push(existingChannel);
+				currentState.channels[existingChannel.channelNo] = existingChannel;
 			}
 
 			existingChannel.videoMode = channel["videoMode"];	// @todo: fix this shit
-			existingChannel.layers = [];
+			existingChannel.layers = {};
 		});
 
 		// Save new state:
@@ -115,14 +117,22 @@ export class CasparCGState {
 
 		commands.forEach((i) => {
 			let command: IAMCPCommandVO = i.cmd;
+			
 			console.log('state: applyCommand '+command._commandName);
-			// console.log(command._objectParams);
+			console.log(command._objectParams);
+			//console.log(i.additionalLayerState)
 
-
-			let channel: Channel | undefined = _.findWhere(currentState.channels, {channelNo: command.channel});
+			
+			let channel: Channel | undefined = currentState.channels[command.channel+''];
 			let layer: Layer | undefined;
 			if (!channel) {
-				throw new Error(`Missing channel with channel number "${command.channel}"`);
+				// Create new empty channel:
+				channel = new Channel();
+				channel.channelNo = command.channel;
+
+				currentState.channels[channel.channelNo+''] = channel;
+
+				//throw new Error(`Missing channel with channel number "${command.channel}"`);
 			}
 			let channelFPS = 50; // todo: change this
 			
@@ -149,7 +159,12 @@ export class CasparCGState {
 
 						layer.looping = !!command._objectParams['loop'];
 
-						layer.playTime = this._getCurrentTimeFunction()-playDeltaTime;
+						if (i.additionalLayerState) {
+							layer.playTime = i.additionalLayerState.playTime;
+						} else {
+							layer.playTime = this._getCurrentTimeFunction()-playDeltaTime;
+						}
+
 						this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
 						
 					} else {
@@ -167,6 +182,7 @@ export class CasparCGState {
 						_.extend(layer.media, {outTransition: i.additionalLayerState.media["outTransition"]});
 					}
 
+
 					break;
 				case "PauseCommand":
 					layer = this.ensureLayer(channel, command.layer);
@@ -174,12 +190,12 @@ export class CasparCGState {
 					layer.pauseTime = this._getCurrentTimeFunction();
 					break;
 				case "ClearCommand":
-					if (command.layer >0) {
-						channel.layers = [];
-						break;
-					} else {
+					if (command.layer>0) {
 						layer = this.ensureLayer(channel, command.layer);
 						layer.next = null;
+					} else {
+						channel.layers = {};
+						break;
 						
 					}
 					// no break;
@@ -303,11 +319,12 @@ export class CasparCGState {
 		if (! (layerNo >0 )) {
 			throw "State.ensureLayer: tried to get layer '"+layerNo+"' on channel '"+channel+"'";
 		}
-		let layer  = _.findWhere(channel.layers, {layerNo: layerNo});
+		let layer:Layer  = channel.layers[layerNo+''];
 		if (!layer) {
 			layer = new Layer();
 			layer.layerNo = layerNo;
-			channel.layers.push(layer);
+			channel.layers[layer.layerNo+''] = layer;
+			
 		}
 		return layer;
 		
@@ -321,13 +338,29 @@ export class CasparCGState {
 
 	private compareAttrs(obj0:Object, obj1:Object, attrs:Array<string>, strict?:boolean ):boolean {
 		var areSame:boolean = true;
+		
+		let getValue:any = function (val:any) {
+			if (_.isObject(val)) return val.valueOf();
+			return val;
+		}
 		if (strict) {
 			_.each(attrs,(a:string) => {
-				if (obj0[a] !== obj1[a] ) areSame = false;
+				if (obj0[a].valueOf() !== obj1[a].valueOf() ) areSame = false;
 			});	
 		} else {
 			_.each(attrs,(a:string) => {
-				if (obj0[a] != obj1[a] ) areSame = false;
+
+				if (getValue(obj0[a]) != getValue(obj1[a]) ) {
+					areSame = false;	
+				}
+
+				//if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
+					/*
+					console.log('not same:')
+					console.log(obj0[a])
+					console.log(obj1[a])
+					*/
+				//} 
 			});	
 		}
 		return areSame;
@@ -335,7 +368,8 @@ export class CasparCGState {
 	/** */
 	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> {
 		
-		console.log('diffStates,');
+		console.log('diffStates -----------------------------');
+		//console.log(newState)
 
 		let commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
 		let time:number = this._getCurrentTimeFunction();
@@ -346,17 +380,22 @@ export class CasparCGState {
 			let channelFps = 50; // @todo: fix this, based on channel.videoMode
 			// @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
 
-			let oldChannel = oldState.channels[channelKey] || (new Channel);
+			let oldChannel = oldState.channels[channelKey+''] || (new Channel);
 
 			_.each(channel.layers,(layer,layerKey) => {
-				let oldLayer:Layer = oldChannel.layers[layerKey] || (new Layer);
+				let oldLayer:Layer = oldChannel.layers[layerKey+''] || (new Layer);
 
 				if (layer) {
+
+					console.log('new layer '+channelKey+'-'+layerKey);
+					console.log(layer)
+					console.log('old layer');
+					console.log(oldLayer)
+					
 					if (
 						!this.compareAttrs(layer,oldLayer,['content','media','templateType','playTime'])
 					) {
 						let cmd;
-						let additionalLayerState: Layer = new Layer();
 						let options:any = {};
 
 						options.channel = channel.channelNo;
@@ -369,19 +408,16 @@ export class CasparCGState {
 
 
 
-							// @todo: discuss how to preserve persistent state, this might get ugly????????
-							additionalLayerState.media = new TransitionObject();
-							if(layer.media.outTransition) additionalLayerState.media.outTransition = layer.media.outTransition;
 							
 							let transition: Transition | undefined;
 
-							if(oldLayer.playing && layer.media.changeTransition){
+							if(oldLayer.playing && layer.media.changeTransition ){
 								transition = layer.media.changeTransition;
-							}else if(layer.media.inTransition){
+							} else if( layer.media.inTransition ){
 								transition = layer.media.inTransition;
 							}
 
-							if(transition){
+							if(transition ){
 								options.transition 			= transition.type;
 								options.transitionDuration 	= Math.round(transition.duration*channelFps);
 								options.transitionEasing 	= transition.easing;
@@ -391,32 +427,52 @@ export class CasparCGState {
 
 						if (layer.content == 'media' && layer.media !== null) {
 
-							let timeSincePlay = (layer.pauseTime || time ) - layer.playTime;
+							let timeSincePlay:any = (layer.pauseTime || time ) - layer.playTime;
 							if (timeSincePlay < this.minTimeSincePlay) {
 								timeSincePlay = 0;
 							}
-
 							if (layer.looping) {
 								// we don't support looping and seeking at the same time right now..
 								timeSincePlay = 0;
 							}
-							if (layer.playing) {
+
+							
+							if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object
+								timeSincePlay = null;
+								
+								/*if (
+									_.isNull(oldLayer.playTime) 
+									&& this.compareAttrs(layer,oldLayer,['content','media','templateType','playing'])
+								) {
+									// 
+									noCommandNeeded = true;
+								}*/
+							}
+
+							
+							if (layer.playing) {	
 								cmd = new AMCP.PlayCommand(_.extend(options,{
 									clip: layer.media.toString(),
-									seek: Math.max(0,Math.floor(timeSincePlay*channelFps)), 
+									seek: Math.max(0,Math.floor((timeSincePlay||0)*channelFps)), 
 									loop: !!layer.looping
 								}));
 							} else {
-								if (layer.pauseTime && (time-layer.pauseTime) < this.minTimeSincePlay) {
+								if (
+									(layer.pauseTime && (time-layer.pauseTime) < this.minTimeSincePlay)
+									|| _.isNull(timeSincePlay)
+								) {
 									cmd = new AMCP.PauseCommand(options);
 								} else {
+									
 									cmd = new AMCP.LoadCommand(_.extend(options,{
 										clip: layer.media.toString(),
 										seek: Math.max(0,Math.floor(timeSincePlay*channelFps)),
 										loop: !!layer.looping
 									}));
+									
 								}
 							}
+							
 						} else if (layer.content == 'template' && layer.media !== null) {
 
 							cmd = new AMCP.CGAddCommand(_.extend(options,{
@@ -432,7 +488,7 @@ export class CasparCGState {
 						}
 						if (cmd) {
 							// console.log(cmd.serialize());
-							commands.push({cmd: cmd.serialize(), additionalLayerState: additionalLayerState});
+							commands.push({cmd: cmd.serialize(), additionalLayerState: layer});
 						}
 						
 					} else if (
@@ -471,7 +527,7 @@ export class CasparCGState {
 				_.each(oldChannel.layers,(oldLayer,layerKey) => {
 					// @todo: foooooo
 					let channelFps:number = 50;
-					let newLayer:Layer = newChannel.layers[layerKey] || (new Layer);
+					let newLayer:Layer = newChannel.layers[layerKey+''] || (new Layer);
 					if (newLayer) {
 
 						
