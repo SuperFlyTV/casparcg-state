@@ -307,7 +307,7 @@ var CasparCGState = (function () {
                     console.log(layer);
                     console.log('old layer');
                     console.log(oldLayer);
-                    if (!_this.compareAttrs(layer, oldLayer, ['content', 'media', 'templateType', 'playTime'])) {
+                    if (!_this.compareAttrs(layer, oldLayer, ['content', 'media', 'templateType', 'playTime', 'looping'])) {
                         var cmd = void 0;
                         var options = {};
                         options.channel = channel.channelNo;

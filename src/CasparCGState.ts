@@ -393,7 +393,7 @@ export class CasparCGState {
 					console.log(oldLayer)
 					
 					if (
-						!this.compareAttrs(layer,oldLayer,['content','media','templateType','playTime'])
+						!this.compareAttrs(layer,oldLayer,['content','media','templateType','playTime','looping'])
 					) {
 						let cmd;
 						let options:any = {};
