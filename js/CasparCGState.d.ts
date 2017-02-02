@@ -1,5 +1,6 @@
 import { StateObject as StateNS } from "./lib/StateObject";
 import CasparCG = StateNS.CasparCG;
+import Layer = StateNS.Layer;
 import { Command as CommandNS } from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 import { Config as ConfigNS } from "casparcg-connection";
@@ -9,7 +10,7 @@ import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 export declare class CasparCGState {
     private minTimeSincePlay;
     private _currentStateStorage;
-    private _getCurrentTimeFunction;
+    private _currentTimeFunction;
     private _getMediaDuration;
     /** */
     constructor(config?: {
@@ -26,7 +27,10 @@ export declare class CasparCGState {
         full: boolean;
     }): CasparCG;
     /** */
-    applyCommands(commands: Array<IAMCPCommandVO>): void;
+    applyCommands(commands: Array<{
+        cmd: IAMCPCommandVO;
+        additionalLayerState?: Layer;
+    }>): void;
     /** */
     applyState(channelNo: number, layerNo: number, stateData: {
         [key: string]: any;
@@ -34,10 +38,16 @@ export declare class CasparCGState {
     /** */
     private ensureLayer(channel, layerNo);
     /** */
-    getDiff(newState: CasparCG): Array<IAMCPCommandVO>;
+    getDiff(newState: CasparCG): Array<{
+        cmd: IAMCPCommandVO;
+        additionalLayerState?: Layer;
+    }>;
     private compareAttrs(obj0, obj1, attrs, strict?);
     /** */
-    diffStates(oldState: CasparCG, newState: CasparCG): Array<IAMCPCommandVO>;
+    diffStates(oldState: CasparCG, newState: CasparCG): Array<{
+        cmd: IAMCPCommandVO;
+        additionalLayerState?: Layer;
+    }>;
     /** */
     valueOf(): CasparCG;
     /** */

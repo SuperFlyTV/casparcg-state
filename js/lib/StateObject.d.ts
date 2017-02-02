@@ -1,23 +1,37 @@
 export declare namespace StateObject {
     /** */
+    class Mappings {
+        layers: {
+            [GLayer: string]: Mapping;
+        };
+    }
+    class Mapping {
+        channel: number;
+        layer: number;
+    }
+    /** */
     class CasparCG {
-        channels: Array<Channel>;
+        channels: {
+            [channel: string]: Channel;
+        };
     }
     /** */
     class Channel {
         channelNo: number;
         videoMode: string | null;
-        layers: Array<Layer>;
+        layers: {
+            [layer: string]: Layer;
+        };
     }
     /** */
     class Layer {
         layerNo: number;
-        content: string;
-        media: string | TransitionObject;
+        content: string | null;
+        media: string | TransitionObject | null;
         templateType?: string;
         playing: boolean;
         looping: boolean;
-        playTime: number;
+        playTime: number | null;
         pauseTime: number;
         duration: number;
         next: Next | null;
@@ -27,8 +41,8 @@ export declare namespace StateObject {
     }
     /** */
     class Mixer {
-        opacity: number | TransitionObject;
-        volume: number | TransitionObject;
+        opacity?: number | TransitionObject;
+        volume?: number | TransitionObject;
     }
     /** */
     class Next {
@@ -39,16 +53,27 @@ export declare namespace StateObject {
         duration: number;
         auto: boolean;
     }
+    class Transition {
+        type: string;
+        duration: number;
+        easing: string;
+        direction: string;
+        /**
+         *
+         */
+        constructor(type?: string, duration?: number, easing?: string, direction?: string);
+    }
     /** */
     class TransitionObject {
         _value: string | number | boolean;
-        transition: {
-            type: string;
-            duration: number;
-            easeing: string;
-            direction?: string;
-        };
+        inTransition: Transition;
+        changeTransition: Transition;
+        outTransition: Transition;
+        /** */
+        constructor(value?: string | number | boolean);
+        /** */
         valueOf(): string | number | boolean;
+        /** */
         toString(): string;
     }
     /**
