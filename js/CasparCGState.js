@@ -21,10 +21,10 @@ var CasparCGState = (function () {
         this._currentStateStorage = new StateObjectStorage();
         // set the callback for handling time messurement
         if (config && config.currentTime) {
-            this._getCurrentTimeFunction = config.currentTime;
+            this._currentTimeFunction = config.currentTime;
         }
         else {
-            this._getCurrentTimeFunction = function () { return Date.now() / 1000; };
+            this._currentTimeFunction = function () { return Date.now() / 1000; };
         }
         // set the callback for handling media duration query
         if (config && config.getMediaDurationCallback) {
@@ -85,8 +85,8 @@ var CasparCGState = (function () {
         var currentState = this._currentStateStorage.fetchState();
         commands.forEach(function (i) {
             var command = i.cmd;
-            console.log('state: applyCommand ' + command._commandName);
-            console.log(command._objectParams);
+            //console.log('state: applyCommand '+command._commandName);
+            //console.log(command._objectParams);
             //console.log(i.additionalLayerState)
             var channel = currentState.channels[command.channel + ''];
             var layer;
@@ -116,7 +116,7 @@ var CasparCGState = (function () {
                             layer.playTime = i.additionalLayerState.playTime;
                         }
                         else {
-                            layer.playTime = _this._getCurrentTimeFunction() - playDeltaTime;
+                            layer.playTime = _this._currentTimeFunction() - playDeltaTime;
                         }
                         _this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
                     }
@@ -125,7 +125,7 @@ var CasparCGState = (function () {
                             // resuming a paused clip
                             layer.playing = true;
                             var playedTime = layer.playTime - layer.pauseTime;
-                            layer.playTime = _this._getCurrentTimeFunction() - playedTime; // "move" the clip to new start time
+                            layer.playTime = _this._currentTimeFunction() - playedTime; // "move" the clip to new start time
                         }
                     }
                     if (i.additionalLayerState && i.additionalLayerState.media) {
@@ -135,7 +135,7 @@ var CasparCGState = (function () {
                 case "PauseCommand":
                     layer = _this.ensureLayer(channel, command.layer);
                     layer.playing = false;
-                    layer.pauseTime = _this._getCurrentTimeFunction();
+                    layer.pauseTime = _this._currentTimeFunction();
                     break;
                 case "ClearCommand":
                     if (command.layer > 0) {
@@ -174,7 +174,7 @@ var CasparCGState = (function () {
                         layer.content = 'template'; // @todo: string literal
                         layer.media = command._objectParams['templateName'];
                         //layer.templateType // we don't know if it's flash or html 
-                        layer.playTime = _this._getCurrentTimeFunction();
+                        layer.playTime = _this._currentTimeFunction();
                         if (command._objectParams['playOnLoad']) {
                             layer.playing = true;
                             layer.templateFcn = 'play';
@@ -288,11 +288,11 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.prototype.diffStates = function (oldState, newState) {
-        var _this = this;
-        console.log('diffStates -----------------------------');
+        //console.log('diffStates -----------------------------');
         //console.log(newState)
+        var _this = this;
         var commands = [];
-        var time = this._getCurrentTimeFunction();
+        var time = this._currentTimeFunction();
         // ==============================================================================
         // Added things:
         _.each(newState.channels, function (channel, channelKey) {
@@ -303,10 +303,11 @@ var CasparCGState = (function () {
             _.each(channel.layers, function (layer, layerKey) {
                 var oldLayer = oldChannel.layers[layerKey + ''] || (new Layer);
                 if (layer) {
-                    console.log('new layer ' + channelKey + '-' + layerKey);
-                    console.log(layer);
+                    /*console.log('new layer '+channelKey+'-'+layerKey);
+                    console.log(layer)
                     console.log('old layer');
-                    console.log(oldLayer);
+                    console.log(oldLayer)
+                    */
                     if (!_this.compareAttrs(layer, oldLayer, ['content', 'media', 'templateType', 'playTime', 'looping'])) {
                         var cmd = void 0;
                         var options = {};

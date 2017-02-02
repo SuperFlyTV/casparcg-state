@@ -10,7 +10,7 @@ import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 export declare class CasparCGState {
     private minTimeSincePlay;
     private _currentStateStorage;
-    private _getCurrentTimeFunction;
+    private _currentTimeFunction;
     private _getMediaDuration;
     /** */
     constructor(config?: {

@@ -32,7 +32,7 @@ export class CasparCGState {
 
 	private _currentStateStorage: StateObjectStorage = new StateObjectStorage();
 
-	private _getCurrentTimeFunction: () => number;
+	private _currentTimeFunction: () => number;
 	private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void;
 
 
@@ -44,9 +44,10 @@ export class CasparCGState {
 	}) {
 		// set the callback for handling time messurement
 		if (config && config.currentTime) {
-			this._getCurrentTimeFunction = config.currentTime;
+
+			this._currentTimeFunction = config.currentTime;
 		} else {
-			this._getCurrentTimeFunction = () => {return Date.now() / 1000; };
+			this._currentTimeFunction = () => {return Date.now() / 1000; };
 		}
 
 		// set the callback for handling media duration query
@@ -118,8 +119,8 @@ export class CasparCGState {
 		commands.forEach((i) => {
 			let command: IAMCPCommandVO = i.cmd;
 			
-			console.log('state: applyCommand '+command._commandName);
-			console.log(command._objectParams);
+			//console.log('state: applyCommand '+command._commandName);
+			//console.log(command._objectParams);
 			//console.log(i.additionalLayerState)
 
 			
@@ -162,7 +163,7 @@ export class CasparCGState {
 						if (i.additionalLayerState) {
 							layer.playTime = i.additionalLayerState.playTime;
 						} else {
-							layer.playTime = this._getCurrentTimeFunction()-playDeltaTime;
+							layer.playTime = this._currentTimeFunction()-playDeltaTime;
 						}
 
 						this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
@@ -173,7 +174,7 @@ export class CasparCGState {
 							layer.playing = true;
 
 							let playedTime = layer.playTime-layer.pauseTime;
-							layer.playTime = this._getCurrentTimeFunction()-playedTime; // "move" the clip to new start time
+							layer.playTime = this._currentTimeFunction()-playedTime; // "move" the clip to new start time
 						}
 					}
 
@@ -187,7 +188,7 @@ export class CasparCGState {
 				case "PauseCommand":
 					layer = this.ensureLayer(channel, command.layer);
 					layer.playing = false;
-					layer.pauseTime = this._getCurrentTimeFunction();
+					layer.pauseTime = this._currentTimeFunction();
 					break;
 				case "ClearCommand":
 					if (command.layer>0) {
@@ -235,7 +236,7 @@ export class CasparCGState {
 						layer.media = <string>command._objectParams['templateName'];
 						//layer.templateType // we don't know if it's flash or html 
 					
-						layer.playTime = this._getCurrentTimeFunction();
+						layer.playTime = this._currentTimeFunction();
 						
 						if (command._objectParams['playOnLoad']) {
 							layer.playing = true;
@@ -368,11 +369,14 @@ export class CasparCGState {
 	/** */
 	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> {
 		
-		console.log('diffStates -----------------------------');
+		//console.log('diffStates -----------------------------');
 		//console.log(newState)
 
 		let commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
-		let time:number = this._getCurrentTimeFunction();
+		let time:number = this._currentTimeFunction();
+
+
+
 		// ==============================================================================
 		// Added things:
 		_.each(newState.channels, (channel,channelKey) => {
@@ -387,10 +391,11 @@ export class CasparCGState {
 
 				if (layer) {
 
-					console.log('new layer '+channelKey+'-'+layerKey);
+					/*console.log('new layer '+channelKey+'-'+layerKey);
 					console.log(layer)
 					console.log('old layer');
 					console.log(oldLayer)
+					*/
 					
 					if (
 						!this.compareAttrs(layer,oldLayer,['content','media','templateType','playTime','looping'])
