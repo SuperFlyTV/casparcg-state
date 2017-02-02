@@ -5,8 +5,6 @@
   "main": "js/index.js",
   "typings": "js/index.d.ts",
   "scripts": {
-    "postversion": "npm run test && npm run doc",
-    "test": "JASMINE_CONFIG_PATH=jasmine.json jasmine-ts 'tests/**/*[sS]pec.ts'",
     "gulp": "gulp",
     "build": "gulp build",
     "cleanbuild": "gulp clean && gulp build",
