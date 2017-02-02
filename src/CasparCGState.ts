@@ -292,6 +292,23 @@ export class CasparCGState {
 					layer.templateData = null;
 					break;
 
+				/*
+
+					ResumeCommand
+
+					CallCommand
+					SwapCommand
+					AddCommand
+					RemoveCommand
+					SetCommand
+					ChannelGridCommand
+
+					bye
+					kill
+					restart
+				*/
+
+
 				/*case "MixerOpacityCommand":
 					layer = this.ensureLayer(channel, command.layer);
 					if (command._objectParams['method']) {
