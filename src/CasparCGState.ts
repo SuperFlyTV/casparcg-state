@@ -9,9 +9,11 @@ import Transition = StateNS.Transition;
 
 import Channel = StateNS.Channel;
 import Layer = StateNS.Layer;
-// import Mixer = StateNS.Mixer;
+import Mixer = StateNS.Mixer;
 import Next = StateNS.Next;
 import TransitionObject = StateNS.TransitionObject;
+
+//import * as CCG_conn from "casparcg-connection";
 
 // AMCP NS
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
@@ -115,6 +117,28 @@ export class CasparCGState {
 
 		let currentState = this._currentStateStorage.fetchState();
 
+
+		let setMixerState = (channel:Channel, command:IAMCPCommandVO, attr:string, subValue:Array<string> | string) => {
+			let layer = this.ensureLayer(channel, command.layer);
+			
+			if (!layer.mixer) layer.mixer = new Mixer();
+
+
+			
+			if (_.isArray(subValue)) {
+				let o = {}
+				_.each(subValue,(sv) => {
+					o[sv] = command[sv];
+				})
+				layer.mixer[attr] = new TransitionObject(o);
+
+			} else if (_.isString(subValue)) {
+				let o:any = command[subValue];
+				layer.mixer[attr] = new TransitionObject(o);
+			}
+
+
+		}
 
 		commands.forEach((i) => {
 			let command: IAMCPCommandVO = i.cmd;
@@ -292,6 +316,69 @@ export class CasparCGState {
 					layer.templateData = null;
 					break;
 
+				case "PlayDecklinkCommand":
+					layer = this.ensureLayer(channel, command.layer);
+
+					layer.content = 'input';
+
+					layer.media = 'decklink'
+
+					layer.input = {
+						device: <number>command._objectParams['device'],
+						format: <string>command._objectParams['format'],
+						
+					}
+					//filter: command._objectParams['filter'],
+					//channelLayout: command._objectParams['channelLayout'],
+
+					layer.playing = true;
+					layer.playTime = null; // playtime is irrelevant
+
+					break;
+
+				case "MixerAnchorCommand":
+					setMixerState(channel, command,'anchor',['x','y']);
+					break;
+				// blend
+				case "MixerBrightnessCommand":
+					setMixerState(channel, command,'brightness','brightness');
+					break;
+				// chroma
+				case "MixerClipCommand":
+					setMixerState(channel, command,'clip',['x','y','width','height']);
+					break;
+				case "MixerContrastCommand":
+					setMixerState(channel, command,'contrast','contrast');
+					break;
+				case "MixerCropCommand":
+					setMixerState(channel, command,'crop',['left','top','right','bottom']);
+					break;
+				case "MixerFillCommand":
+					setMixerState(channel, command,'fill',['x','y','xScale','yScale']);
+					break;
+				// grid
+				// keyer
+				// levels
+				// mastervolume
+				// mipmap
+				case "MixerOpacityCommand":
+					setMixerState(channel, command,'opacity','opacity');
+					break;
+				case "MixerPerspectiveCommand":
+					setMixerState(channel, command,'perspective',['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottmLeftX','bottomLeftY']);
+					break;
+				case "MixerRotationCommand":
+					setMixerState(channel, command,'rotation','rotation');
+					break;
+				case "MixerSaturationCommand":
+					setMixerState(channel, command,'saturation','saturation');
+					break;
+				case "MixerStraightAlphaOutputCommand":
+					setMixerState(channel, command,'straightAlpha','state');
+					break;
+				case "MixerVolumeCommand":
+					setMixerState(channel, command,'volume','volume');
+					break;
 				/*
 
 					ResumeCommand
@@ -349,61 +436,98 @@ export class CasparCGState {
 	}
 
 	/** */
-	getDiff(newState: CasparCG): Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> {
+	getDiff(newState: CasparCG): Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> {
 		let currentState = this._currentStateStorage.fetchState();
 		return this.diffStates(currentState, newState);
 	}
 
-	private compareAttrs(obj0:Object, obj1:Object, attrs:Array<string>, strict?:boolean ):boolean {
+
+	private compareAttrs(obj0:any, obj1:any, attrs:Array<string>, strict?:boolean ):boolean {
 		var areSame:boolean = true;
 		
 		let getValue:any = function (val:any) {
-			if (_.isObject(val)) return val.valueOf();
-			return val;
+			//if (_.isObject(val)) return val.valueOf();
+			//if (val.valueOf) return val.valueOf();
+			//return val;
+			return Mixer.getValue(val);
 		}
-		if (strict) {
-			_.each(attrs,(a:string) => {
-				if (obj0[a].valueOf() !== obj1[a].valueOf() ) areSame = false;
-			});	
+		if (obj0 && obj1) {
+			if (strict) {
+				_.each(attrs,(a:string) => {
+					if (obj0[a].valueOf() !== obj1[a].valueOf() ) areSame = false;
+				});	
+			} else {
+				_.each(attrs,(a:string) => {
+
+					if (getValue(obj0[a]) != getValue(obj1[a]) ) {
+						areSame = false;	
+					}
+
+					//if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
+						/*
+						console.log('not same:')
+						console.log(obj0[a])
+						console.log(obj1[a])
+						*/
+					//} 
+				});	
+			}
 		} else {
-			_.each(attrs,(a:string) => {
-
-				if (getValue(obj0[a]) != getValue(obj1[a]) ) {
-					areSame = false;	
-				}
-
-				//if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
-					/*
-					console.log('not same:')
-					console.log(obj0[a])
-					console.log(obj1[a])
-					*/
-				//} 
-			});	
+			if (
+				(obj0 && !obj1)
+				||
+				(!obj0 && obj1)
+			) areSame = false
 		}
 		return areSame;
 	}
 	/** */
-	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> {
+	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> {
 		
 		//console.log('diffStates -----------------------------');
 		//console.log(newState)
 
-		let commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
+		let commands: Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> = [];
 		let time:number = this._currentTimeFunction();
 
+		let channelFps = 50; // @todo: fix this, based on channel.videoMode
 
+		let setTransition = (options:Object | null, channel:Channel,oldLayer:Layer, content:any) => {
+			
+			channel;
+			if (!options) options = {};
+
+			if (_.isObject(content)) {
+
+				let transition: Transition | undefined;
+
+				if(oldLayer.playing && content.changeTransition ){
+					transition = content.changeTransition;
+				} else if( content.inTransition ){
+					transition = content.inTransition;
+				}
+
+				if(transition ) {
+					options['transition'] 			= transition.type;
+					options['transitionDuration'] 	= Math.round(transition.duration*channelFps); // @todo: fix this, based on channel.videoMode
+					options['transitionEasing'] 	= transition.easing;
+					options['transitionDirection'] 	= transition.direction;
+				}
+			}
+			
+			return options;
+		}
 
 		// ==============================================================================
 		// Added things:
 		_.each(newState.channels, (channel,channelKey) => {
 			// @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
-			let channelFps = 50; // @todo: fix this, based on channel.videoMode
+			
 			// @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
 
 			let oldChannel = oldState.channels[channelKey+''] || (new Channel);
 
-			_.each(channel.layers,(layer,layerKey) => {
+			_.each(channel.layers,(layer:Layer,layerKey) => {
 				let oldLayer:Layer = oldChannel.layers[layerKey+''] || (new Layer);
 
 				if (layer) {
@@ -413,39 +537,26 @@ export class CasparCGState {
 					console.log('old layer');
 					console.log(oldLayer)
 					*/
+					let cmd;
+					let additionalCmds:Array<any> = [];
+
+					
 					
 					if (
 						!this.compareAttrs(layer,oldLayer,['content','media','templateType','playTime','looping'])
+						||
+						(
+							layer.content == 'input'
+							&& !this.compareAttrs(layer.input,oldLayer.input,['device','format'])
+						)
 					) {
-						let cmd;
+						
 						let options:any = {};
-
 						options.channel = channel.channelNo;
 						options.layer = layer.layerNo;
 						
-						if (typeof layer.media == 'object' && layer.media !== null) {
-							
-
-
-
-
-
-							
-							let transition: Transition | undefined;
-
-							if(oldLayer.playing && layer.media.changeTransition ){
-								transition = layer.media.changeTransition;
-							} else if( layer.media.inTransition ){
-								transition = layer.media.inTransition;
-							}
-
-							if(transition ){
-								options.transition 			= transition.type;
-								options.transitionDuration 	= Math.round(transition.duration*channelFps);
-								options.transitionEasing 	= transition.easing;
-								options.transitionDirection = transition.direction;
-							}
-						}
+						
+						setTransition(options,channel,oldLayer,layer.media);
 
 						if (layer.content == 'media' && layer.media !== null) {
 
@@ -459,7 +570,7 @@ export class CasparCGState {
 							}
 
 							
-							if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object
+							if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
 								timeSincePlay = null;
 								
 								/*if (
@@ -502,16 +613,44 @@ export class CasparCGState {
 								playOnLoad: layer.playing,
 								data: layer.templateData||undefined
 							}));
+						
+						} else if (layer.content == 'input' && layer.media !== null) {
+
+							
+							let inputType:string 	= (layer.input && layer.media.toString()) || 'decklink';
+							let device:number 		= (layer.input && layer.input.device) || 1;
+							let format:string 		= (layer.input && layer.input.format) || '720p5000'; // todo: the default value should be the channel format
+
+							if (inputType == 'decklink') {
+
+
+								
+
+								_.extend(options,{
+									device: 		device,
+									//filter		// "ffmpeg filter"
+									//channelLayout
+									format: 		format,
+								})
+								
+
+								cmd = new AMCP.PlayDecklinkCommand(options);
+
+								/*cmd = new AMCP.CustomCommand(_.extend(options,{
+									command: "PLAY "+options.channel+"-"+options.layer+" "+inputType+" DEVICE "+device+" FORMAT "+format,
+								}));
+								*/
+							}
 
 						} else {
 							if (oldLayer.content == 'media' || oldLayer.content == 'media') {
 								cmd = new AMCP.StopCommand(options);
 							}
 						}
-						if (cmd) {
-							// console.log(cmd.serialize());
-							commands.push({cmd: cmd.serialize(), additionalLayerState: layer});
-						}
+
+						
+
+						
 						
 					} else if (
 						layer.content == 'template' 
@@ -519,6 +658,121 @@ export class CasparCGState {
 					) {
 						// todo: implement CGUpdateCommand etc..
 					}
+
+					// -------------------------------------------------------------
+
+					// Mixer commands:
+					if (!layer.mixer) layer.mixer = new Mixer();
+					if (!oldLayer.mixer) oldLayer.mixer = new Mixer();
+
+					let compareMixerValues = function (layer:Layer,oldLayer:Layer,attr:string,attrs?:Array<string>): boolean{
+						let val0:any = Mixer.getValue(layer.mixer[attr]);
+						let val1:any = Mixer.getValue(oldLayer.mixer[attr]);
+
+						if (attrs) {
+							var areSame = true;
+
+							if (val0 && val1) {
+								_.each(attrs,function (a) {
+									if (val0[a] != val1[a]) areSame = false;
+								});
+							} else {
+								if (
+									(val0 && !val1)
+									||
+									(!val0 && val1)
+								) {
+									areSame = true;
+								}
+							}
+							return areSame;
+						}
+
+						return (val0 == val1);
+					}
+
+					let pushMixerCommand = function (attr:string, Command:any, subValue?:Array<string> | string ) {
+						
+
+
+
+
+						if (!compareMixerValues(
+								layer,
+								oldLayer,
+								attr,
+								(
+									_.isArray(subValue) 
+									? subValue 
+									: undefined 
+								)
+							)
+						) {
+
+							if (_.has(layer.mixer,attr)) {
+
+								
+
+								let options:any = {};
+								options.channel = channel.channelNo;
+								options.layer = layer.layerNo;
+
+								setTransition(options,channel,oldLayer,layer.mixer[attr])
+
+								let o = Mixer.getValue(layer.mixer[attr]);
+
+								if (_.isArray(subValue)) {
+
+									_.each(subValue,(sv) => {
+										options[sv] = o[sv];
+									});
+								} else if (_.isString(subValue)) {
+									options[subValue] = o;
+								}
+								additionalCmds.push(new Command(options));
+							}
+						}
+					}
+
+					if (!this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
+						
+						pushMixerCommand('anchor',AMCP.MixerAnchorCommand,['x','y']);
+						// blend
+						pushMixerCommand('brightness',AMCP.MixerBrightnessCommand,'brightness');
+						// chroma
+						pushMixerCommand('clip',AMCP.MixerClipCommand,['x','y','width','height']);
+						pushMixerCommand('contrast',AMCP.MixerContrastCommand,'contrast');
+						pushMixerCommand('crop',AMCP.MixerCropCommand,['left','top','right','bottom']);
+						pushMixerCommand('fill',AMCP.MixerFillCommand,['x','y','xScale','yScale']);
+						// grid
+						// keyer
+						// levels
+						// mastervolume
+						// mipmap
+						pushMixerCommand('opacity',AMCP.MixerOpacityCommand,'opacity');
+						pushMixerCommand('perspective',AMCP.MixerPerspectiveCommand, ['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottmLeftX','bottomLeftY']);
+						pushMixerCommand('rotation',AMCP.MixerRotationCommand,'rotation');
+						pushMixerCommand('saturation',AMCP.MixerSaturationCommand,'saturation');
+						pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'state');
+						pushMixerCommand('volume',AMCP.MixerVolumeCommand,'volume');
+					}
+
+
+					
+
+					
+
+					// console.log(cmd.serialize());
+					
+					var cmds:Array<any> = [];
+					if (cmd) cmds.push(cmd.serialize());
+
+					_.each(additionalCmds, (addCmd:any) => {
+						cmds.push(addCmd.serialize());
+					});
+
+					commands.push({cmds: cmds, additionalLayerState: layer});
+					
 
 				}
 			});
@@ -571,14 +825,21 @@ export class CasparCGState {
 							}
 
 							if (!cmd) {
-								console.log('clear layer ' + oldLayer.layerNo);
+								//console.log('clear layer ' + oldLayer.layerNo);
 								// ClearCommand:
 								cmd = new AMCP.ClearCommand({
 									channel: oldChannel.channelNo,
 									layer: oldLayer.layerNo,
 								});
 							}
-							commands.push({cmd: cmd.serialize()});
+
+							if (cmd) {
+								commands.push({
+									cmds: [
+										cmd.serialize()
+									]
+								});
+							}
 						}
 					}
 				});

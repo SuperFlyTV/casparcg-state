@@ -1,5 +1,6 @@
 import * as _ from "underscore";
 
+
 export namespace StateObject {
 	
 
@@ -28,12 +29,22 @@ export namespace StateObject {
 	/** */
 	export class Layer {
 		layerNo: number;
+		
 		content: string | null; 		// @todo: string literal
+		
 		media: string | TransitionObject | null; // clip or templatename
+		
+		input: {
+			device: number,
+			format: string
+		} | null ;
+
+
+		
 		templateType?: string;	// @todo: string literal 'flash', 'html'
 		playing: boolean;
 		looping: boolean;
-		playTime: number | null; // timestamp when content started playing
+		playTime: number | null; // timestamp when content started playing, (null == 'irrelevant')
 		pauseTime: number; // timestamp when content stopped playing (was paused)
 		duration: number;
 		next: Next | null;
@@ -44,9 +55,54 @@ export namespace StateObject {
 
 	/** */
 	export class Mixer {
+		public static getValue(val:any) {
+			if (_.isObject(val) && val.valueOf) return val.valueOf();
+			return val;
+		}
+		public static supportedAttributes():Array<string> {
+			return ['anchor','brightness','clip','contrast','crop','fill','opacity','perspective','rotation','saturation','straightAlpha','volume'];
+		};
+
+		anchor?: {x:number, y:number } | TransitionObject;
+		// blend?: CCG_conn.Enum.BlendMode | TransitionObject;
+		brightness?: number | TransitionObject;
+		/*chroma?: {
+			keyer:CCG_conn.Enum.Chroma,
+			threshold:number,
+			softness: number,
+			spill: number
+			
+		} | TransitionObject;
+		*/
+		clip?: {x:number, y:number, width:number, height:number } | TransitionObject;
+		contrast?: number | TransitionObject;
+		crop?: {left:number, top:number, right:number, bottom:number } | TransitionObject;
+		fill?: {x:number, y:number, xScale:number, yScale:number } | TransitionObject;
+		// grid
+		// keyer
+		// levels
+		// mastervolume
+		// mipmap
 		opacity?: number | TransitionObject;
+		perspective?: {
+			topLeftX: number, 
+			topLeftY: number, 
+			topRightX: number, 
+			topRightY: number, 
+			bottomRightX: number, 
+			bottomRightY: number, 
+			bottmLeftX: number, 
+			bottomLeftY: number
+		} | TransitionObject;
+		
+		rotation?: number | TransitionObject;
+		saturation?: number | TransitionObject;
+		straightAlpha?: boolean | TransitionObject;
 		volume?: number | TransitionObject;
 	}
+
+
+
 
 	/** */
 	export class Next {
@@ -94,7 +150,7 @@ export namespace StateObject {
 		outTransition: Transition;
 
 		/** */
-		constructor(value?: string | number | boolean){
+		constructor(value?: any ){
 			if(value){
 				this._value = value;
 			}
@@ -107,9 +163,12 @@ export namespace StateObject {
 
 		/** */
 		toString(): string {
-			return this._value.toString();
+			if (this._value) return this._value.toString();
+			return '';
 		}
 	}
+
+
 
 
 

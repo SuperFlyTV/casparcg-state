@@ -6,9 +6,10 @@ var StateObjectStorage = StateObject_1.StateObject.StateObjectStorage;
 var Transition = StateObject_1.StateObject.Transition;
 var Channel = StateObject_1.StateObject.Channel;
 var Layer = StateObject_1.StateObject.Layer;
-// import Mixer = StateNS.Mixer;
+var Mixer = StateObject_1.StateObject.Mixer;
 var Next = StateObject_1.StateObject.Next;
 var TransitionObject = StateObject_1.StateObject.TransitionObject;
+//import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
 /** */
@@ -83,6 +84,22 @@ var CasparCGState = (function () {
         // iterates over commands and applies new state to current state
         var _this = this;
         var currentState = this._currentStateStorage.fetchState();
+        var setMixerState = function (channel, command, attr, subValue) {
+            var layer = _this.ensureLayer(channel, command.layer);
+            if (!layer.mixer)
+                layer.mixer = new Mixer();
+            if (_.isArray(subValue)) {
+                var o_1 = {};
+                _.each(subValue, function (sv) {
+                    o_1[sv] = command[sv];
+                });
+                layer.mixer[attr] = new TransitionObject(o_1);
+            }
+            else if (_.isString(subValue)) {
+                var o = command[subValue];
+                layer.mixer[attr] = new TransitionObject(o);
+            }
+        };
         commands.forEach(function (i) {
             var command = i.cmd;
             //console.log('state: applyCommand '+command._commandName);
@@ -225,6 +242,62 @@ var CasparCGState = (function () {
                     layer.pauseTime = 0;
                     layer.templateData = null;
                     break;
+                case "PlayDecklinkCommand":
+                    layer = _this.ensureLayer(channel, command.layer);
+                    layer.content = 'input';
+                    layer.media = 'decklink';
+                    layer.input = {
+                        device: command._objectParams['device'],
+                        format: command._objectParams['format'],
+                    };
+                    //filter: command._objectParams['filter'],
+                    //channelLayout: command._objectParams['channelLayout'],
+                    layer.playing = true;
+                    layer.playTime = null; // playtime is irrelevant
+                    break;
+                case "MixerAnchorCommand":
+                    setMixerState(channel, command, 'anchor', ['x', 'y']);
+                    break;
+                // blend
+                case "MixerBrightnessCommand":
+                    setMixerState(channel, command, 'brightness', 'brightness');
+                    break;
+                // chroma
+                case "MixerClipCommand":
+                    setMixerState(channel, command, 'clip', ['x', 'y', 'width', 'height']);
+                    break;
+                case "MixerContrastCommand":
+                    setMixerState(channel, command, 'contrast', 'contrast');
+                    break;
+                case "MixerCropCommand":
+                    setMixerState(channel, command, 'crop', ['left', 'top', 'right', 'bottom']);
+                    break;
+                case "MixerFillCommand":
+                    setMixerState(channel, command, 'fill', ['x', 'y', 'xScale', 'yScale']);
+                    break;
+                // grid
+                // keyer
+                // levels
+                // mastervolume
+                // mipmap
+                case "MixerOpacityCommand":
+                    setMixerState(channel, command, 'opacity', 'opacity');
+                    break;
+                case "MixerPerspectiveCommand":
+                    setMixerState(channel, command, 'perspective', ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottmLeftX', 'bottomLeftY']);
+                    break;
+                case "MixerRotationCommand":
+                    setMixerState(channel, command, 'rotation', 'rotation');
+                    break;
+                case "MixerSaturationCommand":
+                    setMixerState(channel, command, 'saturation', 'saturation');
+                    break;
+                case "MixerStraightAlphaOutputCommand":
+                    setMixerState(channel, command, 'straightAlpha', 'state');
+                    break;
+                case "MixerVolumeCommand":
+                    setMixerState(channel, command, 'volume', 'volume');
+                    break;
             }
         });
         // Save new state:
@@ -260,29 +333,38 @@ var CasparCGState = (function () {
     CasparCGState.prototype.compareAttrs = function (obj0, obj1, attrs, strict) {
         var areSame = true;
         var getValue = function (val) {
-            if (_.isObject(val))
-                return val.valueOf();
-            return val;
+            //if (_.isObject(val)) return val.valueOf();
+            //if (val.valueOf) return val.valueOf();
+            //return val;
+            return Mixer.getValue(val);
         };
-        if (strict) {
-            _.each(attrs, function (a) {
-                if (obj0[a].valueOf() !== obj1[a].valueOf())
-                    areSame = false;
-            });
+        if (obj0 && obj1) {
+            if (strict) {
+                _.each(attrs, function (a) {
+                    if (obj0[a].valueOf() !== obj1[a].valueOf())
+                        areSame = false;
+                });
+            }
+            else {
+                _.each(attrs, function (a) {
+                    if (getValue(obj0[a]) != getValue(obj1[a])) {
+                        areSame = false;
+                    }
+                    //if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
+                    /*
+                    console.log('not same:')
+                    console.log(obj0[a])
+                    console.log(obj1[a])
+                    */
+                    //} 
+                });
+            }
         }
         else {
-            _.each(attrs, function (a) {
-                if (getValue(obj0[a]) != getValue(obj1[a])) {
-                    areSame = false;
-                }
-                //if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
-                /*
-                console.log('not same:')
-                console.log(obj0[a])
-                console.log(obj1[a])
-                */
-                //} 
-            });
+            if ((obj0 && !obj1)
+                ||
+                    (!obj0 && obj1))
+                areSame = false;
         }
         return areSame;
     };
@@ -293,11 +375,32 @@ var CasparCGState = (function () {
         var _this = this;
         var commands = [];
         var time = this._currentTimeFunction();
+        var channelFps = 50; // @todo: fix this, based on channel.videoMode
+        var setTransition = function (options, channel, oldLayer, content) {
+            channel;
+            if (!options)
+                options = {};
+            if (_.isObject(content)) {
+                var transition = void 0;
+                if (oldLayer.playing && content.changeTransition) {
+                    transition = content.changeTransition;
+                }
+                else if (content.inTransition) {
+                    transition = content.inTransition;
+                }
+                if (transition) {
+                    options['transition'] = transition.type;
+                    options['transitionDuration'] = Math.round(transition.duration * channelFps); // @todo: fix this, based on channel.videoMode
+                    options['transitionEasing'] = transition.easing;
+                    options['transitionDirection'] = transition.direction;
+                }
+            }
+            return options;
+        };
         // ==============================================================================
         // Added things:
         _.each(newState.channels, function (channel, channelKey) {
             // @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
-            var channelFps = 50; // @todo: fix this, based on channel.videoMode
             // @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
             var oldChannel = oldState.channels[channelKey + ''] || (new Channel);
             _.each(channel.layers, function (layer, layerKey) {
@@ -308,26 +411,16 @@ var CasparCGState = (function () {
                     console.log('old layer');
                     console.log(oldLayer)
                     */
-                    if (!_this.compareAttrs(layer, oldLayer, ['content', 'media', 'templateType', 'playTime', 'looping'])) {
-                        var cmd = void 0;
+                    var cmd = void 0;
+                    var additionalCmds_1 = [];
+                    if (!_this.compareAttrs(layer, oldLayer, ['content', 'media', 'templateType', 'playTime', 'looping'])
+                        ||
+                            (layer.content == 'input'
+                                && !_this.compareAttrs(layer.input, oldLayer.input, ['device', 'format']))) {
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
-                        if (typeof layer.media == 'object' && layer.media !== null) {
-                            var transition = void 0;
-                            if (oldLayer.playing && layer.media.changeTransition) {
-                                transition = layer.media.changeTransition;
-                            }
-                            else if (layer.media.inTransition) {
-                                transition = layer.media.inTransition;
-                            }
-                            if (transition) {
-                                options.transition = transition.type;
-                                options.transitionDuration = Math.round(transition.duration * channelFps);
-                                options.transitionEasing = transition.easing;
-                                options.transitionDirection = transition.direction;
-                            }
-                        }
+                        setTransition(options, channel, oldLayer, layer.media);
                         if (layer.content == 'media' && layer.media !== null) {
                             var timeSincePlay = (layer.pauseTime || time) - layer.playTime;
                             if (timeSincePlay < _this.minTimeSincePlay) {
@@ -368,19 +461,110 @@ var CasparCGState = (function () {
                                 data: layer.templateData || undefined
                             }));
                         }
+                        else if (layer.content == 'input' && layer.media !== null) {
+                            var inputType = (layer.input && layer.media.toString()) || 'decklink';
+                            var device = (layer.input && layer.input.device) || 1;
+                            var format = (layer.input && layer.input.format) || '720p5000'; // todo: the default value should be the channel format
+                            if (inputType == 'decklink') {
+                                _.extend(options, {
+                                    device: device,
+                                    //filter		// "ffmpeg filter"
+                                    //channelLayout
+                                    format: format,
+                                });
+                                console.log('-----------------');
+                                console.log(options);
+                                cmd = new casparcg_connection_1.AMCP.PlayDecklinkCommand(options);
+                            }
+                        }
                         else {
                             if (oldLayer.content == 'media' || oldLayer.content == 'media') {
                                 cmd = new casparcg_connection_1.AMCP.StopCommand(options);
                             }
                         }
-                        if (cmd) {
-                            // console.log(cmd.serialize());
-                            commands.push({ cmd: cmd.serialize(), additionalLayerState: layer });
-                        }
                     }
                     else if (layer.content == 'template'
                         && !_this.compareAttrs(layer, oldLayer, ['templateFcn'])) {
                     }
+                    // -------------------------------------------------------------
+                    // Mixer commands:
+                    if (!layer.mixer)
+                        layer.mixer = new Mixer();
+                    if (!oldLayer.mixer)
+                        oldLayer.mixer = new Mixer();
+                    var compareMixerValues_1 = function (layer, oldLayer, attr, attrs) {
+                        var val0 = Mixer.getValue(layer.mixer[attr]);
+                        var val1 = Mixer.getValue(oldLayer.mixer[attr]);
+                        if (attrs) {
+                            var areSame = true;
+                            if (val0 && val1) {
+                                _.each(attrs, function (a) {
+                                    if (val0[a] != val1[a])
+                                        areSame = false;
+                                });
+                            }
+                            else {
+                                if ((val0 && !val1)
+                                    ||
+                                        (!val0 && val1)) {
+                                    areSame = true;
+                                }
+                            }
+                            return areSame;
+                        }
+                        return (val0 == val1);
+                    };
+                    var pushMixerCommand = function (attr, Command, subValue) {
+                        if (!compareMixerValues_1(layer, oldLayer, attr, (_.isArray(subValue)
+                            ? subValue
+                            : undefined))) {
+                            if (_.has(layer.mixer, attr)) {
+                                var options_1 = {};
+                                options_1.channel = channel.channelNo;
+                                options_1.layer = layer.layerNo;
+                                setTransition(options_1, channel, oldLayer, layer.mixer[attr]);
+                                var o_2 = Mixer.getValue(layer.mixer[attr]);
+                                if (_.isArray(subValue)) {
+                                    _.each(subValue, function (sv) {
+                                        options_1[sv] = o_2[sv];
+                                    });
+                                }
+                                else if (_.isString(subValue)) {
+                                    options_1[subValue] = o_2;
+                                }
+                                additionalCmds_1.push(new Command(options_1));
+                            }
+                        }
+                    };
+                    if (!_this.compareAttrs(layer.mixer, oldLayer.mixer, Mixer.supportedAttributes())) {
+                        pushMixerCommand('anchor', casparcg_connection_1.AMCP.MixerAnchorCommand, ['x', 'y']);
+                        // blend
+                        pushMixerCommand('brightness', casparcg_connection_1.AMCP.MixerBrightnessCommand, 'brightness');
+                        // chroma
+                        pushMixerCommand('clip', casparcg_connection_1.AMCP.MixerClipCommand, ['x', 'y', 'width', 'height']);
+                        pushMixerCommand('contrast', casparcg_connection_1.AMCP.MixerContrastCommand, 'contrast');
+                        pushMixerCommand('crop', casparcg_connection_1.AMCP.MixerCropCommand, ['left', 'top', 'right', 'bottom']);
+                        pushMixerCommand('fill', casparcg_connection_1.AMCP.MixerFillCommand, ['x', 'y', 'xScale', 'yScale']);
+                        // grid
+                        // keyer
+                        // levels
+                        // mastervolume
+                        // mipmap
+                        pushMixerCommand('opacity', casparcg_connection_1.AMCP.MixerOpacityCommand, 'opacity');
+                        pushMixerCommand('perspective', casparcg_connection_1.AMCP.MixerPerspectiveCommand, ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottmLeftX', 'bottomLeftY']);
+                        pushMixerCommand('rotation', casparcg_connection_1.AMCP.MixerRotationCommand, 'rotation');
+                        pushMixerCommand('saturation', casparcg_connection_1.AMCP.MixerSaturationCommand, 'saturation');
+                        pushMixerCommand('straightAlpha', casparcg_connection_1.AMCP.MixerStraightAlphaOutputCommand, 'state');
+                        pushMixerCommand('volume', casparcg_connection_1.AMCP.MixerVolumeCommand, 'volume');
+                    }
+                    // console.log(cmd.serialize());
+                    var cmds = [];
+                    if (cmd)
+                        cmds.push(cmd.serialize());
+                    _.each(additionalCmds_1, function (addCmd) {
+                        cmds.push(addCmd.serialize());
+                    });
+                    commands.push({ cmds: cmds, additionalLayerState: layer });
                 }
             });
         });
@@ -421,14 +605,20 @@ var CasparCGState = (function () {
                             }
                         }
                         if (!cmd) {
-                            console.log('clear layer ' + oldLayer.layerNo);
+                            //console.log('clear layer ' + oldLayer.layerNo);
                             // ClearCommand:
                             cmd = new casparcg_connection_1.AMCP.ClearCommand({
                                 channel: oldChannel.channelNo,
                                 layer: oldLayer.layerNo,
                             });
                         }
-                        commands.push({ cmd: cmd.serialize() });
+                        if (cmd) {
+                            commands.push({
+                                cmds: [
+                                    cmd.serialize()
+                                ]
+                            });
+                        }
                     }
                 }
             });

@@ -39,13 +39,13 @@ export declare class CasparCGState {
     private ensureLayer(channel, layerNo);
     /** */
     getDiff(newState: CasparCG): Array<{
-        cmd: IAMCPCommandVO;
+        cmds: Array<IAMCPCommandVO>;
         additionalLayerState?: Layer;
     }>;
     private compareAttrs(obj0, obj1, attrs, strict?);
     /** */
     diffStates(oldState: CasparCG, newState: CasparCG): Array<{
-        cmd: IAMCPCommandVO;
+        cmds: Array<IAMCPCommandVO>;
         additionalLayerState?: Layer;
     }>;
     /** */

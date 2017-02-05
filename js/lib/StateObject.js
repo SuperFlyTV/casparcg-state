@@ -44,6 +44,15 @@ var StateObject;
     var Mixer = (function () {
         function Mixer() {
         }
+        Mixer.getValue = function (val) {
+            if (_.isObject(val) && val.valueOf)
+                return val.valueOf();
+            return val;
+        };
+        Mixer.supportedAttributes = function () {
+            return ['anchor', 'brightness', 'clip', 'contrast', 'crop', 'fill', 'opacity', 'perspective', 'rotation', 'saturation', 'straightAlpha', 'volume'];
+        };
+        ;
         return Mixer;
     }());
     StateObject.Mixer = Mixer;
@@ -94,7 +103,9 @@ var StateObject;
         };
         /** */
         TransitionObject.prototype.toString = function () {
-            return this._value.toString();
+            if (this._value)
+                return this._value.toString();
+            return '';
         };
         return TransitionObject;
     }());
