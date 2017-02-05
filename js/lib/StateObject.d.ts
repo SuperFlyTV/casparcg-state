@@ -19,6 +19,7 @@ export declare namespace StateObject {
     class Channel {
         channelNo: number;
         videoMode: string | null;
+        fps: number;
         layers: {
             [layer: string]: Layer;
         };

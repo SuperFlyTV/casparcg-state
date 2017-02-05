@@ -22,9 +22,9 @@ import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
 
 // config NS
-import {Config as ConfigNS} from "casparcg-connection";
-import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
-import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
+// import {Config as ConfigNS} from "casparcg-connection";
+// import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
+// import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 
 /** */
 export class CasparCGState {
@@ -36,6 +36,10 @@ export class CasparCGState {
 
 	private _currentTimeFunction: () => number;
 	private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void;
+
+	private _isInitialised: boolean;
+	public bufferedCommands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
+
 
 
 	/** */
@@ -70,7 +74,30 @@ export class CasparCGState {
 	}
 
 	/** */
-	initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210) {
+	public initStateFromChannelInfo(channels: any) {
+		let currentState = this._currentStateStorage.fetchState();
+		_.each(channels, (channel, i) => {
+			//let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
+			let existingChannel = currentState.channels[(i+1)+''];
+			if (!existingChannel) {
+				existingChannel = new Channel();
+				existingChannel.channelNo = i + 1;
+				//currentState.channels.push(existingChannel);
+				currentState.channels[existingChannel.channelNo] = existingChannel;
+			}
+
+			existingChannel.videoMode = channel["format"];
+			existingChannel.fps = channel["frameRate"];
+			existingChannel.layers = {};
+		});
+
+		// Save new state:
+		this._currentStateStorage.storeState(currentState);
+		this.isInitialised = true;
+	}
+
+	/** *
+	public initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210) {
 		let currentState = this._currentStateStorage.fetchState();
 
 		_.each(config.channels, (channel, i) => {
@@ -89,7 +116,8 @@ export class CasparCGState {
 
 		// Save new state:
 		this._currentStateStorage.storeState(currentState);
-	}
+		this.isInitialised = true;
+	}*/
 
 	/** */
 	setState(state: CasparCG): void {
@@ -98,9 +126,12 @@ export class CasparCGState {
 
 	/** */
 	getState(options: {full: boolean} = {full: true}): CasparCG {
+		// needs to be initialised
+		if(!this.isInitialised) {
+			throw new Error("CasparCG State is not initialised");
+		}
 
 		let currentState = this._currentStateStorage.fetchState();
-
 		// return state without defaults added:
 		if (!options.full) {
 			return currentState;
@@ -113,6 +144,13 @@ export class CasparCGState {
 
 	/** */
 	applyCommands(commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}>): void {
+
+		// buffer commands until we are initialised
+		if(!this.isInitialised) {
+			this.bufferedCommands = this.bufferedCommands.concat(commands);
+			return;
+		}
+
 		// iterates over commands and applies new state to current state
 
 		let currentState = this._currentStateStorage.fetchState();
@@ -159,8 +197,6 @@ export class CasparCGState {
 
 				//throw new Error(`Missing channel with channel number "${command.channel}"`);
 			}
-			let channelFPS = 50; // todo: change this
-			
 
 			let cmdName = command._commandName;
 			switch (cmdName) {
@@ -170,7 +206,7 @@ export class CasparCGState {
 
 					let seek:number = <number>command._objectParams['seek'];
 
-					let playDeltaTime = (seek||0)/channelFPS;
+					let playDeltaTime = (seek||0)/channel.fps;
 
 
 					if (command._objectParams['clip']) {
@@ -394,14 +430,6 @@ export class CasparCGState {
 					kill
 					restart
 				*/
-
-
-				/*case "MixerOpacityCommand":
-					layer = this.ensureLayer(channel, command.layer);
-					if (command._objectParams['method']) {
-						// @todo: in the fuuuuuutuuuuuuureeeeee
-					}
-					break;*/
 			}
 		});
 
@@ -437,6 +465,11 @@ export class CasparCGState {
 
 	/** */
 	getDiff(newState: CasparCG): Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> {
+		// needs to be initialised
+		if(!this.isInitialised) {
+			throw new Error("CasparCG State is not initialised");
+		}
+
 		let currentState = this._currentStateStorage.fetchState();
 		return this.diffStates(currentState, newState);
 	}
@@ -483,14 +516,17 @@ export class CasparCGState {
 	}
 	/** */
 	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> {
+
+		// needs to be initialised
+		if(!this.isInitialised) {
+			throw new Error("CasparCG State is not initialised");
+		}
 		
 		//console.log('diffStates -----------------------------');
 		//console.log(newState)
 
 		let commands: Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> = [];
 		let time:number = this._currentTimeFunction();
-
-		let channelFps = 50; // @todo: fix this, based on channel.videoMode
 
 		let setTransition = (options:Object | null, channel:Channel,oldLayer:Layer, content:any) => {
 			
@@ -509,7 +545,7 @@ export class CasparCGState {
 
 				if(transition ) {
 					options['transition'] 			= transition.type;
-					options['transitionDuration'] 	= Math.round(transition.duration*channelFps); // @todo: fix this, based on channel.videoMode
+					options['transitionDuration'] 	= Math.round(transition.duration*channel.fps);
 					options['transitionEasing'] 	= transition.easing;
 					options['transitionDirection'] 	= transition.direction;
 				}
@@ -521,14 +557,10 @@ export class CasparCGState {
 		// ==============================================================================
 		// Added things:
 		_.each(newState.channels, (channel,channelKey) => {
-			// @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
-			
-			// @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
-
-			let oldChannel = oldState.channels[channelKey+''] || (new Channel);
-
-			_.each(channel.layers,(layer:Layer,layerKey) => {
-				let oldLayer:Layer = oldChannel.layers[layerKey+''] || (new Layer);
+			let oldChannel = oldState.channels[channelKey+''] || (new Channel());
+ 
+ 			_.each(channel.layers,(layer:Layer,layerKey) => {
+				let oldLayer:Layer = oldChannel.layers[layerKey+''] || (new Layer());
 
 				if (layer) {
 
@@ -586,7 +618,7 @@ export class CasparCGState {
 							if (layer.playing) {	
 								cmd = new AMCP.PlayCommand(_.extend(options,{
 									clip: layer.media.toString(),
-									seek: Math.max(0,Math.floor((timeSincePlay||0)*channelFps)), 
+									seek: Math.max(0,Math.floor((timeSincePlay||0)*oldChannel.fps)), 
 									loop: !!layer.looping
 								}));
 							} else {
@@ -599,7 +631,7 @@ export class CasparCGState {
 									
 									cmd = new AMCP.LoadCommand(_.extend(options,{
 										clip: layer.media.toString(),
-										seek: Math.max(0,Math.floor(timeSincePlay*channelFps)),
+										seek: Math.max(0,Math.floor(timeSincePlay*oldChannel.fps)),
 										loop: !!layer.looping
 									}));
 									
@@ -784,7 +816,7 @@ export class CasparCGState {
 		
 
 		_.each(oldState.channels, (oldChannel,channelKey) => {
-			let newChannel = newState.channels[channelKey] || (new Channel);
+			let newChannel = newState.channels[channelKey] || (new Channel());
 
 			//console.log("oooooold", oldChannel.layers);
 			
@@ -802,7 +834,6 @@ export class CasparCGState {
 			} else {*/
 				_.each(oldChannel.layers,(oldLayer,layerKey) => {
 					// @todo: foooooo
-					let channelFps:number = 50;
 					let newLayer:Layer = newChannel.layers[layerKey+''] || (new Layer);
 					if (newLayer) {
 
@@ -817,7 +848,7 @@ export class CasparCGState {
 										layer: oldLayer.layerNo,
 										clip: "empty",
 										transition: oldLayer.media.outTransition.type,
-										transitionDuration: Math.round(+(oldLayer.media.outTransition.duration)*channelFps),
+										transitionDuration: Math.round(+(oldLayer.media.outTransition.duration)*oldChannel.fps),
 										transitionEasing: oldLayer.media.outTransition.easing,
 										transitionDirection: oldLayer.media.outTransition.direction
 									});
@@ -858,5 +889,21 @@ export class CasparCGState {
 	/** */
 	toString(): string {
 		return JSON.stringify(this.getState({full: true}));
+	}
+
+	/** */
+	public get isInitialised(): boolean {
+		return this._isInitialised;
+	}
+
+	/** */
+	public set isInitialised(initialised: boolean) {
+		if(this._isInitialised !== initialised) {
+			this._isInitialised = initialised;
+			if(this._isInitialised) {
+				this.applyCommands(this.bufferedCommands);
+				this.bufferedCommands = [];
+			}
+		}
 	}
 }

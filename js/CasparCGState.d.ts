@@ -3,15 +3,17 @@ import CasparCG = StateNS.CasparCG;
 import Layer = StateNS.Layer;
 import { Command as CommandNS } from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
-import { Config as ConfigNS } from "casparcg-connection";
-import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
-import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
 export declare class CasparCGState {
     private minTimeSincePlay;
     private _currentStateStorage;
     private _currentTimeFunction;
     private _getMediaDuration;
+    private _isInitialised;
+    bufferedCommands: Array<{
+        cmd: IAMCPCommandVO;
+        additionalLayerState?: Layer;
+    }>;
     /** */
     constructor(config?: {
         currentTime?: () => number;
@@ -19,7 +21,29 @@ export declare class CasparCGState {
         externalStorage?: (action: string, data: Object | null) => CasparCG;
     });
     /** */
-    initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210): void;
+    initStateFromChannelInfo(channels: any): void;
+    /** *
+    public initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210) {
+        let currentState = this._currentStateStorage.fetchState();
+
+        _.each(config.channels, (channel, i) => {
+            //let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
+            let existingChannel = currentState.channels[(i+1)+''];
+            if (!existingChannel) {
+                existingChannel = new Channel();
+                existingChannel.channelNo = i + 1;
+                //currentState.channels.push(existingChannel);
+                currentState.channels[existingChannel.channelNo] = existingChannel;
+            }
+
+            existingChannel.videoMode = channel["videoMode"];	// @todo: fix this shit
+            existingChannel.layers = {};
+        });
+
+        // Save new state:
+        this._currentStateStorage.storeState(currentState);
+        this.isInitialised = true;
+    }*/
     /** */
     setState(state: CasparCG): void;
     /** */
@@ -52,4 +76,7 @@ export declare class CasparCGState {
     valueOf(): CasparCG;
     /** */
     toString(): string;
+    /** */
+    /** */
+    isInitialised: boolean;
 }

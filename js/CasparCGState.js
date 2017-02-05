@@ -12,6 +12,10 @@ var TransitionObject = StateObject_1.StateObject.TransitionObject;
 //import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
+// config NS
+// import {Config as ConfigNS} from "casparcg-connection";
+// import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
+// import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
 var CasparCGState = (function () {
     /** */
@@ -20,6 +24,7 @@ var CasparCGState = (function () {
         this.minTimeSincePlay = 0.2;
         // private _currentState: CasparCG = new CasparCG(); // replaced by this._currentStateStorage
         this._currentStateStorage = new StateObjectStorage();
+        this.bufferedCommands = [];
         // set the callback for handling time messurement
         if (config && config.currentTime) {
             this._currentTimeFunction = config.currentTime;
@@ -44,9 +49,9 @@ var CasparCGState = (function () {
         }
     }
     /** */
-    CasparCGState.prototype.initStateFromConfig = function (config) {
+    CasparCGState.prototype.initStateFromChannelInfo = function (channels) {
         var currentState = this._currentStateStorage.fetchState();
-        _.each(config.channels, function (channel, i) {
+        _.each(channels, function (channel, i) {
             //let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
             var existingChannel = currentState.channels[(i + 1) + ''];
             if (!existingChannel) {
@@ -55,12 +60,36 @@ var CasparCGState = (function () {
                 //currentState.channels.push(existingChannel);
                 currentState.channels[existingChannel.channelNo] = existingChannel;
             }
-            existingChannel.videoMode = channel["videoMode"]; // @todo: fix this shit
+            existingChannel.videoMode = channel["format"];
+            existingChannel.fps = channel["frameRate"];
             existingChannel.layers = {};
         });
         // Save new state:
         this._currentStateStorage.storeState(currentState);
+        this.isInitialised = true;
     };
+    /** *
+    public initStateFromConfig(config: CasparCGConfig207 | CasparCGConfig210) {
+        let currentState = this._currentStateStorage.fetchState();
+
+        _.each(config.channels, (channel, i) => {
+            //let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
+            let existingChannel = currentState.channels[(i+1)+''];
+            if (!existingChannel) {
+                existingChannel = new Channel();
+                existingChannel.channelNo = i + 1;
+                //currentState.channels.push(existingChannel);
+                currentState.channels[existingChannel.channelNo] = existingChannel;
+            }
+
+            existingChannel.videoMode = channel["videoMode"];	// @todo: fix this shit
+            existingChannel.layers = {};
+        });
+
+        // Save new state:
+        this._currentStateStorage.storeState(currentState);
+        this.isInitialised = true;
+    }*/
     /** */
     CasparCGState.prototype.setState = function (state) {
         this._currentStateStorage.storeState(state);
@@ -68,6 +97,10 @@ var CasparCGState = (function () {
     /** */
     CasparCGState.prototype.getState = function (options) {
         if (options === void 0) { options = { full: true }; }
+        // needs to be initialised
+        if (!this.isInitialised) {
+            throw new Error("CasparCG State is not initialised");
+        }
         var currentState = this._currentStateStorage.fetchState();
         // return state without defaults added:
         if (!options.full) {
@@ -81,8 +114,13 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.prototype.applyCommands = function (commands) {
-        // iterates over commands and applies new state to current state
         var _this = this;
+        // buffer commands until we are initialised
+        if (!this.isInitialised) {
+            this.bufferedCommands = this.bufferedCommands.concat(commands);
+            return;
+        }
+        // iterates over commands and applies new state to current state
         var currentState = this._currentStateStorage.fetchState();
         var setMixerState = function (channel, command, attr, subValue) {
             var layer = _this.ensureLayer(channel, command.layer);
@@ -113,14 +151,13 @@ var CasparCGState = (function () {
                 channel.channelNo = command.channel;
                 currentState.channels[channel.channelNo + ''] = channel;
             }
-            var channelFPS = 50; // todo: change this
             var cmdName = command._commandName;
             switch (cmdName) {
                 case "PlayCommand":
                 case "LoadCommand":
                     layer = _this.ensureLayer(channel, command.layer);
                     var seek = command._objectParams['seek'];
-                    var playDeltaTime = (seek || 0) / channelFPS;
+                    var playDeltaTime = (seek || 0) / channel.fps;
                     if (command._objectParams['clip']) {
                         layer.content = 'media';
                         layer.playing = (cmdName == 'PlayCommand');
@@ -327,6 +364,10 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.prototype.getDiff = function (newState) {
+        // needs to be initialised
+        if (!this.isInitialised) {
+            throw new Error("CasparCG State is not initialised");
+        }
         var currentState = this._currentStateStorage.fetchState();
         return this.diffStates(currentState, newState);
     };
@@ -370,12 +411,15 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.prototype.diffStates = function (oldState, newState) {
+        var _this = this;
+        // needs to be initialised
+        if (!this.isInitialised) {
+            throw new Error("CasparCG State is not initialised");
+        }
         //console.log('diffStates -----------------------------');
         //console.log(newState)
-        var _this = this;
         var commands = [];
         var time = this._currentTimeFunction();
-        var channelFps = 50; // @todo: fix this, based on channel.videoMode
         var setTransition = function (options, channel, oldLayer, content) {
             channel;
             if (!options)
@@ -390,7 +434,7 @@ var CasparCGState = (function () {
                 }
                 if (transition) {
                     options['transition'] = transition.type;
-                    options['transitionDuration'] = Math.round(transition.duration * channelFps); // @todo: fix this, based on channel.videoMode
+                    options['transitionDuration'] = Math.round(transition.duration * channel.fps);
                     options['transitionEasing'] = transition.easing;
                     options['transitionDirection'] = transition.direction;
                 }
@@ -400,11 +444,9 @@ var CasparCGState = (function () {
         // ==============================================================================
         // Added things:
         _.each(newState.channels, function (channel, channelKey) {
-            // @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
-            // @todo IMPORTANT!!!!!! 50I = 25FPS!!!!!!!!!
-            var oldChannel = oldState.channels[channelKey + ''] || (new Channel);
+            var oldChannel = oldState.channels[channelKey + ''] || (new Channel());
             _.each(channel.layers, function (layer, layerKey) {
-                var oldLayer = oldChannel.layers[layerKey + ''] || (new Layer);
+                var oldLayer = oldChannel.layers[layerKey + ''] || (new Layer());
                 if (layer) {
                     /*console.log('new layer '+channelKey+'-'+layerKey);
                     console.log(layer)
@@ -436,7 +478,7 @@ var CasparCGState = (function () {
                             if (layer.playing) {
                                 cmd = new casparcg_connection_1.AMCP.PlayCommand(_.extend(options, {
                                     clip: layer.media.toString(),
-                                    seek: Math.max(0, Math.floor((timeSincePlay || 0) * channelFps)),
+                                    seek: Math.max(0, Math.floor((timeSincePlay || 0) * oldChannel.fps)),
                                     loop: !!layer.looping
                                 }));
                             }
@@ -448,7 +490,7 @@ var CasparCGState = (function () {
                                 else {
                                     cmd = new casparcg_connection_1.AMCP.LoadCommand(_.extend(options, {
                                         clip: layer.media.toString(),
-                                        seek: Math.max(0, Math.floor(timeSincePlay * channelFps)),
+                                        seek: Math.max(0, Math.floor(timeSincePlay * oldChannel.fps)),
                                         loop: !!layer.looping
                                     }));
                                 }
@@ -472,8 +514,6 @@ var CasparCGState = (function () {
                                     //channelLayout
                                     format: format,
                                 });
-                                console.log('-----------------');
-                                console.log(options);
                                 cmd = new casparcg_connection_1.AMCP.PlayDecklinkCommand(options);
                             }
                         }
@@ -571,7 +611,7 @@ var CasparCGState = (function () {
         // ==============================================================================
         // Removed things:
         _.each(oldState.channels, function (oldChannel, channelKey) {
-            var newChannel = newState.channels[channelKey] || (new Channel);
+            var newChannel = newState.channels[channelKey] || (new Channel());
             //console.log("oooooold", oldChannel.layers);
             /*if (!channel.layers.length) {
                 if (oldChannel.layers.length) {
@@ -586,7 +626,6 @@ var CasparCGState = (function () {
             } else {*/
             _.each(oldChannel.layers, function (oldLayer, layerKey) {
                 // @todo: foooooo
-                var channelFps = 50;
                 var newLayer = newChannel.layers[layerKey + ''] || (new Layer);
                 if (newLayer) {
                     if (!newLayer.content && oldLayer.content) {
@@ -598,7 +637,7 @@ var CasparCGState = (function () {
                                     layer: oldLayer.layerNo,
                                     clip: "empty",
                                     transition: oldLayer.media.outTransition.type,
-                                    transitionDuration: Math.round(+(oldLayer.media.outTransition.duration) * channelFps),
+                                    transitionDuration: Math.round(+(oldLayer.media.outTransition.duration) * oldChannel.fps),
                                     transitionEasing: oldLayer.media.outTransition.easing,
                                     transitionDirection: oldLayer.media.outTransition.direction
                                 });
@@ -634,6 +673,24 @@ var CasparCGState = (function () {
     CasparCGState.prototype.toString = function () {
         return JSON.stringify(this.getState({ full: true }));
     };
+    Object.defineProperty(CasparCGState.prototype, "isInitialised", {
+        /** */
+        get: function () {
+            return this._isInitialised;
+        },
+        /** */
+        set: function (initialised) {
+            if (this._isInitialised !== initialised) {
+                this._isInitialised = initialised;
+                if (this._isInitialised) {
+                    this.applyCommands(this.bufferedCommands);
+                    this.bufferedCommands = [];
+                }
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
     return CasparCGState;
 }());
 exports.CasparCGState = CasparCGState;

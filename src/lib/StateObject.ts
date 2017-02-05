@@ -23,6 +23,7 @@ export namespace StateObject {
 	export class Channel {
 		channelNo: number = 1;
 		videoMode: string | null; 	// @todo: string literal
+		fps: number;
 		layers: { [layer: string]: Layer} = {} //layers: Array<Layer> = [];
 	}
 
