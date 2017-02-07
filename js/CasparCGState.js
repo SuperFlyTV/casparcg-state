@@ -115,6 +115,7 @@ var CasparCGState = (function () {
     /** */
     CasparCGState.prototype.applyCommands = function (commands) {
         var _this = this;
+        console.log('applyCommands');
         // buffer commands until we are initialised
         if (!this.isInitialised) {
             this.bufferedCommands = this.bufferedCommands.concat(commands);
@@ -143,19 +144,21 @@ var CasparCGState = (function () {
             //console.log('state: applyCommand '+command._commandName);
             //console.log(command._objectParams);
             //console.log(i.additionalLayerState)
-            var channel = currentState.channels[command.channel + ''];
+            var channelNo = command._objectParams['channel'] || command.channel;
+            var layerNo = command._objectParams['layer'] || command.layer;
+            var channel = currentState.channels[channelNo + ''];
             var layer;
             if (!channel) {
                 // Create new empty channel:
                 channel = new Channel();
-                channel.channelNo = command.channel;
+                channel.channelNo = channelNo;
                 currentState.channels[channel.channelNo + ''] = channel;
             }
             var cmdName = command._commandName;
             switch (cmdName) {
                 case "PlayCommand":
                 case "LoadCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     var seek = command._objectParams['seek'];
                     var playDeltaTime = (seek || 0) / channel.fps;
                     if (command._objectParams['clip']) {
@@ -187,13 +190,13 @@ var CasparCGState = (function () {
                     }
                     break;
                 case "PauseCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     layer.playing = false;
                     layer.pauseTime = _this._currentTimeFunction();
                     break;
                 case "ClearCommand":
-                    if (command.layer > 0) {
-                        layer = _this.ensureLayer(channel, command.layer);
+                    if (layerNo > 0) {
+                        layer = _this.ensureLayer(channel, layerNo);
                         layer.next = null;
                     }
                     else {
@@ -202,7 +205,7 @@ var CasparCGState = (function () {
                     }
                 // no break;
                 case "StopCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     layer.playing = false;
                     layer.content = null;
                     layer.media = null;
@@ -210,7 +213,7 @@ var CasparCGState = (function () {
                     layer.pauseTime = 0;
                     break;
                 case "LoadbgCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     layer.next = new Next();
                     if (command._objectParams['clip']) {
                         layer.next.content = 'media';
@@ -222,7 +225,7 @@ var CasparCGState = (function () {
                     }
                     break;
                 case "CGAddCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     // Note: we don't support flashLayer for the moment
                     if (command._objectParams['templateName']) {
                         layer.content = 'template'; // @todo: string literal
@@ -243,25 +246,25 @@ var CasparCGState = (function () {
                     }
                     break;
                 case "CGUpdateCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     if (layer.content == 'template') {
                         layer.templateFcn = 'update';
                         layer.templateData = command._objectParams['data'] || null;
                     }
                     break;
                 case "CGPlayCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     layer.playing = true;
                     layer.templateFcn = 'play';
                     layer.templateData = null;
                     break;
                 case "CGStopCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     layer.templateFcn = 'stop';
                     layer.playing = false;
                     break;
                 case "CGInvokeCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     if (command._objectParams['method']) {
                         layer.templateFcn = 'invoke';
                         layer.templateData = { method: command._objectParams['method'] };
@@ -270,7 +273,7 @@ var CasparCGState = (function () {
                 case "CGRemoveCommand":
                 case "CGClearCommand":
                     // note: since we don't support flashlayers, CGRemoveCommand == CGClearCommand
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     // todo: what's the difference between this and StopCommand?
                     layer.playing = false;
                     layer.content = null;
@@ -280,7 +283,7 @@ var CasparCGState = (function () {
                     layer.templateData = null;
                     break;
                 case "PlayDecklinkCommand":
-                    layer = _this.ensureLayer(channel, command.layer);
+                    layer = _this.ensureLayer(channel, layerNo);
                     layer.content = 'input';
                     layer.media = 'decklink';
                     layer.input = {
@@ -334,6 +337,40 @@ var CasparCGState = (function () {
                     break;
                 case "MixerVolumeCommand":
                     setMixerState(channel, command, 'volume', 'volume');
+                    break;
+                /*
+
+                    ResumeCommand
+
+                    CallCommand
+                    SwapCommand
+                    AddCommand
+                    RemoveCommand
+                    SetCommand
+                    ChannelGridCommand
+
+                    bye
+                    kill
+                    restart
+                */
+                case "CustomCommand":
+                    // specials/temporary workaraounds:
+                    switch (command._objectParams['customCommand']) {
+                        case "route":
+                            layer = _this.ensureLayer(channel, layerNo);
+                            layer.content = 'route';
+                            layer.media = 'route';
+                            //let route:Object = <Object>co;
+                            var routeChannel = command._objectParams['routeChannel'];
+                            var routeLayer = command._objectParams['routeLayer'];
+                            layer.route = {
+                                channel: parseInt(routeChannel),
+                                layer: (routeLayer ? parseInt(routeLayer) : null)
+                            };
+                            layer.playing = true;
+                            layer.playTime = null; // playtime is irrelevant
+                            break;
+                    }
                     break;
             }
         });
@@ -416,8 +453,8 @@ var CasparCGState = (function () {
         if (!this.isInitialised) {
             throw new Error("CasparCG State is not initialised");
         }
-        //console.log('diffStates -----------------------------');
-        //console.log(newState)
+        console.log('diffStates -----------------------------');
+        console.log(newState);
         var commands = [];
         var time = this._currentTimeFunction();
         var setTransition = function (options, channel, oldLayer, content) {
@@ -434,7 +471,7 @@ var CasparCGState = (function () {
                 }
                 if (transition) {
                     options['transition'] = transition.type;
-                    options['transitionDuration'] = Math.round(transition.duration * channel.fps);
+                    options['transitionDuration'] = Math.round(transition.duration * (channel.fps || 50));
                     options['transitionEasing'] = transition.easing;
                     options['transitionDirection'] = transition.direction;
                 }
@@ -516,6 +553,30 @@ var CasparCGState = (function () {
                                 });
                                 cmd = new casparcg_connection_1.AMCP.PlayDecklinkCommand(options);
                             }
+                        }
+                        else if (layer.content == 'route' && layer.route) {
+                            /*
+                            options['transition'] 			= transition.type;
+                            options['transitionDuration'] 	= Math.round(transition.duration*(channel.fps||50));
+                            options['transitionEasing'] 	= transition.easing;
+                            options['transitionDirection'] 	= transition.direction;
+                            */
+                            console.log(options);
+                            var routeChannel = layer.route.channel;
+                            var routeLayer = layer.route.layer;
+                            _.extend(options, {
+                                routeChannel: routeChannel,
+                                routeLayer: routeLayer,
+                                command: ('PLAY ' + options.channel + '-' + options.layer +
+                                    ' route://' +
+                                    routeChannel +
+                                    (routeLayer ? '-' + routeLayer : '') +
+                                    (options.transition
+                                        ? (' ' + options.transition + ' ' + options.transitionDuration + ' ' + options.transitionEasing)
+                                        : '')),
+                                customCommand: 'route',
+                            });
+                            cmd = new casparcg_connection_1.AMCP.CustomCommand(options);
                         }
                         else {
                             if (oldLayer.content == 'media' || oldLayer.content == 'media') {

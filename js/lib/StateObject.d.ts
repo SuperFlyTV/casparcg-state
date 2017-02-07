@@ -33,6 +33,10 @@ export declare namespace StateObject {
             device: number;
             format: string;
         } | null;
+        route: {
+            channel: number;
+            layer: number | null;
+        } | null;
         templateType?: string;
         playing: boolean;
         looping: boolean;

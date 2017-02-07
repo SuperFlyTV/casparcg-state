@@ -40,6 +40,10 @@ export namespace StateObject {
 			format: string
 		} | null ;
 
+		route: {
+			channel: number,
+			layer: number | null
+		} | null ;
 
 		
 		templateType?: string;	// @todo: string literal 'flash', 'html'

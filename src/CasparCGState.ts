@@ -144,7 +144,6 @@ export class CasparCGState {
 
 	/** */
 	applyCommands(commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}>): void {
-
 		// buffer commands until we are initialised
 		if(!this.isInitialised) {
 			this.bufferedCommands = this.bufferedCommands.concat(commands);
@@ -181,17 +180,16 @@ export class CasparCGState {
 		commands.forEach((i) => {
 			let command: IAMCPCommandVO = i.cmd;
 			
-			//console.log('state: applyCommand '+command._commandName);
-			//console.log(command._objectParams);
-			//console.log(i.additionalLayerState)
 
+			let channelNo:number = <number> command._objectParams['channel'] || command.channel;
+			let layerNo:number = <number> command._objectParams['layer'] || command.layer;
 			
-			let channel: Channel | undefined = currentState.channels[command.channel+''];
+			let channel: Channel | undefined = currentState.channels[channelNo+''];
 			let layer: Layer | undefined;
 			if (!channel) {
 				// Create new empty channel:
 				channel = new Channel();
-				channel.channelNo = command.channel;
+				channel.channelNo = channelNo;
 
 				currentState.channels[channel.channelNo+''] = channel;
 
@@ -202,7 +200,7 @@ export class CasparCGState {
 			switch (cmdName) {
 				case "PlayCommand":
 				case "LoadCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 
 					let seek:number = <number>command._objectParams['seek'];
 
@@ -246,13 +244,13 @@ export class CasparCGState {
 
 					break;
 				case "PauseCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					layer.playing = false;
 					layer.pauseTime = this._currentTimeFunction();
 					break;
 				case "ClearCommand":
-					if (command.layer>0) {
-						layer = this.ensureLayer(channel, command.layer);
+					if (layerNo>0) {
+						layer = this.ensureLayer(channel, layerNo);
 						layer.next = null;
 					} else {
 						channel.layers = {};
@@ -261,7 +259,7 @@ export class CasparCGState {
 					}
 					// no break;
 				case "StopCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					layer.playing = false;
 					layer.content = null;
 					layer.media = null;
@@ -269,7 +267,7 @@ export class CasparCGState {
 					layer.pauseTime = 0;
 					break;
 				case "LoadbgCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					layer.next = new Next();
 					
 					if (command._objectParams['clip']) {
@@ -287,7 +285,7 @@ export class CasparCGState {
 
 					break;
 				case "CGAddCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 
 					// Note: we don't support flashLayer for the moment
 					if (command._objectParams['templateName']) {
@@ -313,26 +311,26 @@ export class CasparCGState {
 					}
 					break;
 				case "CGUpdateCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					if (layer.content == 'template') {
 						layer.templateFcn = 'update';
 						layer.templateData = command._objectParams['data'] || null;
 					}
 					break;
 				case "CGPlayCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					layer.playing = true;
 					layer.templateFcn = 'play';
 					layer.templateData = null;
 					break;
 				case "CGStopCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					layer.templateFcn = 'stop';
 					layer.playing = false;
 
 					break;
 				case "CGInvokeCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					if (command._objectParams['method']) {
 						layer.templateFcn = 'invoke';
 						layer.templateData = {method: command._objectParams['method'] };
@@ -342,7 +340,7 @@ export class CasparCGState {
 				case "CGRemoveCommand":
 				case "CGClearCommand":
 					// note: since we don't support flashlayers, CGRemoveCommand == CGClearCommand
-					layer = this.ensureLayer(channel, command.layer);
+					layer = this.ensureLayer(channel, layerNo);
 					// todo: what's the difference between this and StopCommand?
 					layer.playing = false;
 					layer.content = null;
@@ -353,7 +351,9 @@ export class CasparCGState {
 					break;
 
 				case "PlayDecklinkCommand":
-					layer = this.ensureLayer(channel, command.layer);
+					
+
+					layer = this.ensureLayer(channel, layerNo);
 
 					layer.content = 'input';
 
@@ -430,9 +430,39 @@ export class CasparCGState {
 					kill
 					restart
 				*/
+				case "CustomCommand":
+					// specials/temporary workaraounds:
+
+					switch (command._objectParams['customCommand']) {
+						case "route":
+							
+							layer = this.ensureLayer(channel, layerNo);
+							
+							layer.content = 'route';
+							layer.media = 'route'
+
+							//let route:Object = <Object>co;
+
+							let routeChannel:any 	= command._objectParams['routeChannel'];
+							
+							let routeLayer:any 		= command._objectParams['routeLayer'];
+							
+							layer.route = {
+								channel: 	parseInt(routeChannel),
+								layer: 		(routeLayer ? parseInt(routeLayer) : null)
+							};
+							
+							layer.playing = true;
+							layer.playTime = null; // playtime is irrelevant
+
+							break;
+						//
+					}
+					break;
+				//
 			}
 		});
-
+			
 		// Save new state:
 		this._currentStateStorage.storeState(currentState);
 	}
@@ -496,13 +526,7 @@ export class CasparCGState {
 						areSame = false;	
 					}
 
-					//if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
-						/*
-						console.log('not same:')
-						console.log(obj0[a])
-						console.log(obj1[a])
-						*/
-					//} 
+					
 				});	
 			}
 		} else {
@@ -545,7 +569,7 @@ export class CasparCGState {
 
 				if(transition ) {
 					options['transition'] 			= transition.type;
-					options['transitionDuration'] 	= Math.round(transition.duration*channel.fps);
+					options['transitionDuration'] 	= Math.round(transition.duration*(channel.fps||50));
 					options['transitionEasing'] 	= transition.easing;
 					options['transitionDirection'] 	= transition.direction;
 				}
@@ -589,6 +613,8 @@ export class CasparCGState {
 						
 						
 						setTransition(options,channel,oldLayer,layer.media);
+
+						
 
 						if (layer.content == 'media' && layer.media !== null) {
 
@@ -673,6 +699,36 @@ export class CasparCGState {
 								}));
 								*/
 							}
+						} else if (layer.content == 'route' && layer.route) {
+
+							
+
+							let routeChannel:any 	= layer.route.channel;
+							let routeLayer:any 		= layer.route.layer;
+
+							_.extend(options,{
+								routeChannel: 		routeChannel,
+								routeLayer: 		routeLayer,
+
+								command: (
+									'PLAY '+options.channel+'-'+options.layer+
+									' route://'+
+										routeChannel+
+										(routeLayer ? '-'+routeLayer : '')+
+									(
+										options.transition
+										? (' '+options.transition+' '+options.transitionDuration+' '+options.transitionEasing)
+										: ''
+									)
+								),
+
+								customCommand: 'route',
+							});
+
+							cmd = new AMCP.CustomCommand(options);
+
+
+
 
 						} else {
 							if (oldLayer.content == 'media' || oldLayer.content == 'media') {
@@ -794,7 +850,6 @@ export class CasparCGState {
 
 					
 
-					// console.log(cmd.serialize());
 					
 					var cmds:Array<any> = [];
 					if (cmd) cmds.push(cmd.serialize());
@@ -818,63 +873,50 @@ export class CasparCGState {
 		_.each(oldState.channels, (oldChannel,channelKey) => {
 			let newChannel = newState.channels[channelKey] || (new Channel());
 
-			//console.log("oooooold", oldChannel.layers);
 			
+			_.each(oldChannel.layers,(oldLayer,layerKey) => {
+				
+				let newLayer:Layer = newChannel.layers[layerKey+''] || (new Layer);
+				if (newLayer) {
 
-			/*if (!channel.layers.length) {
-				if (oldChannel.layers.length) {
-					console.log('clear channel '+channel.channelNo);
-					// ClearCommand:
-					let cmd = new AMCP.ClearCommand({
-						channel: channel.channelNo
-					});
+					
 
-					commands.push(cmd.serialize());
-				}
-			} else {*/
-				_.each(oldChannel.layers,(oldLayer,layerKey) => {
-					// @todo: foooooo
-					let newLayer:Layer = newChannel.layers[layerKey+''] || (new Layer);
-					if (newLayer) {
-
-						
-
-						if (!newLayer.content && oldLayer.content) {
-							let cmd;
-							if(typeof oldLayer.media === 'object'  && oldLayer.media !== null){
-								if(oldLayer.media.outTransition){
-									cmd = new AMCP.PlayCommand({
-										channel: oldChannel.channelNo,
-										layer: oldLayer.layerNo,
-										clip: "empty",
-										transition: oldLayer.media.outTransition.type,
-										transitionDuration: Math.round(+(oldLayer.media.outTransition.duration)*oldChannel.fps),
-										transitionEasing: oldLayer.media.outTransition.easing,
-										transitionDirection: oldLayer.media.outTransition.direction
-									});
-								}
-							}
-
-							if (!cmd) {
-								//console.log('clear layer ' + oldLayer.layerNo);
-								// ClearCommand:
-								cmd = new AMCP.ClearCommand({
+					if (!newLayer.content && oldLayer.content) {
+						let cmd;
+						if(typeof oldLayer.media === 'object'  && oldLayer.media !== null){
+							if(oldLayer.media.outTransition) {
+								cmd = new AMCP.PlayCommand({
 									channel: oldChannel.channelNo,
 									layer: oldLayer.layerNo,
-								});
-							}
-
-							if (cmd) {
-								commands.push({
-									cmds: [
-										cmd.serialize()
-									]
+									clip: "empty",
+									transition: oldLayer.media.outTransition.type,
+									transitionDuration: Math.round(+(oldLayer.media.outTransition.duration)*oldChannel.fps),
+									transitionEasing: oldLayer.media.outTransition.easing,
+									transitionDirection: oldLayer.media.outTransition.direction
 								});
 							}
 						}
+
+						if (!cmd) {
+							
+							// ClearCommand:
+							cmd = new AMCP.ClearCommand({
+								channel: oldChannel.channelNo,
+								layer: oldLayer.layerNo,
+							});
+						}
+
+						if (cmd) {
+							commands.push({
+								cmds: [
+									cmd.serialize()
+								]
+							});
+						}
 					}
-				});
-			//}
+				}
+			});
+			
 
 
 		});
