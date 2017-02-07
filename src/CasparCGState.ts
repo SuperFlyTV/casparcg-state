@@ -778,7 +778,7 @@ export class CasparCGState {
 									||
 									(!val0 && val1)
 								) {
-									areSame = true;
+									areSame = false;
 								}
 							}
 							return areSame;
@@ -791,7 +791,7 @@ export class CasparCGState {
 						
 
 
-
+						
 
 						if (!compareMixerValues(
 								layer,
@@ -804,10 +804,10 @@ export class CasparCGState {
 								)
 							)
 						) {
+							
 
 							if (_.has(layer.mixer,attr)) {
 
-								
 
 								let options:any = {};
 								options.channel = channel.channelNo;
@@ -816,6 +816,7 @@ export class CasparCGState {
 								setTransition(options,channel,oldLayer,layer.mixer[attr])
 
 								let o = Mixer.getValue(layer.mixer[attr]);
+
 
 								if (_.isArray(subValue)) {
 
@@ -826,12 +827,17 @@ export class CasparCGState {
 									options[subValue] = o;
 								}
 								additionalCmds.push(new Command(options));
+							} else {
+								// @todo: implement
+								// reset this mixer?
 							}
 						}
 					}
-
+					
 					if (!this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
-						
+
+
+
 						pushMixerCommand('anchor',AMCP.MixerAnchorCommand,['x','y']);
 						// blend
 						pushMixerCommand('brightness',AMCP.MixerBrightnessCommand,'brightness');

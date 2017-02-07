@@ -594,7 +594,7 @@ var CasparCGState = (function () {
                                 if ((val0 && !val1)
                                     ||
                                         (!val0 && val1)) {
-                                    areSame = true;
+                                    areSame = false;
                                 }
                             }
                             return areSame;
@@ -620,6 +620,8 @@ var CasparCGState = (function () {
                                     options_1[subValue] = o_2;
                                 }
                                 additionalCmds_1.push(new Command(options_1));
+                            }
+                            else {
                             }
                         }
                     };
