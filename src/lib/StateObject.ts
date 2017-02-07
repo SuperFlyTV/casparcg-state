@@ -49,6 +49,7 @@ export namespace StateObject {
 		templateType?: string;	// @todo: string literal 'flash', 'html'
 		playing: boolean;
 		looping: boolean;
+		seek: number; 	// start the clip xx seconds in
 		playTime: number | null; // timestamp when content started playing, (null == 'irrelevant')
 		pauseTime: number; // timestamp when content stopped playing (was paused)
 		duration: number;

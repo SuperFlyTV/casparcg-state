@@ -40,6 +40,7 @@ export declare namespace StateObject {
         templateType?: string;
         playing: boolean;
         looping: boolean;
+        seek: number;
         playTime: number | null;
         pauseTime: number;
         duration: number;

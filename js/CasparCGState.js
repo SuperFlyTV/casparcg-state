@@ -115,7 +115,6 @@ var CasparCGState = (function () {
     /** */
     CasparCGState.prototype.applyCommands = function (commands) {
         var _this = this;
-        console.log('applyCommands');
         // buffer commands until we are initialised
         if (!this.isInitialised) {
             this.bufferedCommands = this.bufferedCommands.concat(commands);
@@ -141,9 +140,6 @@ var CasparCGState = (function () {
         };
         commands.forEach(function (i) {
             var command = i.cmd;
-            //console.log('state: applyCommand '+command._commandName);
-            //console.log(command._objectParams);
-            //console.log(i.additionalLayerState)
             var channelNo = command._objectParams['channel'] || command.channel;
             var layerNo = command._objectParams['layer'] || command.layer;
             var channel = currentState.channels[channelNo + ''];
@@ -428,13 +424,6 @@ var CasparCGState = (function () {
                     if (getValue(obj0[a]) != getValue(obj1[a])) {
                         areSame = false;
                     }
-                    //if ((obj0[a] && obj0[a].valueOf()) != (obj1[a] && obj1[a].valueOf()) ) {
-                    /*
-                    console.log('not same:')
-                    console.log(obj0[a])
-                    console.log(obj1[a])
-                    */
-                    //} 
                 });
             }
         }
@@ -453,8 +442,8 @@ var CasparCGState = (function () {
         if (!this.isInitialised) {
             throw new Error("CasparCG State is not initialised");
         }
-        console.log('diffStates -----------------------------');
-        console.log(newState);
+        //console.log('diffStates -----------------------------');
+        //console.log(newState)
         var commands = [];
         var time = this._currentTimeFunction();
         var setTransition = function (options, channel, oldLayer, content) {
@@ -512,10 +501,14 @@ var CasparCGState = (function () {
                             if (_.isNull(layer.playTime)) {
                                 timeSincePlay = null;
                             }
+                            var seek = Math.max(0, Math.floor(((timeSincePlay || 0)
+                                +
+                                    (layer.seek || 0))
+                                * oldChannel.fps));
                             if (layer.playing) {
                                 cmd = new casparcg_connection_1.AMCP.PlayCommand(_.extend(options, {
                                     clip: layer.media.toString(),
-                                    seek: Math.max(0, Math.floor((timeSincePlay || 0) * oldChannel.fps)),
+                                    seek: seek,
                                     loop: !!layer.looping
                                 }));
                             }
@@ -527,7 +520,7 @@ var CasparCGState = (function () {
                                 else {
                                     cmd = new casparcg_connection_1.AMCP.LoadCommand(_.extend(options, {
                                         clip: layer.media.toString(),
-                                        seek: Math.max(0, Math.floor(timeSincePlay * oldChannel.fps)),
+                                        seek: seek,
                                         loop: !!layer.looping
                                     }));
                                 }
@@ -555,13 +548,6 @@ var CasparCGState = (function () {
                             }
                         }
                         else if (layer.content == 'route' && layer.route) {
-                            /*
-                            options['transition'] 			= transition.type;
-                            options['transitionDuration'] 	= Math.round(transition.duration*(channel.fps||50));
-                            options['transitionEasing'] 	= transition.easing;
-                            options['transitionDirection'] 	= transition.direction;
-                            */
-                            console.log(options);
                             var routeChannel = layer.route.channel;
                             var routeLayer = layer.route.layer;
                             _.extend(options, {
@@ -658,7 +644,6 @@ var CasparCGState = (function () {
                         pushMixerCommand('straightAlpha', casparcg_connection_1.AMCP.MixerStraightAlphaOutputCommand, 'state');
                         pushMixerCommand('volume', casparcg_connection_1.AMCP.MixerVolumeCommand, 'volume');
                     }
-                    // console.log(cmd.serialize());
                     var cmds = [];
                     if (cmd)
                         cmds.push(cmd.serialize());
@@ -673,20 +658,7 @@ var CasparCGState = (function () {
         // Removed things:
         _.each(oldState.channels, function (oldChannel, channelKey) {
             var newChannel = newState.channels[channelKey] || (new Channel());
-            //console.log("oooooold", oldChannel.layers);
-            /*if (!channel.layers.length) {
-                if (oldChannel.layers.length) {
-                    console.log('clear channel '+channel.channelNo);
-                    // ClearCommand:
-                    let cmd = new AMCP.ClearCommand({
-                        channel: channel.channelNo
-                    });
-
-                    commands.push(cmd.serialize());
-                }
-            } else {*/
             _.each(oldChannel.layers, function (oldLayer, layerKey) {
-                // @todo: foooooo
                 var newLayer = newChannel.layers[layerKey + ''] || (new Layer);
                 if (newLayer) {
                     if (!newLayer.content && oldLayer.content) {
@@ -705,7 +677,6 @@ var CasparCGState = (function () {
                             }
                         }
                         if (!cmd) {
-                            //console.log('clear layer ' + oldLayer.layerNo);
                             // ClearCommand:
                             cmd = new casparcg_connection_1.AMCP.ClearCommand({
                                 channel: oldChannel.channelNo,
@@ -722,7 +693,6 @@ var CasparCGState = (function () {
                     }
                 }
             });
-            //}
         });
         return commands;
     };
