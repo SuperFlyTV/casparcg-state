@@ -676,6 +676,7 @@ export class CasparCGState {
 
 							cmd = new AMCP.CGAddCommand(_.extend(options,{
 								templateName: layer.media.toString(),
+								flashLayer: 1,
 								playOnLoad: layer.playing,
 								data: layer.templateData||undefined
 							}));

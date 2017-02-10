@@ -529,6 +529,7 @@ var CasparCGState = (function () {
                         else if (layer.content == 'template' && layer.media !== null) {
                             cmd = new casparcg_connection_1.AMCP.CGAddCommand(_.extend(options, {
                                 templateName: layer.media.toString(),
+                                flashLayer: 1,
                                 playOnLoad: layer.playing,
                                 data: layer.templateData || undefined
                             }));
