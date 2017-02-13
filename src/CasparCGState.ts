@@ -161,20 +161,28 @@ export class CasparCGState {
 			if (!layer.mixer) layer.mixer = new Mixer();
 
 
-			
-			if (_.isArray(subValue)) {
-				let o = {}
-				_.each(subValue,(sv) => {
-					o[sv] = command[sv];
-				})
-				layer.mixer[attr] = new TransitionObject(o);
+			console.log('setMixerState '+attr);
+			console.log(subValue);
+			console.log(command)
 
-			} else if (_.isString(subValue)) {
-				let o:any = command[subValue];
-				layer.mixer[attr] = new TransitionObject(o);
+			if (command._objectParams['_defaultOptions']) {
+				// the command sent, contains "default parameters"
+				
+				delete layer.mixer[attr];
+			} else {
+
+				if (_.isArray(subValue)) {
+					let o = {}
+					_.each(subValue,(sv) => {
+						o[sv] = command._objectParams[sv];
+					})
+					layer.mixer[attr] = new TransitionObject(o);
+
+				} else if (_.isString(subValue)) {
+					let o:any = {value: command._objectParams[subValue]};
+					layer.mixer[attr] = new TransitionObject(o);
+				}
 			}
-
-
 		}
 
 		commands.forEach((i) => {
@@ -784,6 +792,18 @@ export class CasparCGState {
 							return areSame;
 						}
 
+						if (_.isObject(val0) || _.isObject(val1)) {
+							if (_.isObject(val0) && _.isObject(val1)) {
+								var omitAttrs = ['inTransition','changeTransition','outTransition'];
+
+								return _.isEqual(
+									_.omit(val0,omitAttrs),
+									_.omit(val1,omitAttrs)
+								);
+
+							} else return false;
+						}
+
 						return (val0 == val1);
 					}
 
@@ -791,7 +811,12 @@ export class CasparCGState {
 						
 
 
-						
+						if (attr == 'fill') {
+							console.log('pushMixerCommand '+attr);
+							console.log(oldLayer.mixer)
+							console.log(layer.mixer)
+							console.log(subValue)
+						}
 
 						if (!compareMixerValues(
 								layer,
@@ -804,19 +829,30 @@ export class CasparCGState {
 								)
 							)
 						) {
+
+							console.log('pushMixerCommand change: '+attr)
+							console.log(oldLayer.mixer)
+							console.log(Mixer.getValue(oldLayer.mixer[attr]));
+							console.log(layer.mixer)
+							console.log(Mixer.getValue(layer.mixer[attr]));
 							
 
-							if (_.has(layer.mixer,attr)) {
+							let options:any = {};
+							options.channel = channel.channelNo;
+							options.layer = layer.layerNo;
+							setTransition(options,channel,oldLayer,layer.mixer[attr]);
+
+							let o = Mixer.getValue(layer.mixer[attr]);
+
+							if (_.has(layer.mixer,attr) && !_.isUndefined(o)) {
 
 
-								let options:any = {};
-								options.channel = channel.channelNo;
-								options.layer = layer.layerNo;
+								
 
-								setTransition(options,channel,oldLayer,layer.mixer[attr])
-
-								let o = Mixer.getValue(layer.mixer[attr]);
-
+								
+								console.log(attr);
+								console.log(o);
+								console.log(subValue);
 
 								if (_.isArray(subValue)) {
 
@@ -824,17 +860,39 @@ export class CasparCGState {
 										options[sv] = o[sv];
 									});
 								} else if (_.isString(subValue)) {
-									options[subValue] = o;
+									options[subValue] = o.value;
 								}
 								additionalCmds.push(new Command(options));
 							} else {
 								// @todo: implement
 								// reset this mixer?
+								// temporary workaround, default values
+
+								var defaultValue:any = Mixer.getDefaultValues(attr);
+								if (_.isObject(defaultValue)) {
+									_.extend(options,defaultValue);
+								} else {
+
+									options[attr] = defaultValue;
+
+									/*_.extend(options,{
+										value: 
+									});*/
+								}
+
+								console.log('defaultValues')
+								console.log(options)
+
+								options._defaultOptions = true;	// this is used in ApplyCommands to set state to "default"
+
+								additionalCmds.push(new Command(options));
+
+
 							}
 						}
 					}
 					
-					if (!this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
+					//if (!this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
 
 
 
@@ -857,7 +915,7 @@ export class CasparCGState {
 						pushMixerCommand('saturation',AMCP.MixerSaturationCommand,'saturation');
 						pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'state');
 						pushMixerCommand('volume',AMCP.MixerVolumeCommand,'volume');
-					}
+					//}
 
 
 					

@@ -69,6 +69,84 @@ export namespace StateObject {
 			return ['anchor','brightness','clip','contrast','crop','fill','opacity','perspective','rotation','saturation','straightAlpha','volume'];
 		};
 
+		public static getDefaultValues(attr:string):Object|number|boolean|null {
+			// this is a temporary function, to replaced by some logic from ccg-connection
+			switch (attr) {
+				
+				case 'anchor':
+					return {
+						x:0, 
+						y:0
+					};
+				// blend?: CCG_conn.Enum.BlendMode | TransitionObject;
+				case 'brightness':
+					return 1;
+				/*case chroma':
+					return {
+						keyer:CCG_conn.Enum.Chroma,
+						threshold:number,
+						softness: number,
+						spill: number
+						
+					};
+					*/
+				case 'clip':
+					return {
+						x:0, 
+						y:0, 
+						width:1, 
+						height:1 
+					};
+				case 'contrast':
+					return 1;
+				case 'crop':
+					return {
+						left:0, 
+						top:0, 
+						right:0, 
+						bottom:0 
+					};
+				case 'fill':
+					return {
+						x:0, 
+						y:0, 
+						xScale:1, 
+						yScale:1 
+					};
+				// grid
+				// keyer
+				// levels
+				// mastervolume
+				// mipmap
+				case 'opacity':
+					return 1
+				case 'perspective':
+					return {
+						topLeftX: 0, 
+						topLeftY: 0, 
+						topRightX: 1, 
+						topRightY: 0, 
+						bottomRightX: 1, 
+						bottomRightY: 1, 
+						bottmLeftX: 0, 
+						bottomLeftY: 1
+					};
+				case 'rotation':
+					return 0;
+				case 'saturation':
+					return 1;
+				case 'straightAlpha':
+					return false;
+				case 'volume':
+					return 1;
+				
+				default:
+					// code...
+					break;
+			}
+			return null;
+		};
+
 		anchor?: {x:number, y:number } | TransitionObject;
 		// blend?: CCG_conn.Enum.BlendMode | TransitionObject;
 		brightness?: number | TransitionObject;
