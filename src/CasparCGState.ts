@@ -304,7 +304,7 @@ export class CasparCGState {
 						layer.media = <string>command._objectParams['templateName'];
 						//layer.templateType // we don't know if it's flash or html 
 					
-						layer.playTime = this._currentTimeFunction();
+						// layer.playTime = this._currentTimeFunction();
 						
 						if (command._objectParams['playOnLoad']) {
 							layer.playing = true;
@@ -355,7 +355,7 @@ export class CasparCGState {
 					layer.playing = false;
 					layer.content = null;
 					layer.media = null;
-					layer.playTime = 0;
+					// layer.playTime = 0;
 					layer.pauseTime = 0;
 					layer.templateData = null;
 					break;

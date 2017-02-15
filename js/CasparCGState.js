@@ -238,7 +238,7 @@ var CasparCGState = (function () {
                         layer.content = 'template'; // @todo: string literal
                         layer.media = command._objectParams['templateName'];
                         //layer.templateType // we don't know if it's flash or html 
-                        layer.playTime = _this._currentTimeFunction();
+                        // layer.playTime = this._currentTimeFunction();
                         if (command._objectParams['playOnLoad']) {
                             layer.playing = true;
                             layer.templateFcn = 'play';
@@ -285,7 +285,7 @@ var CasparCGState = (function () {
                     layer.playing = false;
                     layer.content = null;
                     layer.media = null;
-                    layer.playTime = 0;
+                    // layer.playTime = 0;
                     layer.pauseTime = 0;
                     layer.templateData = null;
                     break;
