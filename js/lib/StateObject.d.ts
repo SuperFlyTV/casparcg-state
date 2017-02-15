@@ -53,6 +53,10 @@ export declare namespace StateObject {
     class Mixer {
         static getValue(val: any): any;
         static supportedAttributes(): Array<string>;
+        static getDefaultValues(attr: string): Object | number | boolean | null;
+        inTransition: Object;
+        changeTransition: Object;
+        outTransition: Object;
         anchor?: {
             x: number;
             y: number;

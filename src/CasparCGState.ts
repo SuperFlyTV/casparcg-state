@@ -161,9 +161,11 @@ export class CasparCGState {
 			if (!layer.mixer) layer.mixer = new Mixer();
 
 
+			/*
 			console.log('setMixerState '+attr);
 			console.log(subValue);
 			console.log(command)
+			*/
 
 			if (command._objectParams['_defaultOptions']) {
 				// the command sent, contains "default parameters"
@@ -596,11 +598,13 @@ export class CasparCGState {
 
 				if (layer) {
 
-					/*console.log('new layer '+channelKey+'-'+layerKey);
+					/*
+					console.log('new layer '+channelKey+'-'+layerKey);
 					console.log(layer)
 					console.log('old layer');
 					console.log(oldLayer)
 					*/
+					
 					let cmd;
 					let additionalCmds:Array<any> = [];
 
@@ -812,12 +816,12 @@ export class CasparCGState {
 						
 
 
-						if (attr == 'fill') {
+						/*if (attr == 'fill') {
 							console.log('pushMixerCommand '+attr);
 							console.log(oldLayer.mixer)
 							console.log(layer.mixer)
 							console.log(subValue)
-						}
+						}*/
 
 						if (!compareMixerValues(
 								layer,
@@ -831,29 +835,30 @@ export class CasparCGState {
 							)
 						) {
 
+							/*
 							console.log('pushMixerCommand change: '+attr)
 							console.log(oldLayer.mixer)
 							console.log(Mixer.getValue(oldLayer.mixer[attr]));
 							console.log(layer.mixer)
 							console.log(Mixer.getValue(layer.mixer[attr]));
-							
+							*/
 
 							let options:any = {};
 							options.channel = channel.channelNo;
-							options.layer = layer.layerNo;
-							setTransition(options,channel,oldLayer,layer.mixer[attr]);
+							options.layer 	= layer.layerNo;
+							
+							//setTransition(options,channel,oldLayer,layer.mixer[attr]);
+							setTransition(options,channel,oldLayer,layer.mixer);
 
 							let o = Mixer.getValue(layer.mixer[attr]);
 
 							if (_.has(layer.mixer,attr) && !_.isUndefined(o)) {
-
-
 								
-
-								
+								/*
 								console.log(attr);
 								console.log(o);
 								console.log(subValue);
+								*/
 
 								if (_.isArray(subValue)) {
 
@@ -881,8 +886,10 @@ export class CasparCGState {
 									});*/
 								}
 
+								/*
 								console.log('defaultValues')
 								console.log(options)
+								*/
 
 								options._defaultOptions = true;	// this is used in ApplyCommands to set state to "default"
 

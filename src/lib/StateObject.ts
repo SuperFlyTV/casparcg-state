@@ -147,6 +147,10 @@ export namespace StateObject {
 			return null;
 		};
 
+		inTransition:Object;
+		changeTransition:Object;
+		outTransition:Object;
+
 		anchor?: {x:number, y:number } | TransitionObject;
 		// blend?: CCG_conn.Enum.BlendMode | TransitionObject;
 		brightness?: number | TransitionObject;
