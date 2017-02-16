@@ -126,16 +126,27 @@ var CasparCGState = (function () {
             var layer = _this.ensureLayer(channel, command.layer);
             if (!layer.mixer)
                 layer.mixer = new Mixer();
-            if (_.isArray(subValue)) {
-                var o_1 = {};
-                _.each(subValue, function (sv) {
-                    o_1[sv] = command[sv];
-                });
-                layer.mixer[attr] = new TransitionObject(o_1);
+            /*
+            console.log('setMixerState '+attr);
+            console.log(subValue);
+            console.log(command)
+            */
+            if (command._objectParams['_defaultOptions']) {
+                // the command sent, contains "default parameters"
+                delete layer.mixer[attr];
             }
-            else if (_.isString(subValue)) {
-                var o = command[subValue];
-                layer.mixer[attr] = new TransitionObject(o);
+            else {
+                if (_.isArray(subValue)) {
+                    var o_1 = {};
+                    _.each(subValue, function (sv) {
+                        o_1[sv] = command._objectParams[sv];
+                    });
+                    layer.mixer[attr] = new TransitionObject(o_1);
+                }
+                else if (_.isString(subValue)) {
+                    var o = { value: command._objectParams[subValue] };
+                    layer.mixer[attr] = new TransitionObject(o);
+                }
             }
         };
         commands.forEach(function (i) {
@@ -227,7 +238,7 @@ var CasparCGState = (function () {
                         layer.content = 'template'; // @todo: string literal
                         layer.media = command._objectParams['templateName'];
                         //layer.templateType // we don't know if it's flash or html 
-                        layer.playTime = _this._currentTimeFunction();
+                        // layer.playTime = this._currentTimeFunction();
                         if (command._objectParams['playOnLoad']) {
                             layer.playing = true;
                             layer.templateFcn = 'play';
@@ -274,7 +285,7 @@ var CasparCGState = (function () {
                     layer.playing = false;
                     layer.content = null;
                     layer.media = null;
-                    layer.playTime = 0;
+                    // layer.playTime = 0;
                     layer.pauseTime = 0;
                     layer.templateData = null;
                     break;
@@ -474,7 +485,8 @@ var CasparCGState = (function () {
             _.each(channel.layers, function (layer, layerKey) {
                 var oldLayer = oldChannel.layers[layerKey + ''] || (new Layer());
                 if (layer) {
-                    /*console.log('new layer '+channelKey+'-'+layerKey);
+                    /*
+                    console.log('new layer '+channelKey+'-'+layerKey);
                     console.log(layer)
                     console.log('old layer');
                     console.log(oldLayer)
@@ -600,53 +612,96 @@ var CasparCGState = (function () {
                             }
                             return areSame;
                         }
+                        if (_.isObject(val0) || _.isObject(val1)) {
+                            if (_.isObject(val0) && _.isObject(val1)) {
+                                var omitAttrs = ['inTransition', 'changeTransition', 'outTransition'];
+                                return _.isEqual(_.omit(val0, omitAttrs), _.omit(val1, omitAttrs));
+                            }
+                            else
+                                return false;
+                        }
                         return (val0 == val1);
                     };
                     var pushMixerCommand = function (attr, Command, subValue) {
+                        /*if (attr == 'fill') {
+                            console.log('pushMixerCommand '+attr);
+                            console.log(oldLayer.mixer)
+                            console.log(layer.mixer)
+                            console.log(subValue)
+                        }*/
                         if (!compareMixerValues_1(layer, oldLayer, attr, (_.isArray(subValue)
                             ? subValue
                             : undefined))) {
-                            if (_.has(layer.mixer, attr)) {
-                                var options_1 = {};
-                                options_1.channel = channel.channelNo;
-                                options_1.layer = layer.layerNo;
-                                setTransition(options_1, channel, oldLayer, layer.mixer[attr]);
-                                var o_2 = Mixer.getValue(layer.mixer[attr]);
+                            /*
+                            console.log('pushMixerCommand change: '+attr)
+                            console.log(oldLayer.mixer)
+                            console.log(Mixer.getValue(oldLayer.mixer[attr]));
+                            console.log(layer.mixer)
+                            console.log(Mixer.getValue(layer.mixer[attr]));
+                            */
+                            var options_1 = {};
+                            options_1.channel = channel.channelNo;
+                            options_1.layer = layer.layerNo;
+                            //setTransition(options,channel,oldLayer,layer.mixer[attr]);
+                            setTransition(options_1, channel, oldLayer, layer.mixer);
+                            var o_2 = Mixer.getValue(layer.mixer[attr]);
+                            if (_.has(layer.mixer, attr) && !_.isUndefined(o_2)) {
+                                /*
+                                console.log(attr);
+                                console.log(o);
+                                console.log(subValue);
+                                */
                                 if (_.isArray(subValue)) {
                                     _.each(subValue, function (sv) {
                                         options_1[sv] = o_2[sv];
                                     });
                                 }
                                 else if (_.isString(subValue)) {
-                                    options_1[subValue] = o_2;
+                                    options_1[subValue] = o_2.value;
                                 }
                                 additionalCmds_1.push(new Command(options_1));
                             }
                             else {
+                                // @todo: implement
+                                // reset this mixer?
+                                // temporary workaround, default values
+                                var defaultValue = Mixer.getDefaultValues(attr);
+                                if (_.isObject(defaultValue)) {
+                                    _.extend(options_1, defaultValue);
+                                }
+                                else {
+                                    options_1[attr] = defaultValue;
+                                }
+                                /*
+                                console.log('defaultValues')
+                                console.log(options)
+                                */
+                                options_1._defaultOptions = true; // this is used in ApplyCommands to set state to "default"
+                                additionalCmds_1.push(new Command(options_1));
                             }
                         }
                     };
-                    if (!_this.compareAttrs(layer.mixer, oldLayer.mixer, Mixer.supportedAttributes())) {
-                        pushMixerCommand('anchor', casparcg_connection_1.AMCP.MixerAnchorCommand, ['x', 'y']);
-                        // blend
-                        pushMixerCommand('brightness', casparcg_connection_1.AMCP.MixerBrightnessCommand, 'brightness');
-                        // chroma
-                        pushMixerCommand('clip', casparcg_connection_1.AMCP.MixerClipCommand, ['x', 'y', 'width', 'height']);
-                        pushMixerCommand('contrast', casparcg_connection_1.AMCP.MixerContrastCommand, 'contrast');
-                        pushMixerCommand('crop', casparcg_connection_1.AMCP.MixerCropCommand, ['left', 'top', 'right', 'bottom']);
-                        pushMixerCommand('fill', casparcg_connection_1.AMCP.MixerFillCommand, ['x', 'y', 'xScale', 'yScale']);
-                        // grid
-                        // keyer
-                        // levels
-                        // mastervolume
-                        // mipmap
-                        pushMixerCommand('opacity', casparcg_connection_1.AMCP.MixerOpacityCommand, 'opacity');
-                        pushMixerCommand('perspective', casparcg_connection_1.AMCP.MixerPerspectiveCommand, ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottmLeftX', 'bottomLeftY']);
-                        pushMixerCommand('rotation', casparcg_connection_1.AMCP.MixerRotationCommand, 'rotation');
-                        pushMixerCommand('saturation', casparcg_connection_1.AMCP.MixerSaturationCommand, 'saturation');
-                        pushMixerCommand('straightAlpha', casparcg_connection_1.AMCP.MixerStraightAlphaOutputCommand, 'state');
-                        pushMixerCommand('volume', casparcg_connection_1.AMCP.MixerVolumeCommand, 'volume');
-                    }
+                    //if (!this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
+                    pushMixerCommand('anchor', casparcg_connection_1.AMCP.MixerAnchorCommand, ['x', 'y']);
+                    // blend
+                    pushMixerCommand('brightness', casparcg_connection_1.AMCP.MixerBrightnessCommand, 'brightness');
+                    // chroma
+                    pushMixerCommand('clip', casparcg_connection_1.AMCP.MixerClipCommand, ['x', 'y', 'width', 'height']);
+                    pushMixerCommand('contrast', casparcg_connection_1.AMCP.MixerContrastCommand, 'contrast');
+                    pushMixerCommand('crop', casparcg_connection_1.AMCP.MixerCropCommand, ['left', 'top', 'right', 'bottom']);
+                    pushMixerCommand('fill', casparcg_connection_1.AMCP.MixerFillCommand, ['x', 'y', 'xScale', 'yScale']);
+                    // grid
+                    // keyer
+                    // levels
+                    // mastervolume
+                    // mipmap
+                    pushMixerCommand('opacity', casparcg_connection_1.AMCP.MixerOpacityCommand, 'opacity');
+                    pushMixerCommand('perspective', casparcg_connection_1.AMCP.MixerPerspectiveCommand, ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottmLeftX', 'bottomLeftY']);
+                    pushMixerCommand('rotation', casparcg_connection_1.AMCP.MixerRotationCommand, 'rotation');
+                    pushMixerCommand('saturation', casparcg_connection_1.AMCP.MixerSaturationCommand, 'saturation');
+                    pushMixerCommand('straightAlpha', casparcg_connection_1.AMCP.MixerStraightAlphaOutputCommand, 'state');
+                    pushMixerCommand('volume', casparcg_connection_1.AMCP.MixerVolumeCommand, 'volume');
+                    //}
                     var cmds = [];
                     if (cmd)
                         cmds.push(cmd.serialize());
