@@ -8,7 +8,9 @@
     "gulp": "gulp",
     "build": "gulp build",
     "cleanbuild": "gulp clean && gulp build",
-    "clean": "gulp clean"
+    "clean": "gulp clean",
+    "link": "npm link casparcg-connection",
+    "unlink": "npm unlink casparcg-connection"
   },
   "repository": {
     "type": "git",
