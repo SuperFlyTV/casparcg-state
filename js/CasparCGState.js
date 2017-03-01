@@ -548,8 +548,8 @@ var CasparCGState = (function () {
                         }
                         else if (layer.content == 'input' && layer.media !== null) {
                             var inputType = (layer.input && layer.media.toString()) || 'decklink';
-                            var device = (layer.input && layer.input.device) || 1;
-                            var format = (layer.input && layer.input.format) || '720p5000'; // todo: the default value should be the channel format
+                            var device = (layer.input && layer.input.device);
+                            var format = (layer.input && layer.input.format); // todo: the default value should be the channel format
                             if (inputType == 'decklink') {
                                 _.extend(options, {
                                     device: device,
