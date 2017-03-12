@@ -696,7 +696,7 @@ export class CasparCGState {
 						} else if (layer.content == 'input' && layer.media !== null) {
 
 							
-							let inputType:string 	= (layer.input && layer.media.toString()) || 'decklink';
+							let inputType:string 	= (layer.input && layer.media && layer.media.toString()) || 'decklink';
 							let device:number|null 		= (layer.input && layer.input.device) ;
 							let format:string|null 		= (layer.input && layer.input.format) ; // todo: the default value should be the channel format
 
