@@ -547,7 +547,7 @@ var CasparCGState = (function () {
                             }));
                         }
                         else if (layer.content == 'input' && layer.media !== null) {
-                            var inputType = (layer.input && layer.media.toString()) || 'decklink';
+                            var inputType = (layer.input && layer.media && layer.media.toString()) || 'decklink';
                             var device = (layer.input && layer.input.device);
                             var format = (layer.input && layer.input.format); // todo: the default value should be the channel format
                             if (inputType == 'decklink') {
