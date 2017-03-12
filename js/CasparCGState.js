@@ -144,7 +144,8 @@ var CasparCGState = (function () {
                     layer.mixer[attr] = new TransitionObject(o_1);
                 }
                 else if (_.isString(subValue)) {
-                    var o = { value: command._objectParams[subValue] };
+                    //let o:any = {value: command._objectParams[subValue]};
+                    var o = command._objectParams[subValue];
                     layer.mixer[attr] = new TransitionObject(o);
                 }
             }
@@ -659,7 +660,7 @@ var CasparCGState = (function () {
                                 else if (_.isString(subValue)) {
                                     //options[subValue] = o.value;
                                     if (_.isObject(o_2)) {
-                                        options_1[subValue] = o_2.value;
+                                        options_1[subValue] = o_2._value;
                                     }
                                     else {
                                         options_1[subValue] = o_2;

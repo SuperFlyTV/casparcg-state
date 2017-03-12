@@ -181,7 +181,8 @@ export class CasparCGState {
 					layer.mixer[attr] = new TransitionObject(o);
 
 				} else if (_.isString(subValue)) {
-					let o:any = {value: command._objectParams[subValue]};
+					//let o:any = {value: command._objectParams[subValue]};
+					let o:any = command._objectParams[subValue];
 					layer.mixer[attr] = new TransitionObject(o);
 				}
 			}
@@ -868,7 +869,7 @@ export class CasparCGState {
 								} else if (_.isString(subValue)) {
 									//options[subValue] = o.value;
 									if (_.isObject(o)) {
-										options[subValue] = o.value;
+										options[subValue] = o._value;
 									} else {
 										options[subValue] = o;
 									}
