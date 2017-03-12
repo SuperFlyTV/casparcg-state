@@ -46,7 +46,7 @@ export namespace StateObject {
 		} | null ;
 
 		
-		templateType?: string;	// @todo: string literal 'flash', 'html'
+		
 		playing: boolean;
 		looping: boolean;
 		seek: number; 	// start the clip xx seconds in
@@ -55,8 +55,11 @@ export namespace StateObject {
 		duration: number;
 		next: Next | null;
 		mixer: Mixer;
+		
+		templateType?: string;	// @todo: string literal 'flash', 'html'
 		templateFcn: string; // 'play', 'update', 'stop' or else (invoke)
 		templateData: Object | null;
+		cgStop?: boolean
 	}
 
 	/** */

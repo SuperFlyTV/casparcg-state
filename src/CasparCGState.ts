@@ -983,6 +983,16 @@ export class CasparCGState {
 							}
 						}
 
+
+						if (!cmd) {
+							if (oldLayer.content == 'template' && oldLayer.cgStop ) {
+								cmd = new AMCP.CGStopCommand({
+									channel: oldChannel.channelNo,
+									layer: oldLayer.layerNo,
+									flashLayer: 1,
+								});
+							}
+						}
 						if (!cmd) {
 							
 							// ClearCommand:

@@ -742,6 +742,15 @@ var CasparCGState = (function () {
                             }
                         }
                         if (!cmd) {
+                            if (oldLayer.content == 'template' && oldLayer.cgStop) {
+                                cmd = new casparcg_connection_1.AMCP.CGStopCommand({
+                                    channel: oldChannel.channelNo,
+                                    layer: oldLayer.layerNo,
+                                    flashLayer: 1,
+                                });
+                            }
+                        }
+                        if (!cmd) {
                             // ClearCommand:
                             cmd = new casparcg_connection_1.AMCP.ClearCommand({
                                 channel: oldChannel.channelNo,

@@ -37,7 +37,6 @@ export declare namespace StateObject {
             channel: number;
             layer: number | null;
         } | null;
-        templateType?: string;
         playing: boolean;
         looping: boolean;
         seek: number;
@@ -46,8 +45,10 @@ export declare namespace StateObject {
         duration: number;
         next: Next | null;
         mixer: Mixer;
+        templateType?: string;
         templateFcn: string;
         templateData: Object | null;
+        cgStop?: boolean;
     }
     /** */
     class Mixer {
