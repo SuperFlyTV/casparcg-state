@@ -657,7 +657,13 @@ var CasparCGState = (function () {
                                     });
                                 }
                                 else if (_.isString(subValue)) {
-                                    options_1[subValue] = o_2.value;
+                                    //options[subValue] = o.value;
+                                    if (_.isObject(o_2)) {
+                                        options_1[subValue] = o_2.value;
+                                    }
+                                    else {
+                                        options_1[subValue] = o_2;
+                                    }
                                 }
                                 additionalCmds_1.push(new Command(options_1));
                             }

@@ -866,7 +866,12 @@ export class CasparCGState {
 										options[sv] = o[sv];
 									});
 								} else if (_.isString(subValue)) {
-									options[subValue] = o.value;
+									//options[subValue] = o.value;
+									if (_.isObject(o)) {
+										options[subValue] = o.value;
+									} else {
+										options[subValue] = o;
+									}
 								}
 								additionalCmds.push(new Command(options));
 							} else {
