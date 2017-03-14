@@ -152,8 +152,8 @@ var CasparCGState = (function () {
         };
         commands.forEach(function (i) {
             var command = i.cmd;
-            var channelNo = command._objectParams['channel'] || command.channel;
-            var layerNo = command._objectParams['layer'] || command.layer;
+            var channelNo = (command._objectParams || {})['channel'] || command.channel;
+            var layerNo = (command._objectParams || {})['layer'] || command.layer;
             var channel = currentState.channels[channelNo + ''];
             var layer;
             if (!channel) {

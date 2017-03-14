@@ -196,8 +196,8 @@ export class CasparCGState {
 			let command: IAMCPCommandVO = i.cmd;
 			
 
-			let channelNo:number = <number> command._objectParams['channel'] || command.channel;
-			let layerNo:number = <number> command._objectParams['layer'] || command.layer;
+			let channelNo:number = <number> (command._objectParams||{})['channel'] || command.channel;
+			let layerNo:number = <number> 	(command._objectParams||{})['layer'] || command.layer;
 			
 			let channel: Channel | undefined = currentState.channels[channelNo+''];
 			let layer: Layer | undefined;
