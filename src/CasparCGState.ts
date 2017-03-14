@@ -769,18 +769,20 @@ export class CasparCGState {
 
 							if (fcn && _.isFunction(fcn)) {
 
-								fcn(layer,layer.executeData);
+								var returnValue = fcn(layer,layer.executeData);
 
 
-								
+								if (!returnValue !== true) {
+									
+									// save state:
+									let layer0 = this.ensureLayer(oldChannel, layer.layerNo);
 
-								let layer0 = this.ensureLayer(oldChannel, layer.layerNo);
+									layer0.content 	= layer.content;
+									layer0.media 		= layer.media;
+									layer0.playing 	= layer.playing;
+									layer0.playTime 	= layer.playTime;
+								}
 
-								// save state:
-								layer0.content 	= layer.content;
-								layer0.media 		= layer.media;
-								layer0.playing 	= layer.playing;
-								layer0.playTime 	= layer.playTime;
 
 							}
 

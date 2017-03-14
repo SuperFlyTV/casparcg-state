@@ -588,13 +588,15 @@ var CasparCGState = (function () {
                         else if (layer.content == 'function' && layer.media && layer.executeFcn) {
                             var fcn = (_this._externalFunctions || {})[layer.executeFcn];
                             if (fcn && _.isFunction(fcn)) {
-                                fcn(layer, layer.executeData);
-                                var layer0 = _this.ensureLayer(oldChannel, layer.layerNo);
-                                // save state:
-                                layer0.content = layer.content;
-                                layer0.media = layer.media;
-                                layer0.playing = layer.playing;
-                                layer0.playTime = layer.playTime;
+                                var returnValue = fcn(layer, layer.executeData);
+                                if (!returnValue !== true) {
+                                    // save state:
+                                    var layer0 = _this.ensureLayer(oldChannel, layer.layerNo);
+                                    layer0.content = layer.content;
+                                    layer0.media = layer.media;
+                                    layer0.playing = layer.playing;
+                                    layer0.playTime = layer.playTime;
+                                }
                             }
                         }
                         else {
