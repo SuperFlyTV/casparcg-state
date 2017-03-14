@@ -580,6 +580,17 @@ var CasparCGState = (function () {
                             });
                             cmd = new casparcg_connection_1.AMCP.CustomCommand(options);
                         }
+                        else if (layer.content == 'function' && layer.media && layer.executeFcn) {
+                            if (_.isFunction(layer.executeFcn)) {
+                                layer.executeFcn(layer, layer.executeData);
+                                var layer0 = _this.ensureLayer(oldChannel, layer.layerNo);
+                                // save state:
+                                layer0.content = layer.content;
+                                layer0.media = layer.media;
+                                layer0.playing = layer.playing;
+                                layer0.playTime = layer.playTime;
+                            }
+                        }
                         else {
                             if (oldLayer.content == 'media' || oldLayer.content == 'media') {
                                 cmd = new casparcg_connection_1.AMCP.StopCommand(options);

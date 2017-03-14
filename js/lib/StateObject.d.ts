@@ -49,6 +49,8 @@ export declare namespace StateObject {
         templateFcn: string;
         templateData: Object | null;
         cgStop?: boolean;
+        executeFcn?: (layer: Object, executeData: any) => void;
+        executeData?: any;
     }
     /** */
     class Mixer {

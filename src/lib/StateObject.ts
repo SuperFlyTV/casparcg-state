@@ -59,7 +59,10 @@ export namespace StateObject {
 		templateType?: string;	// @todo: string literal 'flash', 'html'
 		templateFcn: string; // 'play', 'update', 'stop' or else (invoke)
 		templateData: Object | null;
-		cgStop?: boolean
+		cgStop?: boolean;
+
+		executeFcn?: (layer:Object,executeData:any) => void;
+		executeData?: any;
 	}
 
 	/** */

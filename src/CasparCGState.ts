@@ -753,7 +753,24 @@ export class CasparCGState {
 							cmd = new AMCP.CustomCommand(options);
 
 
+						} else if (layer.content == 'function' && layer.media && layer.executeFcn) {
 
+							if (_.isFunction(layer.executeFcn)) {
+
+								layer.executeFcn(layer,layer.executeData);
+
+
+								
+
+								let layer0 = this.ensureLayer(oldChannel, layer.layerNo);
+
+								// save state:
+								layer0.content 	= layer.content;
+								layer0.media 		= layer.media;
+								layer0.playing 	= layer.playing;
+								layer0.playTime 	= layer.playTime;
+
+							}
 
 						} else {
 							if (oldLayer.content == 'media' || oldLayer.content == 'media') {
