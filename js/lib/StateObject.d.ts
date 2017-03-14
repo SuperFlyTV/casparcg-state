@@ -49,7 +49,7 @@ export declare namespace StateObject {
         templateFcn: string;
         templateData: Object | null;
         cgStop?: boolean;
-        executeFcn?: (layer: Object, executeData: any) => void;
+        executeFcn?: string;
         executeData?: any;
     }
     /** */

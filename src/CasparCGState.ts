@@ -40,6 +40,7 @@ export class CasparCGState {
 	private _isInitialised: boolean;
 	public bufferedCommands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
 
+	private _externalFunctions: {};
 
 
 	/** */
@@ -47,6 +48,7 @@ export class CasparCGState {
 		currentTime?: 				() 												=> number,
 		getMediaDurationCallback?: 	(clip: string, callback: (duration: number) 	=> void) => void
 		externalStorage?:			(action: string, data: Object | null) 			=> CasparCG
+		externalFunctions ?: 		{}
 	}) {
 		// set the callback for handling time messurement
 		if (config && config.currentTime) {
@@ -70,6 +72,11 @@ export class CasparCGState {
 		// set the callback for handling externalStorage
 		if (config && config.externalStorage) {
 			this._currentStateStorage.assignExternalStorage(config.externalStorage);
+		}
+
+		if (config && config.externalFunctions) {
+			if (!this._externalFunctions) this._externalFunctions = {};
+			_.extend(this._externalFunctions,config.externalFunctions);
 		}
 	}
 
@@ -755,9 +762,14 @@ export class CasparCGState {
 
 						} else if (layer.content == 'function' && layer.media && layer.executeFcn) {
 
-							if (_.isFunction(layer.executeFcn)) {
+							
+							let fcn = this._externalFunctions[layer.executeFcn];
 
-								layer.executeFcn(layer,layer.executeData);
+						
+
+							if (fcn && _.isFunction(fcn)) {
+
+								fcn(layer,layer.executeData);
 
 
 								

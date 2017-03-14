@@ -47,6 +47,11 @@ var CasparCGState = (function () {
         if (config && config.externalStorage) {
             this._currentStateStorage.assignExternalStorage(config.externalStorage);
         }
+        if (config && config.externalFunctions) {
+            if (!this._externalFunctions)
+                this._externalFunctions = {};
+            _.extend(this._externalFunctions, config.externalFunctions);
+        }
     }
     /** */
     CasparCGState.prototype.initStateFromChannelInfo = function (channels) {
@@ -581,8 +586,9 @@ var CasparCGState = (function () {
                             cmd = new casparcg_connection_1.AMCP.CustomCommand(options);
                         }
                         else if (layer.content == 'function' && layer.media && layer.executeFcn) {
-                            if (_.isFunction(layer.executeFcn)) {
-                                layer.executeFcn(layer, layer.executeData);
+                            var fcn = _this._externalFunctions[layer.executeFcn];
+                            if (fcn && _.isFunction(fcn)) {
+                                fcn(layer, layer.executeData);
                                 var layer0 = _this.ensureLayer(oldChannel, layer.layerNo);
                                 // save state:
                                 layer0.content = layer.content;

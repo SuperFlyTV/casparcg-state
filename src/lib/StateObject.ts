@@ -61,7 +61,7 @@ export namespace StateObject {
 		templateData: Object | null;
 		cgStop?: boolean;
 
-		executeFcn?: (layer:Object,executeData:any) => void;
+		executeFcn?: string; // name of function to execute
 		executeData?: any;
 	}
 
