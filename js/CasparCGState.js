@@ -596,7 +596,7 @@ var CasparCGState = (function () {
                                 externalFunction: true,
                                 functionName: layer.executeFcn,
                                 functionData: layer.executeData,
-                                functionlayer: layer,
+                                functionLayer: layer,
                                 media: layer.media,
                             };
                         }
