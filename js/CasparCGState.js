@@ -47,11 +47,6 @@ var CasparCGState = (function () {
         if (config && config.externalStorage) {
             this._currentStateStorage.assignExternalStorage(config.externalStorage);
         }
-        if (config && config.externalFunctions) {
-            if (!this._externalFunctions)
-                this._externalFunctions = {};
-            _.extend(this._externalFunctions, config.externalFunctions);
-        }
     }
     /** */
     CasparCGState.prototype.initStateFromChannelInfo = function (channels) {
@@ -386,6 +381,14 @@ var CasparCGState = (function () {
                             break;
                     }
                     break;
+                case "executeFunction":
+                    layer = _this.ensureLayer(channel, layerNo);
+                    if (command['returnValue'] !== true) {
+                        // save state:
+                        layer.content = 'function';
+                        layer.media = command['media'];
+                    }
+                    break;
             }
         });
         // Save new state:
@@ -586,18 +589,16 @@ var CasparCGState = (function () {
                             cmd = new casparcg_connection_1.AMCP.CustomCommand(options);
                         }
                         else if (layer.content == 'function' && layer.media && layer.executeFcn) {
-                            var fcn = (_this._externalFunctions || {})[layer.executeFcn];
-                            if (fcn && _.isFunction(fcn)) {
-                                var returnValue = fcn(layer, layer.executeData);
-                                if (!returnValue !== true) {
-                                    // save state:
-                                    var layer0 = _this.ensureLayer(oldChannel, layer.layerNo);
-                                    layer0.content = layer.content;
-                                    layer0.media = layer.media;
-                                    layer0.playing = layer.playing;
-                                    layer0.playTime = layer.playTime;
-                                }
-                            }
+                            cmd = {
+                                channel: options.channel,
+                                layer: options.layer,
+                                _commandName: 'executeFunction',
+                                externalFunction: true,
+                                functionName: layer.executeFcn,
+                                functionData: layer.executeData,
+                                functionlayer: layer,
+                                media: layer.media,
+                            };
                         }
                         else {
                             if (oldLayer.content == 'media' || oldLayer.content == 'media') {
@@ -731,8 +732,14 @@ var CasparCGState = (function () {
                     pushMixerCommand('volume', casparcg_connection_1.AMCP.MixerVolumeCommand, 'volume');
                     //}
                     var cmds = [];
-                    if (cmd)
-                        cmds.push(cmd.serialize());
+                    if (cmd) {
+                        if (cmd['serialize']) {
+                            cmds.push(cmd['serialize']());
+                        }
+                        else {
+                            cmds.push(cmd);
+                        }
+                    }
                     _.each(additionalCmds_1, function (addCmd) {
                         cmds.push(addCmd.serialize());
                     });

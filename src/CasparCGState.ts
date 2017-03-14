@@ -40,7 +40,7 @@ export class CasparCGState {
 	private _isInitialised: boolean;
 	public bufferedCommands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
 
-	private _externalFunctions: {};
+	
 
 
 	/** */
@@ -48,7 +48,7 @@ export class CasparCGState {
 		currentTime?: 				() 												=> number,
 		getMediaDurationCallback?: 	(clip: string, callback: (duration: number) 	=> void) => void
 		externalStorage?:			(action: string, data: Object | null) 			=> CasparCG
-		externalFunctions ?: 		{}
+	
 	}) {
 		// set the callback for handling time messurement
 		if (config && config.currentTime) {
@@ -74,10 +74,7 @@ export class CasparCGState {
 			this._currentStateStorage.assignExternalStorage(config.externalStorage);
 		}
 
-		if (config && config.externalFunctions) {
-			if (!this._externalFunctions) this._externalFunctions = {};
-			_.extend(this._externalFunctions,config.externalFunctions);
-		}
+		
 	}
 
 	/** */
@@ -479,6 +476,19 @@ export class CasparCGState {
 						//
 					}
 					break;
+				case "executeFunction":
+
+					layer = this.ensureLayer(channel, layerNo);
+
+					if (command['returnValue'] !== true) {
+
+						// save state:
+						layer.content = 'function';
+						layer.media = command['media'];
+
+					}
+
+					break;
 				//
 			}
 		});
@@ -762,18 +772,34 @@ export class CasparCGState {
 
 						} else if (layer.content == 'function' && layer.media && layer.executeFcn) {
 
-							
-							let fcn = (this._externalFunctions||{})[layer.executeFcn];
 
-						
+							cmd = {
+								channel: options.channel,
+								layer: options.layer,
+								_commandName: 'executeFunction',
+
+								externalFunction: true,
+								functionName: layer.executeFcn,
+								functionData: layer.executeData,
+								functionlayer: layer,
+
+								media: layer.media,
+							}
+
+							
+							/*let fcn = (this._externalFunctions||{})[layer.executeFcn];
+
+							
 
 							if (fcn && _.isFunction(fcn)) {
 
 								var returnValue = fcn(layer,layer.executeData);
 
 
+
+
 								if (!returnValue !== true) {
-									
+
 									// save state:
 									let layer0 = this.ensureLayer(oldChannel, layer.layerNo);
 
@@ -784,7 +810,7 @@ export class CasparCGState {
 								}
 
 
-							}
+							}*/
 
 						} else {
 							if (oldLayer.content == 'media' || oldLayer.content == 'media') {
@@ -972,7 +998,13 @@ export class CasparCGState {
 
 					
 					var cmds:Array<any> = [];
-					if (cmd) cmds.push(cmd.serialize());
+					if (cmd) {
+						if (cmd['serialize']) {
+							cmds.push(cmd['serialize']());
+						} else {
+							cmds.push(cmd);
+						}
+					}
 
 					_.each(additionalCmds, (addCmd:any) => {
 						cmds.push(addCmd.serialize());
