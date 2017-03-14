@@ -235,7 +235,7 @@ export class CasparCGState {
 							layer.playTime = this._currentTimeFunction()-playDeltaTime;
 						}
 
-						this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
+						this._getMediaDuration((layer.media||'').toString(), channel.channelNo, layer.layerNo);
 						
 					} else {
 						if (cmdName == 'PlayCommand' && layer.content == 'media' && layer.media && layer.pauseTime && layer.playTime) {
@@ -666,7 +666,7 @@ export class CasparCGState {
 							
 							if (layer.playing) {	
 								cmd = new AMCP.PlayCommand(_.extend(options,{
-									clip: layer.media.toString(),
+									clip: (layer.media||'').toString(),
 									seek: seek, 
 									loop: !!layer.looping
 								}));
@@ -679,7 +679,7 @@ export class CasparCGState {
 								} else {
 									
 									cmd = new AMCP.LoadCommand(_.extend(options,{
-										clip: layer.media.toString(),
+										clip: (layer.media||'').toString(),
 										seek: seek,
 										loop: !!layer.looping
 									}));
@@ -690,7 +690,7 @@ export class CasparCGState {
 						} else if (layer.content == 'template' && layer.media !== null) {
 
 							cmd = new AMCP.CGAddCommand(_.extend(options,{
-								templateName: layer.media.toString(),
+								templateName: (layer.media||'').toString(),
 								flashLayer: 1,
 								playOnLoad: layer.playing,
 								data: layer.templateData||undefined,
@@ -700,7 +700,7 @@ export class CasparCGState {
 						} else if (layer.content == 'input' && layer.media !== null) {
 
 							
-							let inputType:string 	= (layer.input && layer.media && layer.media.toString()) || 'decklink';
+							let inputType:string 	= (layer.input && layer.media && (layer.media||'').toString()) || 'decklink';
 							let device:number|null 		= (layer.input && layer.input.device) ;
 							let format:string|null 		= (layer.input && layer.input.format) ; // todo: the default value should be the channel format
 
