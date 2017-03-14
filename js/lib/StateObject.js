@@ -169,7 +169,7 @@ var StateObject;
     var TransitionObject = (function () {
         /** */
         function TransitionObject(value) {
-            if (value) {
+            if (!_.isUndefined(value)) {
                 this._value = value;
             }
         }

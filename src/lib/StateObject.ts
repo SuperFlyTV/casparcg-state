@@ -245,7 +245,7 @@ export namespace StateObject {
 
 		/** */
 		constructor(value?: any ){
-			if(value){
+			if (!_.isUndefined(value)){
 				this._value = value;
 			}
 		}
