@@ -586,7 +586,7 @@ var CasparCGState = (function () {
                             cmd = new casparcg_connection_1.AMCP.CustomCommand(options);
                         }
                         else if (layer.content == 'function' && layer.media && layer.executeFcn) {
-                            var fcn = _this._externalFunctions[layer.executeFcn];
+                            var fcn = (_this._externalFunctions || {})[layer.executeFcn];
                             if (fcn && _.isFunction(fcn)) {
                                 fcn(layer, layer.executeData);
                                 var layer0 = _this.ensureLayer(oldChannel, layer.layerNo);

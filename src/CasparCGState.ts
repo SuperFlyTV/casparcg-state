@@ -763,7 +763,7 @@ export class CasparCGState {
 						} else if (layer.content == 'function' && layer.media && layer.executeFcn) {
 
 							
-							let fcn = this._externalFunctions[layer.executeFcn];
+							let fcn = (this._externalFunctions||{})[layer.executeFcn];
 
 						
 
