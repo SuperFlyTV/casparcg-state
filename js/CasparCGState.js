@@ -183,7 +183,7 @@ var CasparCGState = (function () {
                         else {
                             layer.playTime = _this._currentTimeFunction() - playDeltaTime;
                         }
-                        _this._getMediaDuration(layer.media.toString(), channel.channelNo, layer.layerNo);
+                        _this._getMediaDuration((layer.media || '').toString(), channel.channelNo, layer.layerNo);
                     }
                     else {
                         if (cmdName == 'PlayCommand' && layer.content == 'media' && layer.media && layer.pauseTime && layer.playTime) {
@@ -521,7 +521,7 @@ var CasparCGState = (function () {
                                 * oldChannel.fps));
                             if (layer.playing) {
                                 cmd = new casparcg_connection_1.AMCP.PlayCommand(_.extend(options, {
-                                    clip: layer.media.toString(),
+                                    clip: (layer.media || '').toString(),
                                     seek: seek,
                                     loop: !!layer.looping
                                 }));
@@ -533,7 +533,7 @@ var CasparCGState = (function () {
                                 }
                                 else {
                                     cmd = new casparcg_connection_1.AMCP.LoadCommand(_.extend(options, {
-                                        clip: layer.media.toString(),
+                                        clip: (layer.media || '').toString(),
                                         seek: seek,
                                         loop: !!layer.looping
                                     }));
@@ -542,7 +542,7 @@ var CasparCGState = (function () {
                         }
                         else if (layer.content == 'template' && layer.media !== null) {
                             cmd = new casparcg_connection_1.AMCP.CGAddCommand(_.extend(options, {
-                                templateName: layer.media.toString(),
+                                templateName: (layer.media || '').toString(),
                                 flashLayer: 1,
                                 playOnLoad: layer.playing,
                                 data: layer.templateData || undefined,
@@ -550,7 +550,7 @@ var CasparCGState = (function () {
                             }));
                         }
                         else if (layer.content == 'input' && layer.media !== null) {
-                            var inputType = (layer.input && layer.media && layer.media.toString()) || 'decklink';
+                            var inputType = (layer.input && layer.media && (layer.media || '').toString()) || 'decklink';
                             var device = (layer.input && layer.input.device);
                             var format = (layer.input && layer.input.format); // todo: the default value should be the channel format
                             if (inputType == 'decklink') {
