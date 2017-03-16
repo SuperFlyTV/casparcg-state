@@ -609,7 +609,7 @@ export class CasparCGState {
 		}
 
 		// ==============================================================================
-		// Added things:
+		// Added/updated things:
 		_.each(newState.channels, (channel,channelKey) => {
 			let oldChannel = oldState.channels[channelKey+''] || (new Channel());
  
@@ -637,17 +637,13 @@ export class CasparCGState {
 							layer.content == 'input'
 							&& !this.compareAttrs(layer.input,oldLayer.input,['device','format'])
 						)
-					) {
+					) { 
+						// Added things:
 						
 						let options:any = {};
 						options.channel = channel.channelNo;
 						options.layer = layer.layerNo;
-						
-						
 						setTransition(options,channel,oldLayer,layer.media);
-
-						
-
 						if (layer.content == 'media' && layer.media !== null) {
 
 							let timeSincePlay:any = (layer.pauseTime || time ) - layer.playTime;
@@ -703,7 +699,6 @@ export class CasparCGState {
 									
 								}
 							}
-							
 						} else if (layer.content == 'template' && layer.media !== null) {
 
 							cmd = new AMCP.CGAddCommand(_.extend(options,{
@@ -713,7 +708,6 @@ export class CasparCGState {
 								data: layer.templateData||undefined,
 								cgStop: layer.cgStop
 							}));
-						
 						} else if (layer.content == 'input' && layer.media !== null) {
 
 							
@@ -768,8 +762,6 @@ export class CasparCGState {
 							});
 
 							cmd = new AMCP.CustomCommand(options);
-
-
 						} else if (layer.content == 'function' && layer.media && layer.executeFcn) {
 
 
@@ -811,26 +803,30 @@ export class CasparCGState {
 
 
 							}*/
-
 						} else {
 							if (oldLayer.content == 'media' || oldLayer.content == 'media') {
 								cmd = new AMCP.StopCommand(options);
 							}
 						}
-
-						
-
-						
-						
 					} else if (
 						layer.content == 'template' 
-						&& !this.compareAttrs(layer,oldLayer,['templateFcn'])
+						&& !this.compareAttrs(layer,oldLayer,['templateData'])
 					) {
-						// todo: implement CGUpdateCommand etc..
+						// Updated things:
+						let options:any = {};
+						options.channel = channel.channelNo;
+						options.layer = layer.layerNo;
+						
+
+						if (layer.content == 'template') {
+
+							cmd = new AMCP.CGUpdateCommand(_.extend(options,{
+								flashLayer: 1,
+								data: layer.templateData||undefined,
+							}));
+						}
 					}
-
 					// -------------------------------------------------------------
-
 					// Mixer commands:
 					if (!layer.mixer) layer.mixer = new Mixer();
 					if (!oldLayer.mixer) oldLayer.mixer = new Mixer();

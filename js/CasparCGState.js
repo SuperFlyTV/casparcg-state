@@ -489,7 +489,7 @@ var CasparCGState = (function () {
             return options;
         };
         // ==============================================================================
-        // Added things:
+        // Added/updated things:
         _.each(newState.channels, function (channel, channelKey) {
             var oldChannel = oldState.channels[channelKey + ''] || (new Channel());
             _.each(channel.layers, function (layer, layerKey) {
@@ -507,6 +507,7 @@ var CasparCGState = (function () {
                         ||
                             (layer.content == 'input'
                                 && !_this.compareAttrs(layer.input, oldLayer.input, ['device', 'format']))) {
+                        // Added things:
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
@@ -607,7 +608,17 @@ var CasparCGState = (function () {
                         }
                     }
                     else if (layer.content == 'template'
-                        && !_this.compareAttrs(layer, oldLayer, ['templateFcn'])) {
+                        && !_this.compareAttrs(layer, oldLayer, ['templateData'])) {
+                        // Updated things:
+                        var options = {};
+                        options.channel = channel.channelNo;
+                        options.layer = layer.layerNo;
+                        if (layer.content == 'template') {
+                            cmd = new casparcg_connection_1.AMCP.CGUpdateCommand(_.extend(options, {
+                                flashLayer: 1,
+                                data: layer.templateData || undefined,
+                            }));
+                        }
                     }
                     // -------------------------------------------------------------
                     // Mixer commands:
