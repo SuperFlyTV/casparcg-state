@@ -536,8 +536,8 @@ export class CasparCGState {
 	}
 
 
-	private compareAttrs(obj0:any, obj1:any, attrs:Array<string>, strict?:boolean ):boolean {
-		var areSame:boolean = true;
+	private compareAttrs(obj0:any, obj1:any, attrs:Array<string>, strict?:boolean ):null|string {
+		var difference:null|string = null;
 		
 		let getValue:any = function (val:any) {
 			//if (_.isObject(val)) return val.valueOf();
@@ -548,13 +548,13 @@ export class CasparCGState {
 		if (obj0 && obj1) {
 			if (strict) {
 				_.each(attrs,(a:string) => {
-					if (obj0[a].valueOf() !== obj1[a].valueOf() ) areSame = false;
+					if (obj0[a].valueOf() !== obj1[a].valueOf() ) difference = a+': '+obj0[a].valueOf() +'!=='+ obj1[a].valueOf();
 				});	
 			} else {
 				_.each(attrs,(a:string) => {
 
 					if (getValue(obj0[a]) != getValue(obj1[a]) ) {
-						areSame = false;	
+						difference = a+': '+getValue(obj0[a]) +'!='+ getValue(obj1[a]);
 					}
 
 					
@@ -565,9 +565,9 @@ export class CasparCGState {
 				(obj0 && !obj1)
 				||
 				(!obj0 && obj1)
-			) areSame = false
+			) difference = ''+(!!obj0)+' t/f '+ (!!obj1)
 		}
-		return areSame;
+		return difference;
 	}
 	/** */
 	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> {
@@ -630,17 +630,32 @@ export class CasparCGState {
 					let additionalCmds:Array<any> = [];
 
 					
-					
-					if (
-						!this.compareAttrs(layer,oldLayer,['content','media','templateType','playTime','looping'])
-						||
-						(
-							layer.content == 'input'
-							&& !this.compareAttrs(layer.input,oldLayer.input,['device','format'])
-						)
-					) { 
+					var diff = this.compareAttrs(layer,oldLayer,['content']);
+
+
+					if (!diff) {
+						if (layer.content == 'media') {
+							if (!layer.seek) layer.seek = 0;
+							if (!oldLayer.seek) oldLayer.seek = 0;
+							
+							diff = this.compareAttrs(layer,oldLayer,['media','playTime','looping','seek']);
+						} else if (layer.content == 'template') {
+							diff = this.compareAttrs(layer,oldLayer,['media','templateType']);
+						} else if( layer.content == 'input') {
+							diff = this.compareAttrs(layer,oldLayer,['media']);
+							if (!diff) diff = this.compareAttrs(layer.input,oldLayer.input,['device','format']);
+							
+						} else if( layer.content == 'route')  {
+							
+							diff = this.compareAttrs(layer.route,oldLayer.route,['channel','layer']);
+						} else if( layer.content == 'function')  {
+							diff = this.compareAttrs(layer,oldLayer,['media']);
+						}
+					}
+					if (diff) { 
 						// Added things:
-						
+						console.log('Added things: '+layer.content)
+						console.log(diff)
 						let options:any = {};
 						options.channel = channel.channelNo;
 						options.layer = layer.layerNo;
@@ -660,13 +675,7 @@ export class CasparCGState {
 							if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
 								timeSincePlay = null;
 								
-								/*if (
-									_.isNull(oldLayer.playTime) 
-									&& this.compareAttrs(layer,oldLayer,['content','media','templateType','playing'])
-								) {
-									// 
-									noCommandNeeded = true;
-								}*/
+								
 							}
 
 							var seek = Math.max(0,Math.floor(
@@ -810,23 +819,30 @@ export class CasparCGState {
 								cmd = new AMCP.StopCommand(options);
 							}
 						}
-					} else if (
-						layer.content == 'template' 
-						&& !this.compareAttrs(layer,oldLayer,['templateData'])
-					) {
-						// Updated things:
-						let options:any = {};
-						options.channel = channel.channelNo;
-						options.layer = layer.layerNo;
-						
+					} else if (layer.content == 'template' ) {
 
-						if (layer.content == 'template') {
+						diff = this.compareAttrs(layer,oldLayer,['templateData']);
+						if (diff) {
 
-							cmd = new AMCP.CGUpdateCommand(_.extend(options,{
-								flashLayer: 1,
-								data: layer.templateData||undefined,
-							}));
+							// Updated things:
+
+							console.log("updated things "+layer.content)
+							console.log(diff)
+
+							let options:any = {};
+							options.channel = channel.channelNo;
+							options.layer = layer.layerNo;
+							
+
+							if (layer.content == 'template') {
+
+								cmd = new AMCP.CGUpdateCommand(_.extend(options,{
+									flashLayer: 1,
+									data: layer.templateData||undefined,
+								}));
+							}
 						}
+
 					}
 					// -------------------------------------------------------------
 					// Mixer commands:
@@ -964,7 +980,7 @@ export class CasparCGState {
 						}
 					}
 					
-					//if (!this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
+					//if (this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
 
 
 

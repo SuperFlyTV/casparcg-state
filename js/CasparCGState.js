@@ -427,7 +427,7 @@ var CasparCGState = (function () {
         return this.diffStates(currentState, newState);
     };
     CasparCGState.prototype.compareAttrs = function (obj0, obj1, attrs, strict) {
-        var areSame = true;
+        var difference = null;
         var getValue = function (val) {
             //if (_.isObject(val)) return val.valueOf();
             //if (val.valueOf) return val.valueOf();
@@ -438,13 +438,13 @@ var CasparCGState = (function () {
             if (strict) {
                 _.each(attrs, function (a) {
                     if (obj0[a].valueOf() !== obj1[a].valueOf())
-                        areSame = false;
+                        difference = a + ': ' + obj0[a].valueOf() + '!==' + obj1[a].valueOf();
                 });
             }
             else {
                 _.each(attrs, function (a) {
                     if (getValue(obj0[a]) != getValue(obj1[a])) {
-                        areSame = false;
+                        difference = a + ': ' + getValue(obj0[a]) + '!=' + getValue(obj1[a]);
                     }
                 });
             }
@@ -453,9 +453,9 @@ var CasparCGState = (function () {
             if ((obj0 && !obj1)
                 ||
                     (!obj0 && obj1))
-                areSame = false;
+                difference = '' + (!!obj0) + ' t/f ' + (!!obj1);
         }
-        return areSame;
+        return difference;
     };
     /** */
     CasparCGState.prototype.diffStates = function (oldState, newState) {
@@ -504,11 +504,34 @@ var CasparCGState = (function () {
                     */
                     var cmd = void 0;
                     var additionalCmds_1 = [];
-                    if (!_this.compareAttrs(layer, oldLayer, ['content', 'media', 'templateType', 'playTime', 'looping'])
-                        ||
-                            (layer.content == 'input'
-                                && !_this.compareAttrs(layer.input, oldLayer.input, ['device', 'format']))) {
+                    var diff = _this.compareAttrs(layer, oldLayer, ['content']);
+                    if (!diff) {
+                        if (layer.content == 'media') {
+                            if (!layer.seek)
+                                layer.seek = 0;
+                            if (!oldLayer.seek)
+                                oldLayer.seek = 0;
+                            diff = _this.compareAttrs(layer, oldLayer, ['media', 'playTime', 'looping', 'seek']);
+                        }
+                        else if (layer.content == 'template') {
+                            diff = _this.compareAttrs(layer, oldLayer, ['media', 'templateType']);
+                        }
+                        else if (layer.content == 'input') {
+                            diff = _this.compareAttrs(layer, oldLayer, ['media']);
+                            if (!diff)
+                                diff = _this.compareAttrs(layer.input, oldLayer.input, ['device', 'format']);
+                        }
+                        else if (layer.content == 'route') {
+                            diff = _this.compareAttrs(layer.route, oldLayer.route, ['channel', 'layer']);
+                        }
+                        else if (layer.content == 'function') {
+                            diff = _this.compareAttrs(layer, oldLayer, ['media']);
+                        }
+                    }
+                    if (diff) {
                         // Added things:
+                        console.log('Added things: ' + layer.content);
+                        console.log(diff);
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
@@ -609,17 +632,21 @@ var CasparCGState = (function () {
                             }
                         }
                     }
-                    else if (layer.content == 'template'
-                        && !_this.compareAttrs(layer, oldLayer, ['templateData'])) {
-                        // Updated things:
-                        var options = {};
-                        options.channel = channel.channelNo;
-                        options.layer = layer.layerNo;
-                        if (layer.content == 'template') {
-                            cmd = new casparcg_connection_1.AMCP.CGUpdateCommand(_.extend(options, {
-                                flashLayer: 1,
-                                data: layer.templateData || undefined,
-                            }));
+                    else if (layer.content == 'template') {
+                        diff = _this.compareAttrs(layer, oldLayer, ['templateData']);
+                        if (diff) {
+                            // Updated things:
+                            console.log("updated things " + layer.content);
+                            console.log(diff);
+                            var options = {};
+                            options.channel = channel.channelNo;
+                            options.layer = layer.layerNo;
+                            if (layer.content == 'template') {
+                                cmd = new casparcg_connection_1.AMCP.CGUpdateCommand(_.extend(options, {
+                                    flashLayer: 1,
+                                    data: layer.templateData || undefined,
+                                }));
+                            }
                         }
                     }
                     // -------------------------------------------------------------
@@ -723,7 +750,7 @@ var CasparCGState = (function () {
                             }
                         }
                     };
-                    //if (!this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
+                    //if (this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
                     pushMixerCommand('anchor', casparcg_connection_1.AMCP.MixerAnchorCommand, ['x', 'y']);
                     // blend
                     pushMixerCommand('brightness', casparcg_connection_1.AMCP.MixerBrightnessCommand, 'brightness');
