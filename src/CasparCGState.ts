@@ -309,6 +309,7 @@ export class CasparCGState {
 						layer.media = <string>command._objectParams['templateName'];
 
 						layer.cgStop = !!command._objectParams['cgStop'];
+						layer.templateType  = (<string>command._objectParams['templateType']) || undefined;
 						//layer.templateType // we don't know if it's flash or html 
 					
 						// layer.playTime = this._currentTimeFunction();
@@ -706,7 +707,8 @@ export class CasparCGState {
 								flashLayer: 1,
 								playOnLoad: layer.playing,
 								data: layer.templateData||undefined,
-								cgStop: layer.cgStop
+								cgStop: layer.cgStop,
+								templateType: layer.templateType
 							}));
 						} else if (layer.content == 'input' && layer.media !== null) {
 
