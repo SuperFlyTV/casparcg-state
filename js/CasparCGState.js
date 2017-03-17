@@ -270,8 +270,11 @@ var CasparCGState = (function () {
                     break;
                 case "CGStopCommand":
                     layer = _this.ensureLayer(channel, layerNo);
-                    layer.templateFcn = 'stop';
+                    //layer.templateFcn = 'stop';
+                    //layer.playing = false;
+                    layer.content = null;
                     layer.playing = false;
+                    layer.media = null;
                     break;
                 case "CGInvokeCommand":
                     layer = _this.ensureLayer(channel, layerNo);
@@ -530,8 +533,7 @@ var CasparCGState = (function () {
                     }
                     if (diff) {
                         // Added things:
-                        console.log('Added things: ' + layer.content);
-                        console.log(diff);
+                        console.log('ADD: ' + layer.content + ' ' + diff);
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
@@ -636,8 +638,7 @@ var CasparCGState = (function () {
                         diff = _this.compareAttrs(layer, oldLayer, ['templateData']);
                         if (diff) {
                             // Updated things:
-                            console.log("updated things " + layer.content);
-                            console.log(diff);
+                            console.log('UPDATE: ' + layer.content + ' ' + diff);
                             var options = {};
                             options.channel = channel.channelNo;
                             options.layer = layer.layerNo;
@@ -795,6 +796,7 @@ var CasparCGState = (function () {
                 var newLayer = newChannel.layers[layerKey + ''] || (new Layer);
                 if (newLayer) {
                     if (!newLayer.content && oldLayer.content) {
+                        console.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content);
                         var cmd = void 0;
                         if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
                             if (oldLayer.media.outTransition) {

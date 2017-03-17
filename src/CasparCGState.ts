@@ -343,8 +343,15 @@ export class CasparCGState {
 					break;
 				case "CGStopCommand":
 					layer = this.ensureLayer(channel, layerNo);
-					layer.templateFcn = 'stop';
+					//layer.templateFcn = 'stop';
+					//layer.playing = false;
+
+					layer.content = null;
 					layer.playing = false;
+					layer.media = null;
+					
+
+
 
 					break;
 				case "CGInvokeCommand":
@@ -637,7 +644,7 @@ export class CasparCGState {
 						if (layer.content == 'media') {
 							if (!layer.seek) layer.seek = 0;
 							if (!oldLayer.seek) oldLayer.seek = 0;
-							
+
 							diff = this.compareAttrs(layer,oldLayer,['media','playTime','looping','seek']);
 						} else if (layer.content == 'template') {
 							diff = this.compareAttrs(layer,oldLayer,['media','templateType']);
@@ -654,8 +661,7 @@ export class CasparCGState {
 					}
 					if (diff) { 
 						// Added things:
-						console.log('Added things: '+layer.content)
-						console.log(diff)
+						console.log('ADD: '+layer.content+' '+diff);
 						let options:any = {};
 						options.channel = channel.channelNo;
 						options.layer = layer.layerNo;
@@ -826,8 +832,7 @@ export class CasparCGState {
 
 							// Updated things:
 
-							console.log("updated things "+layer.content)
-							console.log(diff)
+							console.log('UPDATE: '+layer.content+' '+diff);
 
 							let options:any = {};
 							options.channel = channel.channelNo;
@@ -1048,6 +1053,9 @@ export class CasparCGState {
 					
 
 					if (!newLayer.content && oldLayer.content) {
+
+						console.log('REMOVE '+channelKey+'-'+layerKey+': '+oldLayer.content);
+
 						let cmd;
 						if(typeof oldLayer.media === 'object'  && oldLayer.media !== null){
 							if(oldLayer.media.outTransition) {
