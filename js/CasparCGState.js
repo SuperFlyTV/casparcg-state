@@ -458,6 +458,7 @@ var CasparCGState = (function () {
                     (!obj0 && obj1))
                 difference = '' + (!!obj0) + ' t/f ' + (!!obj1);
         }
+        if (difference && difference.length>20) difference = difference.slice(0,30)+'...';
         return difference;
     };
     /** */
