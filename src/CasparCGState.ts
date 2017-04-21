@@ -252,10 +252,12 @@ export class CasparCGState {
 					}
 
 
+
 					if(i.additionalLayerState && i.additionalLayerState.media) {
 						_.extend(layer.media, {outTransition: i.additionalLayerState.media["outTransition"]});
 					}
 
+					layer.noClear = <boolean>command._objectParams['noClear'];
 
 					break;
 				case "PauseCommand":
@@ -325,6 +327,8 @@ export class CasparCGState {
 							layer.templateData = null;
 						}
 
+						layer.noClear = <boolean>command._objectParams['noClear'];
+
 						
 					}
 					break;
@@ -340,6 +344,8 @@ export class CasparCGState {
 					layer.playing = true;
 					layer.templateFcn = 'play';
 					layer.templateData = null;
+
+					layer.noClear = <boolean>command._objectParams['noClear'];
 					break;
 				case "CGStopCommand":
 					layer = this.ensureLayer(channel, layerNo);
@@ -394,6 +400,8 @@ export class CasparCGState {
 
 					layer.playing = true;
 					layer.playTime = null; // playtime is irrelevant
+
+					layer.noClear = <boolean>command._objectParams['noClear'];
 
 					break;
 
@@ -678,9 +686,12 @@ export class CasparCGState {
 					if (diff) { 
 						// Added things:
 						console.log('ADD: '+layer.content+' '+diff);
+						
 						let options:any = {};
 						options.channel = channel.channelNo;
 						options.layer = layer.layerNo;
+						if (layer.noClear) options.noClear = layer.noClear;
+
 						setTransition(options,channel,oldLayer,layer.media);
 						if (layer.content == 'media' && layer.media !== null) {
 
@@ -734,12 +745,13 @@ export class CasparCGState {
 						} else if (layer.content == 'template' && layer.media !== null) {
 
 							cmd = new AMCP.CGAddCommand(_.extend(options,{
-								templateName: (layer.media||'').toString(),
-								flashLayer: 1,
-								playOnLoad: layer.playing,
-								data: layer.templateData||undefined,
-								cgStop: layer.cgStop,
-								templateType: layer.templateType
+								templateName: 	(layer.media||'').toString(),
+								flashLayer: 	1,
+								playOnLoad:		layer.playing,
+								data: 			layer.templateData||undefined,
+								
+								cgStop: 		layer.cgStop,
+								templateType: 	layer.templateType
 							}));
 						} else if (layer.content == 'input' && layer.media !== null) {
 
@@ -1071,47 +1083,54 @@ export class CasparCGState {
 					if (!newLayer.content && oldLayer.content) {
 
 						console.log('REMOVE '+channelKey+'-'+layerKey+': '+oldLayer.content);
+						
+						if (oldLayer.noClear) {
+							// hack: don't do the clear command
+							console.log('NOCLEAR is set!');
+						} else {
 
-						let cmd;
-						if(typeof oldLayer.media === 'object'  && oldLayer.media !== null){
-							if(oldLayer.media.outTransition) {
-								cmd = new AMCP.PlayCommand({
+							let cmd;
+							if(typeof oldLayer.media === 'object'  && oldLayer.media !== null){
+								if(oldLayer.media.outTransition) {
+									cmd = new AMCP.PlayCommand({
+										channel: oldChannel.channelNo,
+										layer: oldLayer.layerNo,
+										clip: "empty",
+										transition: oldLayer.media.outTransition.type,
+										transitionDuration: Math.round(+(oldLayer.media.outTransition.duration)*oldChannel.fps),
+										transitionEasing: oldLayer.media.outTransition.easing,
+										transitionDirection: oldLayer.media.outTransition.direction
+									});
+								}
+							}
+
+
+							if (!cmd) {
+								if (oldLayer.content == 'template' && oldLayer.cgStop ) {
+									cmd = new AMCP.CGStopCommand({
+										channel: oldChannel.channelNo,
+										layer: oldLayer.layerNo,
+										flashLayer: 1,
+									});
+								}
+							}
+							if (!cmd) {
+
+								// ClearCommand:
+								cmd = new AMCP.ClearCommand({
 									channel: oldChannel.channelNo,
 									layer: oldLayer.layerNo,
-									clip: "empty",
-									transition: oldLayer.media.outTransition.type,
-									transitionDuration: Math.round(+(oldLayer.media.outTransition.duration)*oldChannel.fps),
-									transitionEasing: oldLayer.media.outTransition.easing,
-									transitionDirection: oldLayer.media.outTransition.direction
+								});
+								
+							}
+
+							if (cmd) {
+								commands.push({
+									cmds: [
+										cmd.serialize()
+									]
 								});
 							}
-						}
-
-
-						if (!cmd) {
-							if (oldLayer.content == 'template' && oldLayer.cgStop ) {
-								cmd = new AMCP.CGStopCommand({
-									channel: oldChannel.channelNo,
-									layer: oldLayer.layerNo,
-									flashLayer: 1,
-								});
-							}
-						}
-						if (!cmd) {
-							
-							// ClearCommand:
-							cmd = new AMCP.ClearCommand({
-								channel: oldChannel.channelNo,
-								layer: oldLayer.layerNo,
-							});
-						}
-
-						if (cmd) {
-							commands.push({
-								cmds: [
-									cmd.serialize()
-								]
-							});
 						}
 					}
 				}

@@ -51,6 +51,7 @@ export declare namespace StateObject {
         cgStop?: boolean;
         executeFcn?: string;
         executeData?: any;
+        noClear?: boolean;
     }
     /** */
     class Mixer {

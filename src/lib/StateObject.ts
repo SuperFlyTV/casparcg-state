@@ -63,6 +63,8 @@ export namespace StateObject {
 
 		executeFcn?: string; // name of function to execute
 		executeData?: any;
+
+		noClear?: boolean;
 	}
 
 	/** */

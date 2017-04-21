@@ -196,6 +196,7 @@ var CasparCGState = (function () {
                     if (i.additionalLayerState && i.additionalLayerState.media) {
                         _.extend(layer.media, { outTransition: i.additionalLayerState.media["outTransition"] });
                     }
+                    layer.noClear = command._objectParams['noClear'];
                     break;
                 case "PauseCommand":
                     layer = _this.ensureLayer(channel, layerNo);
@@ -253,6 +254,7 @@ var CasparCGState = (function () {
                             layer.templateFcn = '';
                             layer.templateData = null;
                         }
+                        layer.noClear = command._objectParams['noClear'];
                     }
                     break;
                 case "CGUpdateCommand":
@@ -267,6 +269,7 @@ var CasparCGState = (function () {
                     layer.playing = true;
                     layer.templateFcn = 'play';
                     layer.templateData = null;
+                    layer.noClear = command._objectParams['noClear'];
                     break;
                 case "CGStopCommand":
                     layer = _this.ensureLayer(channel, layerNo);
@@ -307,6 +310,7 @@ var CasparCGState = (function () {
                     //channelLayout: command._objectParams['channelLayout'],
                     layer.playing = true;
                     layer.playTime = null; // playtime is irrelevant
+                    layer.noClear = command._objectParams['noClear'];
                     break;
                 case "MixerAnchorCommand":
                     setMixerState(channel, command, 'anchor', ['x', 'y']);
@@ -553,6 +557,8 @@ var CasparCGState = (function () {
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
+                        if (layer.noClear)
+                            options.noClear = layer.noClear;
                         setTransition(options, channel, oldLayer, layer.media);
                         if (layer.content == 'media' && layer.media !== null) {
                             var timeSincePlay = (layer.pauseTime || time) - layer.playTime;
@@ -813,42 +819,48 @@ var CasparCGState = (function () {
                 if (newLayer) {
                     if (!newLayer.content && oldLayer.content) {
                         console.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content);
-                        var cmd = void 0;
-                        if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
-                            if (oldLayer.media.outTransition) {
-                                cmd = new casparcg_connection_1.AMCP.PlayCommand({
+                        if (oldLayer.noClear) {
+                            // hack: don't do the clear command
+                            console.log('NOCLEAR is set!');
+                        }
+                        else {
+                            var cmd = void 0;
+                            if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
+                                if (oldLayer.media.outTransition) {
+                                    cmd = new casparcg_connection_1.AMCP.PlayCommand({
+                                        channel: oldChannel.channelNo,
+                                        layer: oldLayer.layerNo,
+                                        clip: "empty",
+                                        transition: oldLayer.media.outTransition.type,
+                                        transitionDuration: Math.round(+(oldLayer.media.outTransition.duration) * oldChannel.fps),
+                                        transitionEasing: oldLayer.media.outTransition.easing,
+                                        transitionDirection: oldLayer.media.outTransition.direction
+                                    });
+                                }
+                            }
+                            if (!cmd) {
+                                if (oldLayer.content == 'template' && oldLayer.cgStop) {
+                                    cmd = new casparcg_connection_1.AMCP.CGStopCommand({
+                                        channel: oldChannel.channelNo,
+                                        layer: oldLayer.layerNo,
+                                        flashLayer: 1,
+                                    });
+                                }
+                            }
+                            if (!cmd) {
+                                // ClearCommand:
+                                cmd = new casparcg_connection_1.AMCP.ClearCommand({
                                     channel: oldChannel.channelNo,
                                     layer: oldLayer.layerNo,
-                                    clip: "empty",
-                                    transition: oldLayer.media.outTransition.type,
-                                    transitionDuration: Math.round(+(oldLayer.media.outTransition.duration) * oldChannel.fps),
-                                    transitionEasing: oldLayer.media.outTransition.easing,
-                                    transitionDirection: oldLayer.media.outTransition.direction
                                 });
                             }
-                        }
-                        if (!cmd) {
-                            if (oldLayer.content == 'template' && oldLayer.cgStop) {
-                                cmd = new casparcg_connection_1.AMCP.CGStopCommand({
-                                    channel: oldChannel.channelNo,
-                                    layer: oldLayer.layerNo,
-                                    flashLayer: 1,
+                            if (cmd) {
+                                commands.push({
+                                    cmds: [
+                                        cmd.serialize()
+                                    ]
                                 });
                             }
-                        }
-                        if (!cmd) {
-                            // ClearCommand:
-                            cmd = new casparcg_connection_1.AMCP.ClearCommand({
-                                channel: oldChannel.channelNo,
-                                layer: oldLayer.layerNo,
-                            });
-                        }
-                        if (cmd) {
-                            commands.push({
-                                cmds: [
-                                    cmd.serialize()
-                                ]
-                            });
                         }
                     }
                 }
