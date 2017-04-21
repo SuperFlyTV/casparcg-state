@@ -546,6 +546,9 @@ export class CasparCGState {
 	private compareAttrs(obj0:any, obj1:any, attrs:Array<string>, strict?:boolean ):null|string {
 		var difference:null|string = null;
 		
+		var diff0 = '';
+		var diff1 = '';
+
 		let getValue:any = function (val:any) {
 			//if (_.isObject(val)) return val.valueOf();
 			//if (val.valueOf) return val.valueOf();
@@ -555,16 +558,28 @@ export class CasparCGState {
 		if (obj0 && obj1) {
 			if (strict) {
 				_.each(attrs,(a:string) => {
-					if (obj0[a].valueOf() !== obj1[a].valueOf() ) difference = a+': '+obj0[a].valueOf() +'!=='+ obj1[a].valueOf();
+					if (obj0[a].valueOf() !== obj1[a].valueOf() ) {
+						diff0 = obj0[a].valueOf()+'';
+						diff1 = obj1[a].valueOf()+'';
+
+						if (diff0 && diff0.length>20) diff0 = diff0.slice(0,20)+'...';
+						if (diff1 && diff1.length>20) diff1 = diff1.slice(0,20)+'...';
+
+						difference = a+': '+diff0 +'!=='+ diff1;
+					}
 				});	
 			} else {
 				_.each(attrs,(a:string) => {
 
 					if (getValue(obj0[a]) != getValue(obj1[a]) ) {
-						difference = a+': '+getValue(obj0[a]) +'!='+ getValue(obj1[a]);
-					}
+						diff0 = getValue(obj0[a])+'';
+						diff1 = getValue(obj1[a])+'';
 
-					
+						if (diff0 && diff0.length>20) diff0 = diff0.slice(0,20)+'...';
+						if (diff1 && diff1.length>20) diff1 = diff1.slice(0,20)+'...';
+
+						difference = a+': '+diff0 +'!='+ diff1;
+					}
 				});	
 			}
 		} else {
@@ -574,7 +589,7 @@ export class CasparCGState {
 				(!obj0 && obj1)
 			) difference = ''+(!!obj0)+' t/f '+ (!!obj1)
 		}
-		if (difference && difference.length>20) difference = difference.slice(0,30)+'...';
+		//if (difference && difference.length>40) difference = difference.slice(0,40)+'...';
 		return difference;
 	}
 	/** */

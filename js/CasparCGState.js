@@ -431,6 +431,8 @@ var CasparCGState = (function () {
     };
     CasparCGState.prototype.compareAttrs = function (obj0, obj1, attrs, strict) {
         var difference = null;
+        var diff0 = '';
+        var diff1 = '';
         var getValue = function (val) {
             //if (_.isObject(val)) return val.valueOf();
             //if (val.valueOf) return val.valueOf();
@@ -440,14 +442,27 @@ var CasparCGState = (function () {
         if (obj0 && obj1) {
             if (strict) {
                 _.each(attrs, function (a) {
-                    if (obj0[a].valueOf() !== obj1[a].valueOf())
-                        difference = a + ': ' + obj0[a].valueOf() + '!==' + obj1[a].valueOf();
+                    if (obj0[a].valueOf() !== obj1[a].valueOf()) {
+                        diff0 = obj0[a].valueOf() + '';
+                        diff1 = obj1[a].valueOf() + '';
+                        if (diff0 && diff0.length > 20)
+                            diff0 = diff0.slice(0, 20) + '...';
+                        if (diff1 && diff1.length > 20)
+                            diff1 = diff1.slice(0, 20) + '...';
+                        difference = a + ': ' + diff0 + '!==' + diff1;
+                    }
                 });
             }
             else {
                 _.each(attrs, function (a) {
                     if (getValue(obj0[a]) != getValue(obj1[a])) {
-                        difference = a + ': ' + getValue(obj0[a]) + '!=' + getValue(obj1[a]);
+                        diff0 = getValue(obj0[a]) + '';
+                        diff1 = getValue(obj1[a]) + '';
+                        if (diff0 && diff0.length > 20)
+                            diff0 = diff0.slice(0, 20) + '...';
+                        if (diff1 && diff1.length > 20)
+                            diff1 = diff1.slice(0, 20) + '...';
+                        difference = a + ': ' + diff0 + '!=' + diff1;
                     }
                 });
             }
@@ -458,7 +473,7 @@ var CasparCGState = (function () {
                     (!obj0 && obj1))
                 difference = '' + (!!obj0) + ' t/f ' + (!!obj1);
         }
-        if (difference && difference.length>20) difference = difference.slice(0,30)+'...';
+        //if (difference && difference.length>40) difference = difference.slice(0,40)+'...';
         return difference;
     };
     /** */
