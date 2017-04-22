@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-
+const CasparCGStateVersion = "2017-04-22 09:56";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
@@ -73,6 +73,9 @@ export class CasparCGState {
 		if (config && config.externalStorage) {
 			this._currentStateStorage.assignExternalStorage(config.externalStorage);
 		}
+
+		console.log("CasparCGState version: "+CasparCGStateVersion);
+		
 
 		
 	}

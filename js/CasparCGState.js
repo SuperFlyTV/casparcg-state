@@ -12,6 +12,7 @@ var TransitionObject = StateObject_1.StateObject.TransitionObject;
 //import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
+var CasparCGStateVersion = "2017-04-22 09:56";
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
@@ -47,6 +48,7 @@ var CasparCGState = (function () {
         if (config && config.externalStorage) {
             this._currentStateStorage.assignExternalStorage(config.externalStorage);
         }
+        console.log("CasparCGState version: " + CasparCGStateVersion);
     }
     /** */
     CasparCGState.prototype.initStateFromChannelInfo = function (channels) {
