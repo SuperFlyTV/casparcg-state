@@ -613,12 +613,14 @@ var CasparCGState = (function () {
                             var inputType = (layer.input && layer.media && (layer.media || '').toString()) || 'decklink';
                             var device = (layer.input && layer.input.device);
                             var format = (layer.input && layer.input.format); // todo: the default value should be the channel format
+                            var channelLayout = (layer.input && layer.input.channelLayout) || null;
                             if (inputType == 'decklink') {
                                 _.extend(options, {
                                     device: device,
                                     //filter		// "ffmpeg filter"
                                     //channelLayout
                                     format: format,
+                                    channelLayout: channelLayout
                                 });
                                 cmd = new casparcg_connection_1.AMCP.PlayDecklinkCommand(options);
                             }

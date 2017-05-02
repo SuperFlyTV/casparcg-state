@@ -37,7 +37,8 @@ export namespace StateObject {
 		
 		input: {
 			device: number,
-			format: string
+			format: string,
+			channelLayout?: string
 		} | null ;
 
 		route: {

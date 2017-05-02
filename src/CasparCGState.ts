@@ -762,6 +762,7 @@ export class CasparCGState {
 							let inputType:string 	= (layer.input && layer.media && (layer.media||'').toString()) || 'decklink';
 							let device:number|null 		= (layer.input && layer.input.device) ;
 							let format:string|null 		= (layer.input && layer.input.format) ; // todo: the default value should be the channel format
+							let channelLayout:string|null 	= (layer.input && layer.input.channelLayout) || null;
 
 							if (inputType == 'decklink') {
 
@@ -773,7 +774,8 @@ export class CasparCGState {
 									//filter		// "ffmpeg filter"
 									//channelLayout
 									format: 		format,
-								})
+									channelLayout: channelLayout
+								});
 								
 
 								cmd = new AMCP.PlayDecklinkCommand(options);
