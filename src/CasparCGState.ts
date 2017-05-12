@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-const CasparCGStateVersion = "2017-04-22 09:56";
+const CasparCGStateVersion = "2017-05-12 19:47";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
@@ -151,15 +151,26 @@ export class CasparCGState {
 
 	/** */
 	applyCommands(commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}>): void {
+		// Applies commands to current state
+
 		// buffer commands until we are initialised
 		if(!this.isInitialised) {
 			this.bufferedCommands = this.bufferedCommands.concat(commands);
 			return;
 		}
 
-		// iterates over commands and applies new state to current state
-
 		let currentState = this._currentStateStorage.fetchState();
+		
+		// Applies commands to target state	
+		this.applyCommandsToState(currentState,commands);
+
+		// Save new state:
+		this._currentStateStorage.storeState(currentState);
+	}
+	applyCommandsToState(currentState:any, commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}>): void {
+		
+
+		// iterates over commands and applies new state to provided state object
 
 
 		let setMixerState = (channel:Channel, command:IAMCPCommandVO, attr:string, subValue:Array<string> | string) => {
@@ -437,7 +448,7 @@ export class CasparCGState {
 					setMixerState(channel, command,'opacity','opacity');
 					break;
 				case "MixerPerspectiveCommand":
-					setMixerState(channel, command,'perspective',['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottmLeftX','bottomLeftY']);
+					setMixerState(channel, command,'perspective',['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottomLeftX','bottomLeftY']);
 					break;
 				case "MixerRotationCommand":
 					setMixerState(channel, command,'rotation','rotation');
@@ -511,9 +522,8 @@ export class CasparCGState {
 				//
 			}
 		});
-			
-		// Save new state:
-		this._currentStateStorage.storeState(currentState);
+		
+		
 	}
 
 	/** */
@@ -604,7 +614,13 @@ export class CasparCGState {
 		return difference;
 	}
 	/** */
-	public diffStates(oldState: CasparCG, newState: CasparCG): Array<{cmds:Array<IAMCPCommandVO>, additionalLayerState?: Layer}> {
+	public diffStates(
+		oldState: CasparCG, 
+		newState: CasparCG
+	): Array<{
+		cmds:Array<IAMCPCommandVO>, 
+		additionalLayerState?: Layer
+	}> {
 
 		// needs to be initialised
 		if(!this.isInitialised) {
@@ -644,6 +660,9 @@ export class CasparCGState {
 		}
 
 		// ==============================================================================
+
+		let bundledCmds:{[bundleGroup:string]: any} = {};
+
 		// Added/updated things:
 		_.each(newState.channels, (channel,channelKey) => {
 			let oldChannel = oldState.channels[channelKey+''] || (new Channel());
@@ -760,8 +779,8 @@ export class CasparCGState {
 
 							
 							let inputType:string 	= (layer.input && layer.media && (layer.media||'').toString()) || 'decklink';
-							let device:number|null 		= (layer.input && layer.input.device) ;
-							let format:string|null 		= (layer.input && layer.input.format) ; // todo: the default value should be the channel format
+							let device:number|null 		= (layer.input && layer.input.device);
+							let format:string|null 		= (layer.input && layer.input.format) || null;
 							let channelLayout:string|null 	= (layer.input && layer.input.channelLayout) || null;
 
 							if (inputType == 'decklink') {
@@ -809,6 +828,7 @@ export class CasparCGState {
 								),
 
 								customCommand: 'route',
+
 							});
 
 							cmd = new AMCP.CustomCommand(options);
@@ -986,7 +1006,24 @@ export class CasparCGState {
 										options[subValue] = o;
 									}
 								}
-								additionalCmds.push(new Command(options));
+
+								
+								if (layer.mixer.bundleWithCommands) {
+									
+									
+									options['bundleWithCommands'] = layer.mixer.bundleWithCommands;
+									var key = layer.mixer.bundleWithCommands+'';
+									if (!bundledCmds[key]) bundledCmds[key] = [];
+
+									options['defer'] = true;
+
+									bundledCmds[key].push(new Command(options));
+
+								} else {
+									additionalCmds.push(new Command(options));
+								}
+
+
 							} else {
 								// @todo: implement
 								// reset this mixer?
@@ -1036,7 +1073,7 @@ export class CasparCGState {
 						// mastervolume
 						// mipmap
 						pushMixerCommand('opacity',AMCP.MixerOpacityCommand,'opacity');
-						pushMixerCommand('perspective',AMCP.MixerPerspectiveCommand, ['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottmLeftX','bottomLeftY']);
+						pushMixerCommand('perspective',AMCP.MixerPerspectiveCommand, ['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottomLeftX','bottomLeftY']);
 						pushMixerCommand('rotation',AMCP.MixerRotationCommand,'rotation');
 						pushMixerCommand('saturation',AMCP.MixerSaturationCommand,'saturation');
 						pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'state');
@@ -1144,6 +1181,31 @@ export class CasparCGState {
 
 
 		});
+
+		// bundled commands:
+		_.each(bundledCmds, (bundle:any) => {
+			
+			var channels = _.uniq(_.pluck(bundle,'channel'));
+
+			_.each(channels,(channel) => {
+
+				bundle.push(new AMCP.MixerCommitCommand({
+					channel: Number(channel)
+				}));
+			});
+			
+
+			var cmds:any = [];
+
+			_.each(bundle, (cmd:any) => {
+				cmds.push(cmd.serialize());
+			});
+
+
+			commands.push({cmds: cmds });
+		});
+
+
 		return commands;
 	}
 

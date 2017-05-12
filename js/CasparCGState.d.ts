@@ -55,6 +55,10 @@ export declare class CasparCGState {
         cmd: IAMCPCommandVO;
         additionalLayerState?: Layer;
     }>): void;
+    applyCommandsToState(currentState: any, commands: Array<{
+        cmd: IAMCPCommandVO;
+        additionalLayerState?: Layer;
+    }>): void;
     /** */
     applyState(channelNo: number, layerNo: number, stateData: {
         [key: string]: any;

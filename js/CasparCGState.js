@@ -12,7 +12,7 @@ var TransitionObject = StateObject_1.StateObject.TransitionObject;
 //import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
-var CasparCGStateVersion = "2017-04-22 09:56";
+var CasparCGStateVersion = "2017-05-12 19:47";
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
@@ -116,14 +116,21 @@ var CasparCGState = (function () {
     };
     /** */
     CasparCGState.prototype.applyCommands = function (commands) {
-        var _this = this;
+        // Applies commands to current state
         // buffer commands until we are initialised
         if (!this.isInitialised) {
             this.bufferedCommands = this.bufferedCommands.concat(commands);
             return;
         }
-        // iterates over commands and applies new state to current state
         var currentState = this._currentStateStorage.fetchState();
+        // Applies commands to target state	
+        this.applyCommandsToState(currentState, commands);
+        // Save new state:
+        this._currentStateStorage.storeState(currentState);
+    };
+    CasparCGState.prototype.applyCommandsToState = function (currentState, commands) {
+        // iterates over commands and applies new state to provided state object
+        var _this = this;
         var setMixerState = function (channel, command, attr, subValue) {
             var layer = _this.ensureLayer(channel, command.layer);
             if (!layer.mixer)
@@ -343,7 +350,7 @@ var CasparCGState = (function () {
                     setMixerState(channel, command, 'opacity', 'opacity');
                     break;
                 case "MixerPerspectiveCommand":
-                    setMixerState(channel, command, 'perspective', ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottmLeftX', 'bottomLeftY']);
+                    setMixerState(channel, command, 'perspective', ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottomLeftX', 'bottomLeftY']);
                     break;
                 case "MixerRotationCommand":
                     setMixerState(channel, command, 'rotation', 'rotation');
@@ -401,8 +408,6 @@ var CasparCGState = (function () {
                     break;
             }
         });
-        // Save new state:
-        this._currentStateStorage.storeState(currentState);
     };
     /** */
     CasparCGState.prototype.applyState = function (channelNo, layerNo, stateData) {
@@ -515,6 +520,7 @@ var CasparCGState = (function () {
             return options;
         };
         // ==============================================================================
+        var bundledCmds = {};
         // Added/updated things:
         _.each(newState.channels, function (channel, channelKey) {
             var oldChannel = oldState.channels[channelKey + ''] || (new Channel());
@@ -612,7 +618,7 @@ var CasparCGState = (function () {
                         else if (layer.content == 'input' && layer.media !== null) {
                             var inputType = (layer.input && layer.media && (layer.media || '').toString()) || 'decklink';
                             var device = (layer.input && layer.input.device);
-                            var format = (layer.input && layer.input.format); // todo: the default value should be the channel format
+                            var format = (layer.input && layer.input.format) || null;
                             var channelLayout = (layer.input && layer.input.channelLayout) || null;
                             if (inputType == 'decklink') {
                                 _.extend(options, {
@@ -755,7 +761,17 @@ var CasparCGState = (function () {
                                         options_1[subValue] = o_2;
                                     }
                                 }
-                                additionalCmds_1.push(new Command(options_1));
+                                if (layer.mixer.bundleWithCommands) {
+                                    options_1['bundleWithCommands'] = layer.mixer.bundleWithCommands;
+                                    var key = layer.mixer.bundleWithCommands + '';
+                                    if (!bundledCmds[key])
+                                        bundledCmds[key] = [];
+                                    options_1['defer'] = true;
+                                    bundledCmds[key].push(new Command(options_1));
+                                }
+                                else {
+                                    additionalCmds_1.push(new Command(options_1));
+                                }
                             }
                             else {
                                 // @todo: implement
@@ -792,7 +808,7 @@ var CasparCGState = (function () {
                     // mastervolume
                     // mipmap
                     pushMixerCommand('opacity', casparcg_connection_1.AMCP.MixerOpacityCommand, 'opacity');
-                    pushMixerCommand('perspective', casparcg_connection_1.AMCP.MixerPerspectiveCommand, ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottmLeftX', 'bottomLeftY']);
+                    pushMixerCommand('perspective', casparcg_connection_1.AMCP.MixerPerspectiveCommand, ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottomLeftX', 'bottomLeftY']);
                     pushMixerCommand('rotation', casparcg_connection_1.AMCP.MixerRotationCommand, 'rotation');
                     pushMixerCommand('saturation', casparcg_connection_1.AMCP.MixerSaturationCommand, 'saturation');
                     pushMixerCommand('straightAlpha', casparcg_connection_1.AMCP.MixerStraightAlphaOutputCommand, 'state');
@@ -869,6 +885,20 @@ var CasparCGState = (function () {
                     }
                 }
             });
+        });
+        // bundled commands:
+        _.each(bundledCmds, function (bundle) {
+            var channels = _.uniq(_.pluck(bundle, 'channel'));
+            _.each(channels, function (channel) {
+                bundle.push(new casparcg_connection_1.AMCP.MixerCommitCommand({
+                    channel: Number(channel)
+                }));
+            });
+            var cmds = [];
+            _.each(bundle, function (cmd) {
+                cmds.push(cmd.serialize());
+            });
+            commands.push({ cmds: cmds });
         });
         return commands;
     };

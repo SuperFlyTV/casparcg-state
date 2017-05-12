@@ -37,7 +37,7 @@ export namespace StateObject {
 		
 		input: {
 			device: number,
-			format: string,
+			format?: string,
 			channelLayout?: string
 		} | null ;
 
@@ -75,7 +75,7 @@ export namespace StateObject {
 			return val;
 		}
 		public static supportedAttributes():Array<string> {
-			return ['anchor','brightness','clip','contrast','crop','fill','opacity','perspective','rotation','saturation','straightAlpha','volume'];
+			return ['anchor','brightness','clip','contrast','crop','fill','opacity','perspective','rotation','saturation','straightAlpha','volume','bundleWithCommands'];
 		};
 
 		public static getDefaultValues(attr:string):Object|number|boolean|null {
@@ -137,7 +137,7 @@ export namespace StateObject {
 						topRightY: 0, 
 						bottomRightX: 1, 
 						bottomRightY: 1, 
-						bottmLeftX: 0, 
+						bottomLeftX: 0, 
 						bottomLeftY: 1
 					};
 				case 'rotation':
@@ -188,7 +188,7 @@ export namespace StateObject {
 			topRightY: number, 
 			bottomRightX: number, 
 			bottomRightY: number, 
-			bottmLeftX: number, 
+			bottomLeftX: number, 
 			bottomLeftY: number
 		} | TransitionObject;
 		
@@ -196,6 +196,8 @@ export namespace StateObject {
 		saturation?: number | TransitionObject;
 		straightAlpha?: boolean | TransitionObject;
 		volume?: number | TransitionObject;
+
+		bundleWithCommands?: number; // special function: bundle and DEFER with other mixer-commands
 	}
 
 

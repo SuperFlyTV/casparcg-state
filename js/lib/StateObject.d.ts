@@ -31,7 +31,7 @@ export declare namespace StateObject {
         media: string | TransitionObject | null;
         input: {
             device: number;
-            format: string;
+            format?: string;
             channelLayout?: string;
         } | null;
         route: {
@@ -94,13 +94,14 @@ export declare namespace StateObject {
             topRightY: number;
             bottomRightX: number;
             bottomRightY: number;
-            bottmLeftX: number;
+            bottomLeftX: number;
             bottomLeftY: number;
         } | TransitionObject;
         rotation?: number | TransitionObject;
         saturation?: number | TransitionObject;
         straightAlpha?: boolean | TransitionObject;
         volume?: number | TransitionObject;
+        bundleWithCommands?: number;
     }
     /** */
     class Next {

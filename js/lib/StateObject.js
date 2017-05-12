@@ -50,7 +50,7 @@ var StateObject;
             return val;
         };
         Mixer.supportedAttributes = function () {
-            return ['anchor', 'brightness', 'clip', 'contrast', 'crop', 'fill', 'opacity', 'perspective', 'rotation', 'saturation', 'straightAlpha', 'volume'];
+            return ['anchor', 'brightness', 'clip', 'contrast', 'crop', 'fill', 'opacity', 'perspective', 'rotation', 'saturation', 'straightAlpha', 'volume', 'bundleWithCommands'];
         };
         ;
         Mixer.getDefaultValues = function (attr) {
@@ -111,7 +111,7 @@ var StateObject;
                         topRightY: 0,
                         bottomRightX: 1,
                         bottomRightY: 1,
-                        bottmLeftX: 0,
+                        bottomLeftX: 0,
                         bottomLeftY: 1
                     };
                 case 'rotation':
