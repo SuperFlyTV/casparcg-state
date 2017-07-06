@@ -12,7 +12,7 @@ var TransitionObject = StateObject_1.StateObject.TransitionObject;
 //import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
-var CasparCGStateVersion = "2017-05-12 19:47";
+var CasparCGStateVersion = "2017-07-06 12:19";
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;

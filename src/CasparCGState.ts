@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-const CasparCGStateVersion = "2017-05-12 19:47";
+const CasparCGStateVersion = "2017-07-06 12:19";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
