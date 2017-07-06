@@ -278,7 +278,7 @@ export namespace StateObject {
 	*/
 	export class StateObjectStorage {
 		private _internalState: CasparCG = new CasparCG();
-		private _externalStorage: ((action: string, data: Object | null) => CasparCG) | null;
+		private _externalStorage: ((action: string, data?: Object | null) => CasparCG) | null;
 
 
 		assignExternalStorage(fcn: (action: string, data: Object | null) => CasparCG ): void {
@@ -300,7 +300,14 @@ export namespace StateObject {
 			} else {
 				this._internalState = data;
 			}
-		}
+		};
+		clearState(): void {
+			if (this._externalStorage) {
+				this._externalStorage("clear");
+			} else {
+				this._internalState = new CasparCG();
+			}
+		};
 
 	}
 

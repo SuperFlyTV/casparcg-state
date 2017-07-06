@@ -46,6 +46,7 @@ export declare class CasparCGState {
     }*/
     /** */
     setState(state: CasparCG): void;
+    clearState(): void;
     /** */
     getState(options?: {
         full: boolean;

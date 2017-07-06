@@ -131,6 +131,10 @@ export class CasparCGState {
 		this._currentStateStorage.storeState(state);
 	}
 
+	clearState(): void {
+		this._currentStateStorage.clearState();
+	}
+
 	/** */
 	getState(options: {full: boolean} = {full: true}): CasparCG {
 		// needs to be initialised

@@ -96,6 +96,9 @@ var CasparCGState = (function () {
     CasparCGState.prototype.setState = function (state) {
         this._currentStateStorage.storeState(state);
     };
+    CasparCGState.prototype.clearState = function () {
+        this._currentStateStorage.clearState();
+    };
     /** */
     CasparCGState.prototype.getState = function (options) {
         if (options === void 0) { options = { full: true }; }

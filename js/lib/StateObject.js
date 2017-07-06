@@ -217,6 +217,16 @@ var StateObject;
                 this._internalState = data;
             }
         };
+        ;
+        StateObjectStorage.prototype.clearState = function () {
+            if (this._externalStorage) {
+                this._externalStorage("clear");
+            }
+            else {
+                this._internalState = new CasparCG();
+            }
+        };
+        ;
         return StateObjectStorage;
     }());
     StateObject.StateObjectStorage = StateObjectStorage;

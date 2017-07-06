@@ -146,5 +146,6 @@ export declare namespace StateObject {
         assignExternalStorage(fcn: (action: string, data: Object | null) => CasparCG): void;
         fetchState(): CasparCG;
         storeState(data: CasparCG): void;
+        clearState(): void;
     }
 }
