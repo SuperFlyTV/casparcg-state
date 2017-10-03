@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-const CasparCGStateVersion = "2017-07-06 12:19";
+const CasparCGStateVersion = "2017-10-03 09:23";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
@@ -40,7 +40,7 @@ export class CasparCGState {
 	private _isInitialised: boolean;
 	public bufferedCommands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}> = [];
 
-	
+	private _externalLog?: (arg0?:any,arg1?:any,arg2?:any,arg3?:any) => void;
 
 
 	/** */
@@ -48,6 +48,7 @@ export class CasparCGState {
 		currentTime?: 				() 												=> number,
 		getMediaDurationCallback?: 	(clip: string, callback: (duration: number) 	=> void) => void
 		externalStorage?:			(action: string, data: Object | null) 			=> CasparCG
+		externalLog?: (arg0?:any,arg1?:any,arg2?:any,arg3?:any) => void 
 	
 	}) {
 		// set the callback for handling time messurement
@@ -74,10 +75,19 @@ export class CasparCGState {
 			this._currentStateStorage.assignExternalStorage(config.externalStorage);
 		}
 
-		console.log("CasparCGState version: "+CasparCGStateVersion);
+		this.log("CasparCGState version: "+CasparCGStateVersion);
 		
-
+		if (config && config.externalLog) {
+			this._externalLog = config.externalLog;
+		}
 		
+	}
+	private log(arg0?:any,arg1?:any,arg2?:any,arg3?:any):void {
+		if (this._externalLog) {
+			this._externalLog(arg0,arg1,arg2,arg3);
+		} else {
+			console.log(arg0,arg1,arg2,arg3);
+		}
 	}
 
 	/** */
@@ -246,7 +256,11 @@ export class CasparCGState {
 
 						layer.media = new TransitionObject(<string>command._objectParams['clip']);
 						if (command._objectParams['transition']) {
-							layer.media.inTransition = new Transition(<string>command._objectParams['transition'], +command._objectParams['transitionDuration'], <string>command._objectParams['transitionEasing'], <string>command._objectParams['transitionDirection']);
+							layer.media.inTransition = new Transition(
+								<string>command._objectParams['transition'], 
+								+(command._objectParams['transitionDuration']||0), 
+								<string>command._objectParams['transitionEasing'], 
+								<string>command._objectParams['transitionDirection']);
 						}
 
 						layer.looping = !!command._objectParams['loop'];
@@ -310,7 +324,12 @@ export class CasparCGState {
 
 						layer.media = new TransitionObject(<string>command._objectParams['clip']);
 						if (command._objectParams['transition']) {
-							layer.media.inTransition = new Transition(<string>command._objectParams['transition'], +command._objectParams['transitionDuration'], <string>command._objectParams['transitionEasing'], <string>command._objectParams['transitionDirection']);
+							layer.media.inTransition = new Transition(
+								<string>command._objectParams['transition'], 
+								+(command._objectParams['transitionDuration']||0), 
+								<string>command._objectParams['transitionEasing'], 
+								<string>command._objectParams['transitionDirection']
+							);
 						}
 
 						layer.next.looping = !!command._objectParams['loop'];
@@ -711,7 +730,7 @@ export class CasparCGState {
 					}
 					if (diff) { 
 						// Added things:
-						console.log('ADD: '+layer.content+' '+diff);
+						this.log('ADD: '+layer.content+' '+diff);
 						
 						let options:any = {};
 						options.channel = channel.channelNo;
@@ -721,7 +740,7 @@ export class CasparCGState {
 						setTransition(options,channel,oldLayer,layer.media);
 						if (layer.content == 'media' && layer.media !== null) {
 
-							let timeSincePlay:any = (layer.pauseTime || time ) - layer.playTime;
+							let timeSincePlay:any = (layer.pauseTime || time ) - (layer.playTime||0);
 							if (timeSincePlay < this.minTimeSincePlay) {
 								timeSincePlay = 0;
 							}
@@ -889,7 +908,7 @@ export class CasparCGState {
 
 							// Updated things:
 
-							console.log('UPDATE: '+layer.content+' '+diff);
+							this.log('UPDATE: '+layer.content+' '+diff);
 
 							let options:any = {};
 							options.channel = channel.channelNo;
@@ -1128,11 +1147,11 @@ export class CasparCGState {
 
 					if (!newLayer.content && oldLayer.content) {
 
-						console.log('REMOVE '+channelKey+'-'+layerKey+': '+oldLayer.content);
+						this.log('REMOVE '+channelKey+'-'+layerKey+': '+oldLayer.content);
 						
 						if (oldLayer.noClear) {
 							// hack: don't do the clear command
-							console.log('NOCLEAR is set!');
+							this.log('NOCLEAR is set!');
 						} else {
 
 							let cmd;
