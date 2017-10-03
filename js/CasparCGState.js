@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var _ = require("underscore");
 // state NS
 var StateObject_1 = require("./lib/StateObject");
@@ -12,7 +13,7 @@ var TransitionObject = StateObject_1.StateObject.TransitionObject;
 //import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
-var CasparCGStateVersion = "2017-07-06 12:19";
+var CasparCGStateVersion = "2017-10-03 09:23";
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
@@ -48,8 +49,19 @@ var CasparCGState = (function () {
         if (config && config.externalStorage) {
             this._currentStateStorage.assignExternalStorage(config.externalStorage);
         }
-        console.log("CasparCGState version: " + CasparCGStateVersion);
+        this.log("CasparCGState version: " + CasparCGStateVersion);
+        if (config && config.externalLog) {
+            this._externalLog = config.externalLog;
+        }
     }
+    CasparCGState.prototype.log = function (arg0, arg1, arg2, arg3) {
+        if (this._externalLog) {
+            this._externalLog(arg0, arg1, arg2, arg3);
+        }
+        else {
+            console.log(arg0, arg1, arg2, arg3);
+        }
+    };
     /** */
     CasparCGState.prototype.initStateFromChannelInfo = function (channels) {
         var currentState = this._currentStateStorage.fetchState();
@@ -173,6 +185,7 @@ var CasparCGState = (function () {
                 channel = new Channel();
                 channel.channelNo = channelNo;
                 currentState.channels[channel.channelNo + ''] = channel;
+                //throw new Error(`Missing channel with channel number "${command.channel}"`);
             }
             var cmdName = command._commandName;
             switch (cmdName) {
@@ -186,7 +199,7 @@ var CasparCGState = (function () {
                         layer.playing = (cmdName == 'PlayCommand');
                         layer.media = new TransitionObject(command._objectParams['clip']);
                         if (command._objectParams['transition']) {
-                            layer.media.inTransition = new Transition(command._objectParams['transition'], +command._objectParams['transitionDuration'], command._objectParams['transitionEasing'], command._objectParams['transitionDirection']);
+                            layer.media.inTransition = new Transition(command._objectParams['transition'], +(command._objectParams['transitionDuration'] || 0), command._objectParams['transitionEasing'], command._objectParams['transitionDirection']);
                         }
                         layer.looping = !!command._objectParams['loop'];
                         if (i.additionalLayerState) {
@@ -240,7 +253,7 @@ var CasparCGState = (function () {
                         layer.next.content = 'media';
                         layer.media = new TransitionObject(command._objectParams['clip']);
                         if (command._objectParams['transition']) {
-                            layer.media.inTransition = new Transition(command._objectParams['transition'], +command._objectParams['transitionDuration'], command._objectParams['transitionEasing'], command._objectParams['transitionDirection']);
+                            layer.media.inTransition = new Transition(command._objectParams['transition'], +(command._objectParams['transitionDuration'] || 0), command._objectParams['transitionEasing'], command._objectParams['transitionDirection']);
                         }
                         layer.next.looping = !!command._objectParams['loop'];
                     }
@@ -564,7 +577,7 @@ var CasparCGState = (function () {
                     }
                     if (diff) {
                         // Added things:
-                        console.log('ADD: ' + layer.content + ' ' + diff);
+                        _this.log('ADD: ' + layer.content + ' ' + diff);
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
@@ -572,7 +585,7 @@ var CasparCGState = (function () {
                             options.noClear = layer.noClear;
                         setTransition(options, channel, oldLayer, layer.media);
                         if (layer.content == 'media' && layer.media !== null) {
-                            var timeSincePlay = (layer.pauseTime || time) - layer.playTime;
+                            var timeSincePlay = (layer.pauseTime || time) - (layer.playTime || 0);
                             if (timeSincePlay < _this.minTimeSincePlay) {
                                 timeSincePlay = 0;
                             }
@@ -632,6 +645,10 @@ var CasparCGState = (function () {
                                     channelLayout: channelLayout
                                 });
                                 cmd = new casparcg_connection_1.AMCP.PlayDecklinkCommand(options);
+                                /*cmd = new AMCP.CustomCommand(_.extend(options,{
+                                    command: "PLAY "+options.channel+"-"+options.layer+" "+inputType+" DEVICE "+device+" FORMAT "+format,
+                                }));
+                                */
                             }
                         }
                         else if (layer.content == 'route' && layer.route) {
@@ -662,6 +679,30 @@ var CasparCGState = (function () {
                                 functionLayer: layer,
                                 media: layer.media,
                             };
+                            /*let fcn = (this._externalFunctions||{})[layer.executeFcn];
+
+                            
+
+                            if (fcn && _.isFunction(fcn)) {
+
+                                var returnValue = fcn(layer,layer.executeData);
+
+
+
+
+                                if (!returnValue !== true) {
+
+                                    // save state:
+                                    let layer0 = this.ensureLayer(oldChannel, layer.layerNo);
+
+                                    layer0.content 	= layer.content;
+                                    layer0.media 		= layer.media;
+                                    layer0.playing 	= layer.playing;
+                                    layer0.playTime 	= layer.playTime;
+                                }
+
+
+                            }*/
                         }
                         else {
                             if (oldLayer.content == 'media' || oldLayer.content == 'media') {
@@ -673,7 +714,7 @@ var CasparCGState = (function () {
                         diff = _this.compareAttrs(layer, oldLayer, ['templateData']);
                         if (diff) {
                             // Updated things:
-                            console.log('UPDATE: ' + layer.content + ' ' + diff);
+                            _this.log('UPDATE: ' + layer.content + ' ' + diff);
                             var options = {};
                             options.channel = channel.channelNo;
                             options.layer = layer.layerNo;
@@ -786,6 +827,9 @@ var CasparCGState = (function () {
                                 }
                                 else {
                                     options_1[attr] = defaultValue;
+                                    /*_.extend(options,{
+                                        value:
+                                    });*/
                                 }
                                 /*
                                 console.log('defaultValues')
@@ -841,10 +885,10 @@ var CasparCGState = (function () {
                 var newLayer = newChannel.layers[layerKey + ''] || (new Layer);
                 if (newLayer) {
                     if (!newLayer.content && oldLayer.content) {
-                        console.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content);
+                        _this.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content);
                         if (oldLayer.noClear) {
                             // hack: don't do the clear command
-                            console.log('NOCLEAR is set!');
+                            _this.log('NOCLEAR is set!');
                         }
                         else {
                             var cmd = void 0;

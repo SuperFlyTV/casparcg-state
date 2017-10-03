@@ -14,12 +14,15 @@ export declare class CasparCGState {
         cmd: IAMCPCommandVO;
         additionalLayerState?: Layer;
     }>;
+    private _externalLog?;
     /** */
     constructor(config?: {
         currentTime?: () => number;
         getMediaDurationCallback?: (clip: string, callback: (duration: number) => void) => void;
         externalStorage?: (action: string, data: Object | null) => CasparCG;
+        externalLog?: (arg0?: any, arg1?: any, arg2?: any, arg3?: any) => void;
     });
+    private log(arg0?, arg1?, arg2?, arg3?);
     /** */
     initStateFromChannelInfo(channels: any): void;
     /** *
