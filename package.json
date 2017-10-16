@@ -45,7 +45,7 @@
     "resolve"
   ],
   "dependencies": {
-    "casparcg-connection": "git+https://github.com/superflytv/casparcg-connection.git#v3.0.0-next.4",
+    "casparcg-connection": "git+https://github.com/superflytv/casparcg-connection.git",
     "deep-diff": "^0.3.4",
     "underscore": "^1.8.3"
   },
