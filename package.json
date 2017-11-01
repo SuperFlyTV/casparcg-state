@@ -24,11 +24,15 @@
   "directories": {
     "lib": "src/"
   },
-  "author": {
+  "contributors":[{
+    "name": "Johan Nyman",
+    "email": "johan@superfly.tv",
+    "url": "http://superfly.tv"
+  },{
     "name": "Jesper Stærkær",
     "email": "jesper@superfly.tv",
     "url": "http://superfly.tv"
-  },
+  }],
   "homepage": "http://superfly.tv",
   "keywords": [
     "casparcg",

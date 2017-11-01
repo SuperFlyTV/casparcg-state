@@ -1,5 +1,5 @@
 import * as _ from "underscore";
-
+import {Enum as CCG_Enum} from "casparcg-connection";
 
 export namespace StateObject {
 	
@@ -75,7 +75,25 @@ export namespace StateObject {
 			return val;
 		}
 		public static supportedAttributes():Array<string> {
-			return ['anchor','brightness','clip','contrast','crop','fill','opacity','perspective','rotation','saturation','straightAlpha','volume','bundleWithCommands'];
+			return [
+			'anchor',
+			'blend',
+			'brightness',
+			'chroma',
+			'clip',
+			'contrast',
+			'crop',
+			'fill',
+			'keyer',
+			'levels',
+			'mastervolume',
+			'opacity',
+			'perspective',
+			'rotation',
+			'saturation',
+			'straightAlpha',
+			'volume',
+			'bundleWithCommands'];
 		};
 
 		public static getDefaultValues(attr:string):Object|number|boolean|null {
@@ -87,18 +105,20 @@ export namespace StateObject {
 						x:0, 
 						y:0
 					};
-				// blend?: CCG_conn.Enum.BlendMode | TransitionObject;
+				
+				case 'blend':
+					return CCG_Enum.BlendMode.NORMAL;
 				case 'brightness':
 					return 1;
-				/*case chroma':
+				
+				case 'chroma':
 					return {
-						keyer:CCG_conn.Enum.Chroma,
-						threshold:number,
-						softness: number,
-						spill: number
-						
+						keyer:CCG_Enum.Chroma.NONE,
+						threshold: 0,
+						softness: 0,
+						spill: 0
 					};
-					*/
+					
 				case 'clip':
 					return {
 						x:0, 
@@ -123,9 +143,19 @@ export namespace StateObject {
 						yScale:1 
 					};
 				// grid
-				// keyer
-				// levels
-				// mastervolume
+				case 'keyer': // Layer mask
+					return false;
+				case 'levels':
+					return {
+						minInput: 	0, 
+						maxInput: 	1, 
+						gamma: 		1, 
+						minOutput: 	0, 
+						maxOutput: 	1, 
+						
+					};
+				case 'mastervolume':
+					return 1;
 				// mipmap
 				case 'opacity':
 					return 1
@@ -161,24 +191,23 @@ export namespace StateObject {
 		outTransition:Object;
 
 		anchor?: {x:number, y:number } | TransitionObject;
-		// blend?: CCG_conn.Enum.BlendMode | TransitionObject;
+		blend?: CCG_Enum.BlendMode | TransitionObject;
 		brightness?: number | TransitionObject;
-		/*chroma?: {
-			keyer:CCG_conn.Enum.Chroma,
+		chroma?: {
+			keyer:CCG_Enum.Chroma,
 			threshold:number,
 			softness: number,
 			spill: number
 			
 		} | TransitionObject;
-		*/
 		clip?: {x:number, y:number, width:number, height:number } | TransitionObject;
 		contrast?: number | TransitionObject;
 		crop?: {left:number, top:number, right:number, bottom:number } | TransitionObject;
 		fill?: {x:number, y:number, xScale:number, yScale:number } | TransitionObject;
 		// grid
-		// keyer
-		// levels
-		// mastervolume
+		keyer?: boolean | TransitionObject;
+		levels?: {minInput: number, maxInput: number, gamma: number, minOutput: number, maxOutput: number} | TransitionObject;
+		mastervolume?: number | TransitionObject;
 		// mipmap
 		opacity?: number | TransitionObject;
 		perspective?: {

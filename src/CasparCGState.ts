@@ -445,11 +445,15 @@ export class CasparCGState {
 				case "MixerAnchorCommand":
 					setMixerState(channel, command,'anchor',['x','y']);
 					break;
-				// blend
+				case "MixerBlendCommand":
+					setMixerState(channel, command,'blend','blend');
+					break;
 				case "MixerBrightnessCommand":
 					setMixerState(channel, command,'brightness','brightness');
 					break;
-				// chroma
+				case "MixerChromaCommand":
+					setMixerState(channel, command,'chroma',['keyer', 'threshold', 'softness', 'spill']);
+					break;
 				case "MixerClipCommand":
 					setMixerState(channel, command,'clip',['x','y','width','height']);
 					break;
@@ -463,9 +467,15 @@ export class CasparCGState {
 					setMixerState(channel, command,'fill',['x','y','xScale','yScale']);
 					break;
 				// grid
-				// keyer
-				// levels
-				// mastervolume
+				case "MixerKeyerCommand":
+					setMixerState(channel, command,'keyer','keyer');
+					break;
+				case "MixerLevelsCommand":
+					setMixerState(channel, command,'levels',['minInput', 'maxInput', 'gamma', 'minOutput', 'maxOutput']);
+					break;
+				case "MixerMastervolumeCommand":
+					setMixerState(channel, command,'mastervolume','mastervolume');
+					break;
 				// mipmap
 				case "MixerOpacityCommand":
 					setMixerState(channel, command,'opacity','opacity');
@@ -1083,17 +1093,17 @@ export class CasparCGState {
 
 
 						pushMixerCommand('anchor',AMCP.MixerAnchorCommand,['x','y']);
-						// blend
+						pushMixerCommand('blend',AMCP.MixerBlendCommand,'blend');
 						pushMixerCommand('brightness',AMCP.MixerBrightnessCommand,'brightness');
-						// chroma
+						pushMixerCommand('chroma',AMCP.MixerChromaCommand, ['keyer', 'threshold', 'softness', 'spill']);
 						pushMixerCommand('clip',AMCP.MixerClipCommand,['x','y','width','height']);
 						pushMixerCommand('contrast',AMCP.MixerContrastCommand,'contrast');
 						pushMixerCommand('crop',AMCP.MixerCropCommand,['left','top','right','bottom']);
 						pushMixerCommand('fill',AMCP.MixerFillCommand,['x','y','xScale','yScale']);
 						// grid
-						// keyer
-						// levels
-						// mastervolume
+						pushMixerCommand('keyer',AMCP.MixerKeyerCommand,'keyer');
+						pushMixerCommand('levels',AMCP.MixerLevelsCommand,['minInput', 'maxInput', 'gamma', 'minOutput', 'maxOutput']);
+						pushMixerCommand('mastervolume',AMCP.MixerMastervolumeCommand,'mastervolume');
 						// mipmap
 						pushMixerCommand('opacity',AMCP.MixerOpacityCommand,'opacity');
 						pushMixerCommand('perspective',AMCP.MixerPerspectiveCommand, ['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottomLeftX','bottomLeftY']);
