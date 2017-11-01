@@ -19,7 +19,7 @@ var CasparCGStateVersion = "2017-10-03 09:23";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
 // import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 /** */
-var CasparCGState = (function () {
+var CasparCGState = /** @class */ (function () {
     /** */
     function CasparCGState(config) {
         var _this = this;
@@ -340,11 +340,15 @@ var CasparCGState = (function () {
                 case "MixerAnchorCommand":
                     setMixerState(channel, command, 'anchor', ['x', 'y']);
                     break;
-                // blend
+                case "MixerBlendCommand":
+                    setMixerState(channel, command, 'blend', 'blend');
+                    break;
                 case "MixerBrightnessCommand":
                     setMixerState(channel, command, 'brightness', 'brightness');
                     break;
-                // chroma
+                case "MixerChromaCommand":
+                    setMixerState(channel, command, 'chroma', ['keyer', 'threshold', 'softness', 'spill']);
+                    break;
                 case "MixerClipCommand":
                     setMixerState(channel, command, 'clip', ['x', 'y', 'width', 'height']);
                     break;
@@ -358,9 +362,15 @@ var CasparCGState = (function () {
                     setMixerState(channel, command, 'fill', ['x', 'y', 'xScale', 'yScale']);
                     break;
                 // grid
-                // keyer
-                // levels
-                // mastervolume
+                case "MixerKeyerCommand":
+                    setMixerState(channel, command, 'keyer', 'keyer');
+                    break;
+                case "MixerLevelsCommand":
+                    setMixerState(channel, command, 'levels', ['minInput', 'maxInput', 'gamma', 'minOutput', 'maxOutput']);
+                    break;
+                case "MixerMastervolumeCommand":
+                    setMixerState(channel, command, 'mastervolume', 'mastervolume');
+                    break;
                 // mipmap
                 case "MixerOpacityCommand":
                     setMixerState(channel, command, 'opacity', 'opacity');
@@ -842,17 +852,17 @@ var CasparCGState = (function () {
                     };
                     //if (this.compareAttrs(layer.mixer,oldLayer.mixer,Mixer.supportedAttributes())) {
                     pushMixerCommand('anchor', casparcg_connection_1.AMCP.MixerAnchorCommand, ['x', 'y']);
-                    // blend
+                    pushMixerCommand('blend', casparcg_connection_1.AMCP.MixerBlendCommand, 'blend');
                     pushMixerCommand('brightness', casparcg_connection_1.AMCP.MixerBrightnessCommand, 'brightness');
-                    // chroma
+                    pushMixerCommand('chroma', casparcg_connection_1.AMCP.MixerChromaCommand, ['keyer', 'threshold', 'softness', 'spill']);
                     pushMixerCommand('clip', casparcg_connection_1.AMCP.MixerClipCommand, ['x', 'y', 'width', 'height']);
                     pushMixerCommand('contrast', casparcg_connection_1.AMCP.MixerContrastCommand, 'contrast');
                     pushMixerCommand('crop', casparcg_connection_1.AMCP.MixerCropCommand, ['left', 'top', 'right', 'bottom']);
                     pushMixerCommand('fill', casparcg_connection_1.AMCP.MixerFillCommand, ['x', 'y', 'xScale', 'yScale']);
                     // grid
-                    // keyer
-                    // levels
-                    // mastervolume
+                    pushMixerCommand('keyer', casparcg_connection_1.AMCP.MixerKeyerCommand, 'keyer');
+                    pushMixerCommand('levels', casparcg_connection_1.AMCP.MixerLevelsCommand, ['minInput', 'maxInput', 'gamma', 'minOutput', 'maxOutput']);
+                    pushMixerCommand('mastervolume', casparcg_connection_1.AMCP.MixerMastervolumeCommand, 'mastervolume');
                     // mipmap
                     pushMixerCommand('opacity', casparcg_connection_1.AMCP.MixerOpacityCommand, 'opacity');
                     pushMixerCommand('perspective', casparcg_connection_1.AMCP.MixerPerspectiveCommand, ['topLeftX', 'topLeftY', 'topRightX', 'topRightY', 'bottomRightX', 'bottomRightY', 'bottomLeftX', 'bottomLeftY']);

@@ -1,24 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var _ = require("underscore");
+var casparcg_connection_1 = require("casparcg-connection");
 var StateObject;
 (function (StateObject) {
     /** */
-    var Mappings = (function () {
+    var Mappings = /** @class */ (function () {
         function Mappings() {
             this.layers = {};
         }
         return Mappings;
     }());
     StateObject.Mappings = Mappings;
-    var Mapping = (function () {
+    var Mapping = /** @class */ (function () {
         function Mapping() {
         }
         return Mapping;
     }());
     StateObject.Mapping = Mapping;
     /** */
-    var CasparCG = (function () {
+    var CasparCG = /** @class */ (function () {
         function CasparCG() {
             this.channels = {}; //Array<Channel> = [new Channel()];
         }
@@ -26,7 +27,7 @@ var StateObject;
     }());
     StateObject.CasparCG = CasparCG;
     /** */
-    var Channel = (function () {
+    var Channel = /** @class */ (function () {
         function Channel() {
             this.channelNo = 1;
             this.layers = {}; //layers: Array<Layer> = [];
@@ -35,14 +36,14 @@ var StateObject;
     }());
     StateObject.Channel = Channel;
     /** */
-    var Layer = (function () {
+    var Layer = /** @class */ (function () {
         function Layer() {
         }
         return Layer;
     }());
     StateObject.Layer = Layer;
     /** */
-    var Mixer = (function () {
+    var Mixer = /** @class */ (function () {
         function Mixer() {
         }
         Mixer.getValue = function (val) {
@@ -51,7 +52,26 @@ var StateObject;
             return val;
         };
         Mixer.supportedAttributes = function () {
-            return ['anchor', 'brightness', 'clip', 'contrast', 'crop', 'fill', 'opacity', 'perspective', 'rotation', 'saturation', 'straightAlpha', 'volume', 'bundleWithCommands'];
+            return [
+                'anchor',
+                'blend',
+                'brightness',
+                'chroma',
+                'clip',
+                'contrast',
+                'crop',
+                'fill',
+                'keyer',
+                'levels',
+                'mastervolume',
+                'opacity',
+                'perspective',
+                'rotation',
+                'saturation',
+                'straightAlpha',
+                'volume',
+                'bundleWithCommands'
+            ];
         };
         ;
         Mixer.getDefaultValues = function (attr) {
@@ -62,18 +82,17 @@ var StateObject;
                         x: 0,
                         y: 0
                     };
-                // blend?: CCG_conn.Enum.BlendMode | TransitionObject;
+                case 'blend':
+                    return casparcg_connection_1.Enum.BlendMode.NORMAL;
                 case 'brightness':
                     return 1;
-                /*case chroma':
+                case 'chroma':
                     return {
-                        keyer:CCG_conn.Enum.Chroma,
-                        threshold:number,
-                        softness: number,
-                        spill: number
-                        
+                        keyer: casparcg_connection_1.Enum.Chroma.NONE,
+                        threshold: 0,
+                        softness: 0,
+                        spill: 0
                     };
-                    */
                 case 'clip':
                     return {
                         x: 0,
@@ -98,9 +117,18 @@ var StateObject;
                         yScale: 1
                     };
                 // grid
-                // keyer
-                // levels
-                // mastervolume
+                case 'keyer':// Layer mask
+                    return false;
+                case 'levels':
+                    return {
+                        minInput: 0,
+                        maxInput: 1,
+                        gamma: 1,
+                        minOutput: 0,
+                        maxOutput: 1,
+                    };
+                case 'mastervolume':
+                    return 1;
                 // mipmap
                 case 'opacity':
                     return 1;
@@ -134,13 +162,13 @@ var StateObject;
     }());
     StateObject.Mixer = Mixer;
     /** */
-    var Next = (function () {
+    var Next = /** @class */ (function () {
         function Next() {
         }
         return Next;
     }());
     StateObject.Next = Next;
-    var Transition = (function () {
+    var Transition = /** @class */ (function () {
         /**
          *
          */
@@ -167,7 +195,7 @@ var StateObject;
     }());
     StateObject.Transition = Transition;
     /** */
-    var TransitionObject = (function () {
+    var TransitionObject = /** @class */ (function () {
         /** */
         function TransitionObject(value) {
             if (!_.isUndefined(value)) {
@@ -192,7 +220,7 @@ var StateObject;
     * By default, it is storing the state as an internal variable,
     * byt may be using an external storage function for fetching/storing the state.
     */
-    var StateObjectStorage = (function () {
+    var StateObjectStorage = /** @class */ (function () {
         function StateObjectStorage() {
             this._internalState = new CasparCG();
         }

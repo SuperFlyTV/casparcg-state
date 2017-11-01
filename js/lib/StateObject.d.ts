@@ -1,3 +1,4 @@
+import { Enum as CCG_Enum } from "casparcg-connection";
 export declare namespace StateObject {
     /** */
     class Mappings {
@@ -66,7 +67,14 @@ export declare namespace StateObject {
             x: number;
             y: number;
         } | TransitionObject;
+        blend?: CCG_Enum.BlendMode | TransitionObject;
         brightness?: number | TransitionObject;
+        chroma?: {
+            keyer: CCG_Enum.Chroma;
+            threshold: number;
+            softness: number;
+            spill: number;
+        } | TransitionObject;
         clip?: {
             x: number;
             y: number;
@@ -86,6 +94,15 @@ export declare namespace StateObject {
             xScale: number;
             yScale: number;
         } | TransitionObject;
+        keyer?: boolean | TransitionObject;
+        levels?: {
+            minInput: number;
+            maxInput: number;
+            gamma: number;
+            minOutput: number;
+            maxOutput: number;
+        } | TransitionObject;
+        mastervolume?: number | TransitionObject;
         opacity?: number | TransitionObject;
         perspective?: {
             topLeftX: number;

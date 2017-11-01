@@ -1,6 +1,6 @@
+"use strict";
 /* =========================================*/
 /* ========== TEST CODE ====================*/
-"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var casparcg_connection_1 = require("casparcg-connection");
 var CasparCGState_1 = require("./CasparCGState");
