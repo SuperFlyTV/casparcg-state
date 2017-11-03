@@ -53,6 +53,15 @@ export declare namespace StateObject {
         cgStop?: boolean;
         executeFcn?: string;
         executeData?: any;
+        oscDevice?: number;
+        inMessage?: {
+            url: string;
+            args?: {};
+        } | null;
+        outMessage?: {
+            url: string;
+            args?: {};
+        } | null;
         noClear?: boolean;
     }
     /** */
