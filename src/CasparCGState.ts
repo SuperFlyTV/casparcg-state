@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-const CasparCGStateVersion = "2017-10-03 09:23";
+const CasparCGStateVersion = "2017-11-03 17:23";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
@@ -167,6 +167,7 @@ export class CasparCGState {
 	applyCommands(commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}>): void {
 		// Applies commands to current state
 
+		
 		// buffer commands until we are initialised
 		if(!this.isInitialised) {
 			this.bufferedCommands = this.bufferedCommands.concat(commands);
@@ -183,7 +184,7 @@ export class CasparCGState {
 	}
 	applyCommandsToState(currentState:any, commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: Layer}>): void {
 		
-
+		//console.log('applyCommandsToState',commands);
 		// iterates over commands and applies new state to provided state object
 
 
@@ -199,7 +200,7 @@ export class CasparCGState {
 			console.log(command)
 			*/
 
-			if (command._objectParams['_defaultOptions']) {
+			if ((command._objectParams||{})['_defaultOptions']) {
 				// the command sent, contains "default parameters"
 				
 				delete layer.mixer[attr];
@@ -867,45 +868,30 @@ export class CasparCGState {
 							cmd = new AMCP.CustomCommand(options);
 						} else if (layer.content == 'function' && layer.media && layer.executeFcn) {
 
-
 							cmd = {
-								channel: options.channel,
-								layer: options.layer,
-								_commandName: 'executeFunction',
+									channel: options.channel,
+									layer: options.layer,
+									_commandName: 'executeFunction',
+									media: layer.media, // used for diffing
+									externalFunction: true,
 
-								externalFunction: true,
-								functionName: layer.executeFcn,
-								functionData: layer.executeData,
-								functionLayer: layer,
-
-								media: layer.media,
-							}
-
-							
-							/*let fcn = (this._externalFunctions||{})[layer.executeFcn];
-
-							
-
-							if (fcn && _.isFunction(fcn)) {
-
-								var returnValue = fcn(layer,layer.executeData);
-
-
-
-
-								if (!returnValue !== true) {
-
-									// save state:
-									let layer0 = this.ensureLayer(oldChannel, layer.layerNo);
-
-									layer0.content 	= layer.content;
-									layer0.media 		= layer.media;
-									layer0.playing 	= layer.playing;
-									layer0.playTime 	= layer.playTime;
 								}
 
+							if (layer.executeFcn === 'special_osc') {
+								cmd = _.extend(cmd, {
+									specialFunction: 'osc',
+									oscDevice: layer.oscDevice,
+									message: layer.inMessage,
+								})
+							} else {
 
-							}*/
+								cmd = _.extend(cmd, {
+									functionName: layer.executeFcn,
+									functionData: layer.executeData,
+									functionLayer: layer,
+								});
+							}
+							
 						} else {
 							if (oldLayer.content == 'media' || oldLayer.content == 'media') {
 								cmd = new AMCP.StopCommand(options);

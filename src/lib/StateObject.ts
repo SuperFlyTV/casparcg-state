@@ -65,6 +65,16 @@ export namespace StateObject {
 		executeFcn?: string; // name of function to execute
 		executeData?: any;
 
+		oscDevice?: number;
+		inMessage?: {
+			url: string,
+			args?: {}
+		} | null;
+		outMessage?: {
+			url: string,
+			args?: {}
+		} | null;
+
 		noClear?: boolean;
 	}
 
