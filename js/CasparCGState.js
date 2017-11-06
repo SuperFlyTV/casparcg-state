@@ -13,7 +13,7 @@ var TransitionObject = StateObject_1.StateObject.TransitionObject;
 //import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
-var CasparCGStateVersion = "2017-11-03 17:23";
+var CasparCGStateVersion = "2017-11-06 08:38";
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
@@ -64,6 +64,7 @@ var CasparCGState = /** @class */ (function () {
     };
     /** */
     CasparCGState.prototype.initStateFromChannelInfo = function (channels) {
+        var _this = this;
         var currentState = this._currentStateStorage.fetchState();
         _.each(channels, function (channel, i) {
             //let existingChannel = _.findWhere(currentState.channels, {channelNo: i + 1});
@@ -76,6 +77,10 @@ var CasparCGState = /** @class */ (function () {
             }
             existingChannel.videoMode = channel["format"];
             existingChannel.fps = channel["frameRate"];
+            if (!existingChannel.videoMode)
+                _this.log("State: No channel videoMode given!");
+            if (!existingChannel.fps)
+                _this.log("State: No channel FPS given!");
             existingChannel.layers = {};
         });
         // Save new state:
@@ -107,6 +112,15 @@ var CasparCGState = /** @class */ (function () {
     /** */
     CasparCGState.prototype.setState = function (state) {
         this._currentStateStorage.storeState(state);
+    };
+    CasparCGState.prototype.softClearState = function () {
+        // a soft clear, ie clears any content, but keeps channel settings
+        var currentState = this._currentStateStorage.fetchState();
+        _.each(currentState.channels, function (channel) {
+            channel.layers = {};
+        });
+        // Save new state:
+        this._currentStateStorage.storeState(currentState);
     };
     CasparCGState.prototype.clearState = function () {
         this._currentStateStorage.clearState();
