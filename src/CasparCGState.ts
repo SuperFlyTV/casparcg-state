@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-const CasparCGStateVersion = "2017-11-06 08:38";
+const CasparCGStateVersion = "2017-11-06 18:08";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
@@ -798,12 +798,14 @@ export class CasparCGState {
 								}));
 							} else {
 								if (
-									(layer.pauseTime && (time-layer.pauseTime) < this.minTimeSincePlay)
-									|| _.isNull(timeSincePlay)
+									(
+										(layer.pauseTime && (time-layer.pauseTime) < this.minTimeSincePlay) ||
+										_.isNull(timeSincePlay)
+									) &&
+									layer.media == oldLayer.media
 								) {
 									cmd = new AMCP.PauseCommand(options);
 								} else {
-									
 									cmd = new AMCP.LoadCommand(_.extend(options,{
 										clip: (layer.media||'').toString(),
 										seek: seek,

@@ -633,8 +633,9 @@ var CasparCGState = /** @class */ (function () {
                                 }));
                             }
                             else {
-                                if ((layer.pauseTime && (time - layer.pauseTime) < _this.minTimeSincePlay)
-                                    || _.isNull(timeSincePlay)) {
+                                if (((layer.pauseTime && (time - layer.pauseTime) < _this.minTimeSincePlay) ||
+                                    _.isNull(timeSincePlay)) &&
+                                    layer.media == oldLayer.media) {
                                     cmd = new casparcg_connection_1.AMCP.PauseCommand(options);
                                 }
                                 else {
