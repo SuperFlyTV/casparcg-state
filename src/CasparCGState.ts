@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-const CasparCGStateVersion = "2017-11-03 17:23";
+const CasparCGStateVersion = "2017-11-06 08:38";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
@@ -105,6 +105,11 @@ export class CasparCGState {
 
 			existingChannel.videoMode = channel["format"];
 			existingChannel.fps = channel["frameRate"];
+
+			if (!existingChannel.videoMode) this.log("State: No channel videoMode given!");
+			if (!existingChannel.fps) this.log("State: No channel FPS given!");
+
+
 			existingChannel.layers = {};
 		});
 
@@ -140,7 +145,16 @@ export class CasparCGState {
 	setState(state: CasparCG): void {
 		this._currentStateStorage.storeState(state);
 	}
-
+	softClearState(): void {
+		// a soft clear, ie clears any content, but keeps channel settings
+		
+		let currentState = this._currentStateStorage.fetchState();
+		_.each(currentState.channels, (channel) => {
+			channel.layers = {};
+		});
+		// Save new state:
+		this._currentStateStorage.storeState(currentState);
+	}
 	clearState(): void {
 		this._currentStateStorage.clearState();
 	}
@@ -774,7 +788,7 @@ export class CasparCGState {
 									(layer.seek||0)
 								)
 								*oldChannel.fps
-							))
+							));
 							
 							if (layer.playing) {	
 								cmd = new AMCP.PlayCommand(_.extend(options,{
