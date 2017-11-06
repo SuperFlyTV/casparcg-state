@@ -19,7 +19,7 @@ import TransitionObject = StateNS.TransitionObject;
 import {Command as CommandNS, AMCP as AMCP} from "casparcg-connection";
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO;
 
-const CasparCGStateVersion = "2017-11-06 18:08";
+const CasparCGStateVersion = "2017-11-06 19:15";
 
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
@@ -286,6 +286,8 @@ export class CasparCGState {
 							layer.playTime = this._currentTimeFunction()-playDeltaTime;
 						}
 
+						layer.pauseTime = Number(command._objectParams['pauseTime']) || 0;
+
 						this._getMediaDuration((layer.media||'').toString(), channel.channelNo, layer.layerNo);
 						
 					} else {
@@ -295,6 +297,8 @@ export class CasparCGState {
 
 							let playedTime = layer.playTime-layer.pauseTime;
 							layer.playTime = this._currentTimeFunction()-playedTime; // "move" the clip to new start time
+
+							layer.pauseTime = 0;
 						}
 					}
 
@@ -624,6 +628,14 @@ export class CasparCGState {
 			//return val;
 			return Mixer.getValue(val);
 		}
+		var cmp = (a:any, b:any, name:any) => {
+
+			if (name == 'playTime') {
+				return Math.abs(a-b) > this.minTimeSincePlay;
+			}
+
+			return a!=b;
+		}
 		if (obj0 && obj1) {
 			if (strict) {
 				_.each(attrs,(a:string) => {
@@ -640,7 +652,7 @@ export class CasparCGState {
 			} else {
 				_.each(attrs,(a:string) => {
 
-					if (getValue(obj0[a]) != getValue(obj1[a]) ) {
+					if (cmp(getValue(obj0[a]), getValue(obj1[a]), a) ) {
 						diff0 = getValue(obj0[a])+'';
 						diff1 = getValue(obj1[a])+'';
 
@@ -765,37 +777,59 @@ export class CasparCGState {
 						setTransition(options,channel,oldLayer,layer.media);
 						if (layer.content == 'media' && layer.media !== null) {
 
-							let timeSincePlay:any = (layer.pauseTime || time ) - (layer.playTime||0);
-							if (timeSincePlay < this.minTimeSincePlay) {
-								timeSincePlay = 0;
+
+							var getTimeSincePlay = (layer:Layer) => {
+								let timeSincePlay:number|null = (layer.pauseTime || time ) - (layer.playTime||0);
+								if (timeSincePlay < this.minTimeSincePlay) {
+									timeSincePlay = 0;
+								}
+								if (layer.looping) {
+									// we don't support looping and seeking at the same time right now..
+									timeSincePlay = 0;
+								}
+								
+								if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
+									timeSincePlay = null;
+								}
+								return timeSincePlay;
 							}
-							if (layer.looping) {
-								// we don't support looping and seeking at the same time right now..
-								timeSincePlay = 0;
+							var getSeek = function (layer:Layer, timeSincePlay:number|null) {
+								return Math.max(0,Math.floor(
+									(
+										(timeSincePlay||0)
+										+
+										(layer.seek||0)
+									)
+									* ( channel.fps || oldChannel.fps )
+								));
 							}
 
-							
-							if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
-								timeSincePlay = null;
-								
-								
-							}
+							var timeSincePlay = getTimeSincePlay(layer);
+							var seek = getSeek(layer, timeSincePlay);
 
-							var seek = Math.max(0,Math.floor(
-								(
-									(timeSincePlay||0)
-									+
-									(layer.seek||0)
-								)
-								*oldChannel.fps
-							));
-							
-							if (layer.playing) {	
-								cmd = new AMCP.PlayCommand(_.extend(options,{
-									clip: (layer.media||'').toString(),
-									seek: seek, 
-									loop: !!layer.looping
-								}));
+							if (layer.playing) {
+
+								var oldTimeSincePlay = getTimeSincePlay(oldLayer);
+								var oldSeek = getSeek(oldLayer, oldTimeSincePlay);
+
+								if (
+									layer.media == oldLayer.media &&
+									oldLayer.pauseTime && 
+									Math.abs(oldSeek  - seek) < this.minTimeSincePlay
+
+								) {
+
+									cmd = new AMCP.PlayCommand(options);
+
+								} else {
+
+									cmd = new AMCP.PlayCommand(_.extend(options,{
+										clip: (layer.media||'').toString(),
+										seek: seek, 
+										loop: !!layer.looping
+									}));
+								}
+
 							} else {
 								if (
 									(
@@ -809,7 +843,9 @@ export class CasparCGState {
 									cmd = new AMCP.LoadCommand(_.extend(options,{
 										clip: (layer.media||'').toString(),
 										seek: seek,
-										loop: !!layer.looping
+										loop: !!layer.looping,
+
+										pauseTime: layer.pauseTime
 									}));
 									
 								}

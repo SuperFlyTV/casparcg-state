@@ -13,7 +13,7 @@ var TransitionObject = StateObject_1.StateObject.TransitionObject;
 //import * as CCG_conn from "casparcg-connection";
 // AMCP NS
 var casparcg_connection_1 = require("casparcg-connection");
-var CasparCGStateVersion = "2017-11-06 08:38";
+var CasparCGStateVersion = "2017-11-06 19:15";
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
@@ -223,6 +223,7 @@ var CasparCGState = /** @class */ (function () {
                         else {
                             layer.playTime = _this._currentTimeFunction() - playDeltaTime;
                         }
+                        layer.pauseTime = Number(command._objectParams['pauseTime']) || 0;
                         _this._getMediaDuration((layer.media || '').toString(), channel.channelNo, layer.layerNo);
                     }
                     else {
@@ -231,6 +232,7 @@ var CasparCGState = /** @class */ (function () {
                             layer.playing = true;
                             var playedTime = layer.playTime - layer.pauseTime;
                             layer.playTime = _this._currentTimeFunction() - playedTime; // "move" the clip to new start time
+                            layer.pauseTime = 0;
                         }
                     }
                     if (i.additionalLayerState && i.additionalLayerState.media) {
@@ -482,6 +484,7 @@ var CasparCGState = /** @class */ (function () {
         return this.diffStates(currentState, newState);
     };
     CasparCGState.prototype.compareAttrs = function (obj0, obj1, attrs, strict) {
+        var _this = this;
         var difference = null;
         var diff0 = '';
         var diff1 = '';
@@ -490,6 +493,12 @@ var CasparCGState = /** @class */ (function () {
             //if (val.valueOf) return val.valueOf();
             //return val;
             return Mixer.getValue(val);
+        };
+        var cmp = function (a, b, name) {
+            if (name == 'playTime') {
+                return Math.abs(a - b) > _this.minTimeSincePlay;
+            }
+            return a != b;
         };
         if (obj0 && obj1) {
             if (strict) {
@@ -507,7 +516,7 @@ var CasparCGState = /** @class */ (function () {
             }
             else {
                 _.each(attrs, function (a) {
-                    if (getValue(obj0[a]) != getValue(obj1[a])) {
+                    if (cmp(getValue(obj0[a]), getValue(obj1[a]), a)) {
                         diff0 = getValue(obj0[a]) + '';
                         diff1 = getValue(obj1[a]) + '';
                         if (diff0 && diff0.length > 20)
@@ -610,27 +619,43 @@ var CasparCGState = /** @class */ (function () {
                             options.noClear = layer.noClear;
                         setTransition(options, channel, oldLayer, layer.media);
                         if (layer.content == 'media' && layer.media !== null) {
-                            var timeSincePlay = (layer.pauseTime || time) - (layer.playTime || 0);
-                            if (timeSincePlay < _this.minTimeSincePlay) {
-                                timeSincePlay = 0;
-                            }
-                            if (layer.looping) {
-                                // we don't support looping and seeking at the same time right now..
-                                timeSincePlay = 0;
-                            }
-                            if (_.isNull(layer.playTime)) {
-                                timeSincePlay = null;
-                            }
-                            var seek = Math.max(0, Math.floor(((timeSincePlay || 0)
-                                +
-                                    (layer.seek || 0))
-                                * oldChannel.fps));
+                            var getTimeSincePlay = function (layer) {
+                                var timeSincePlay = (layer.pauseTime || time) - (layer.playTime || 0);
+                                if (timeSincePlay < _this.minTimeSincePlay) {
+                                    timeSincePlay = 0;
+                                }
+                                if (layer.looping) {
+                                    // we don't support looping and seeking at the same time right now..
+                                    timeSincePlay = 0;
+                                }
+                                if (_.isNull(layer.playTime)) {
+                                    timeSincePlay = null;
+                                }
+                                return timeSincePlay;
+                            };
+                            var getSeek = function (layer, timeSincePlay) {
+                                return Math.max(0, Math.floor(((timeSincePlay || 0)
+                                    +
+                                        (layer.seek || 0))
+                                    * (channel.fps || oldChannel.fps)));
+                            };
+                            var timeSincePlay = getTimeSincePlay(layer);
+                            var seek = getSeek(layer, timeSincePlay);
                             if (layer.playing) {
-                                cmd = new casparcg_connection_1.AMCP.PlayCommand(_.extend(options, {
-                                    clip: (layer.media || '').toString(),
-                                    seek: seek,
-                                    loop: !!layer.looping
-                                }));
+                                var oldTimeSincePlay = getTimeSincePlay(oldLayer);
+                                var oldSeek = getSeek(oldLayer, oldTimeSincePlay);
+                                if (layer.media == oldLayer.media &&
+                                    oldLayer.pauseTime &&
+                                    Math.abs(oldSeek - seek) < _this.minTimeSincePlay) {
+                                    cmd = new casparcg_connection_1.AMCP.PlayCommand(options);
+                                }
+                                else {
+                                    cmd = new casparcg_connection_1.AMCP.PlayCommand(_.extend(options, {
+                                        clip: (layer.media || '').toString(),
+                                        seek: seek,
+                                        loop: !!layer.looping
+                                    }));
+                                }
                             }
                             else {
                                 if (((layer.pauseTime && (time - layer.pauseTime) < _this.minTimeSincePlay) ||
@@ -642,7 +667,8 @@ var CasparCGState = /** @class */ (function () {
                                     cmd = new casparcg_connection_1.AMCP.LoadCommand(_.extend(options, {
                                         clip: (layer.media || '').toString(),
                                         seek: seek,
-                                        loop: !!layer.looping
+                                        loop: !!layer.looping,
+                                        pauseTime: layer.pauseTime
                                     }));
                                 }
                             }
