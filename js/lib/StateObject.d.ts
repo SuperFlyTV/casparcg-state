@@ -63,6 +63,7 @@ export declare namespace StateObject {
             args?: {};
         } | null;
         noClear?: boolean;
+        encoderOptions?: string;
     }
     /** */
     class Mixer {

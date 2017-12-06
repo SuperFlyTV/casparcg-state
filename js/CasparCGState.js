@@ -439,6 +439,25 @@ var CasparCGState = /** @class */ (function () {
                             layer.playing = true;
                             layer.playTime = null; // playtime is irrelevant
                             break;
+                        //
+                        case "add file":
+                            layer = _this.ensureLayer(channel, layerNo);
+                            layer.content = 'record';
+                            layer.media = String(command._objectParams['media']);
+                            layer.encoderOptions = String(command._objectParams['encoderOptions'] || '');
+                            layer.playing = true;
+                            layer.playTime = Number(command._objectParams['playTime']) || null;
+                            break;
+                        case "remove file":
+                            layer = _this.ensureLayer(channel, layerNo);
+                            layer.playing = false;
+                            layer.content = null;
+                            layer.media = null;
+                            delete layer.encoderOptions;
+                            // layer.playTime = 0;
+                            layer.pauseTime = 0;
+                            layer.templateData = null;
+                            break;
                     }
                     break;
                 case "executeFunction":
@@ -605,13 +624,16 @@ var CasparCGState = /** @class */ (function () {
                         else if (layer.content == 'route') {
                             diff = _this.compareAttrs(layer.route, oldLayer.route, ['channel', 'layer']);
                         }
+                        else if (layer.content == 'record') {
+                            diff = _this.compareAttrs(layer, oldLayer, ['media', 'playTime', 'encoderOptions']);
+                        }
                         else if (layer.content == 'function') {
                             diff = _this.compareAttrs(layer, oldLayer, ['media']);
                         }
                     }
                     if (diff) {
                         // Added things:
-                        _this.log('ADD: ' + layer.content + ' ' + diff);
+                        _this.log('ADD: ' + layer.content + ' | ' + diff);
                         var options = {};
                         options.channel = channel.channelNo;
                         options.layer = layer.layerNo;
@@ -717,6 +739,19 @@ var CasparCGState = /** @class */ (function () {
                                         ? (' ' + options.transition + ' ' + options.transitionDuration + ' ' + options.transitionEasing)
                                         : '')),
                                 customCommand: 'route',
+                            });
+                            cmd = new casparcg_connection_1.AMCP.CustomCommand(options);
+                        }
+                        else if (layer.content == 'record' && layer.media !== null) {
+                            var media = layer.media;
+                            var encoderOptions = layer.encoderOptions || '';
+                            var playTime = layer.playTime;
+                            _.extend(options, {
+                                media: media,
+                                encoderOptions: encoderOptions,
+                                playTime: playTime,
+                                command: ('ADD ' + options.channel + ' FILE ' + media + ' ' + encoderOptions),
+                                customCommand: 'add file',
                             });
                             cmd = new casparcg_connection_1.AMCP.CustomCommand(options);
                         }
@@ -931,6 +966,14 @@ var CasparCGState = /** @class */ (function () {
                         }
                         else {
                             var cmd = void 0;
+                            if (oldLayer.content == 'record') {
+                                cmd = new casparcg_connection_1.AMCP.CustomCommand({
+                                    layer: oldLayer.layerNo,
+                                    channel: oldChannel.channelNo,
+                                    command: ('REMOVE ' + oldChannel.channelNo + ' FILE'),
+                                    customCommand: 'remove file',
+                                });
+                            }
                             if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
                                 if (oldLayer.media.outTransition) {
                                     cmd = new casparcg_connection_1.AMCP.PlayCommand({

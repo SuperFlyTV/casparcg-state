@@ -76,6 +76,7 @@ export namespace StateObject {
 		} | null;
 
 		noClear?: boolean;
+		encoderOptions?: string;
 	}
 
 	/** */

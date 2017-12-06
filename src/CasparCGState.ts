@@ -556,6 +556,32 @@ export class CasparCGState {
 
 							break;
 						//
+						case "add file":
+
+							layer = this.ensureLayer(channel, layerNo);
+
+							layer.content 	= 'record';
+							
+							layer.media 			= String(command._objectParams['media']);
+							layer.encoderOptions 	= String(command._objectParams['encoderOptions'] || '');
+
+							layer.playing 	= true;
+							layer.playTime 	= Number(command._objectParams['playTime']) || null;
+
+
+							break;
+						case "remove file":
+							
+							layer = this.ensureLayer(channel, layerNo);
+
+							layer.playing = false;
+							layer.content = null;
+							layer.media = null;
+							delete layer.encoderOptions;
+							// layer.playTime = 0;
+							layer.pauseTime = 0;
+							layer.templateData = null;
+							break;
 					}
 					break;
 				case "executeFunction":
@@ -752,22 +778,27 @@ export class CasparCGState {
 							if (!oldLayer.seek) oldLayer.seek = 0;
 
 							diff = this.compareAttrs(layer,oldLayer,['media','playTime','looping','seek']);
+						
 						} else if (layer.content == 'template') {
 							diff = this.compareAttrs(layer,oldLayer,['media','templateType']);
+						
 						} else if( layer.content == 'input') {
 							diff = this.compareAttrs(layer,oldLayer,['media']);
 							if (!diff) diff = this.compareAttrs(layer.input,oldLayer.input,['device','format']);
 							
 						} else if( layer.content == 'route')  {
-							
 							diff = this.compareAttrs(layer.route,oldLayer.route,['channel','layer']);
+
+						} else if( layer.content == 'record')  {
+							diff = this.compareAttrs(layer,oldLayer,['media','playTime','encoderOptions']);
+
 						} else if( layer.content == 'function')  {
 							diff = this.compareAttrs(layer,oldLayer,['media']);
 						}
 					}
 					if (diff) { 
 						// Added things:
-						this.log('ADD: '+layer.content+' '+diff);
+						this.log('ADD: '+layer.content+' | '+diff);
 						
 						let options:any = {};
 						options.channel = channel.channelNo;
@@ -918,6 +949,28 @@ export class CasparCGState {
 							});
 
 							cmd = new AMCP.CustomCommand(options);
+						} else if (layer.content == 'record' && layer.media !== null) {
+
+							let media:any 			= layer.media;
+							let encoderOptions:any 	= layer.encoderOptions ||'';
+							let playTime:any 		= layer.playTime;
+
+							_.extend(options, {
+								
+								media: 				media, // file name
+								encoderOptions: 	encoderOptions,
+								playTime: 			playTime,
+
+								command: (
+									'ADD '+options.channel+' FILE '+ media +' '+encoderOptions
+								),
+
+								customCommand: 'add file',
+
+							});
+
+							cmd = new AMCP.CustomCommand(options);
+
 						} else if (layer.content == 'function' && layer.media && layer.executeFcn) {
 
 							cmd = {
@@ -1203,6 +1256,28 @@ export class CasparCGState {
 						} else {
 
 							let cmd;
+
+
+							if(oldLayer.content == 'record') {
+
+
+
+								cmd = new AMCP.CustomCommand({
+									layer: oldLayer.layerNo,
+									channel: oldChannel.channelNo,
+
+									command: (
+										'REMOVE '+oldChannel.channelNo+' FILE'
+									),
+
+									customCommand: 'remove file',
+
+								});
+							}
+
+
+
+
 							if(typeof oldLayer.media === 'object'  && oldLayer.media !== null){
 								if(oldLayer.media.outTransition) {
 									cmd = new AMCP.PlayCommand({
