@@ -1,4 +1,13 @@
 .git/
 .vscode/
-node_modules/
+node_modules
 tmp/
+
+coverage
+.nyc_output
+*.log
+
+wallaby.conf.js
+
+.DS_Store
+dist/
