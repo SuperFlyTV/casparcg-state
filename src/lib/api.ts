@@ -1,5 +1,5 @@
 import { TransitionObject } from './transitionObject'
-import { Mixer } from './mixer'
+import { Mixer as Mixer0 } from './mixer'
 
 export namespace CasparCG { // for external use
 	export class Mappings {
@@ -12,11 +12,13 @@ export namespace CasparCG { // for external use
 	export class State {
 		channels: { [channel: string]: Channel} = {}
 	}
-	export class Channel {
-		channelNo: number
-		// videoMode?: string | null
+	export class ChannelInfo {
+		videoMode?: string | null
 		fps?: number
-		layers: { [layer: string]: ILayer} = {}
+	}
+	export class Channel extends ChannelInfo {
+		channelNo: number
+		layers: { [layer: string]: ILayerBase} = {}
 	}
 	export class ILayerBase {
 		layerNo: number
@@ -27,7 +29,7 @@ export namespace CasparCG { // for external use
 		duration?: number
 		noClear?: boolean
 		playing?: boolean
-		mixer?: Mixer
+		mixer?: Mixer0
 	}
 	export class NextUp extends ILayerBase {
 		auto: boolean
@@ -50,9 +52,9 @@ export namespace CasparCG { // for external use
 		playTime: number | null
 		playing: boolean
 
-		templateType?: string	// @todo: string literal 'flash', 'html'
+		templateType?: 'flash' | 'html'	// @todo: string literal 'flash', 'html'
 		templateFcn?: string // 'play', 'update', 'stop' or else (invoke)
-		templateData?: Object | null
+		templateData?: Object | string | null
 		cgStop?: boolean
 
 		nextUp?: NextUp | null
@@ -65,7 +67,8 @@ export namespace CasparCG { // for external use
 			format?: string,
 			channelLayout?: string
 		}
-		playing: true
+		playing: true,
+		playTime: null
 	}
 	export interface IRouteLayer extends ILayerBase {
 		content: LayerContentType.ROUTE
@@ -81,6 +84,7 @@ export namespace CasparCG { // for external use
 		content: LayerContentType.RECORD
 		encoderOptions: string
 		playing: true
+		playTime: number
 	}
 	export interface IFunctionLayer extends ILayerBase {
 		content: LayerContentType.FUNCTION
@@ -112,6 +116,15 @@ export namespace CasparCG { // for external use
 		ROUTE = 'route',
 		RECORD = 'record',
 		FUNCTION = 'function'
+
+	}
+	export interface Mixer extends Mixer0 {}
+	export interface ITransition {
+
+		type?: string
+		duration: number
+		easing?: string
+		direction?: string
 
 	}
 }

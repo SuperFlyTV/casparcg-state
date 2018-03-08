@@ -9,7 +9,7 @@ export class StateObjectStorage {
 	private _internalState: CF.State = new CF.State()
 	private _externalStorage: ((action: string, data?: Object | null) => CF.State) | null
 
-	assignExternalStorage (fcn: (action: string, data: Object | null) => CF.State ): void {
+	assignExternalStorage (fcn: (action: string, data: Object | null) => CF.State): void {
 		this._externalStorage = fcn
 	}
 
@@ -24,7 +24,7 @@ export class StateObjectStorage {
 	}
 	storeState (data: CF.State): void {
 		if (this._externalStorage) {
-			this._externalStorage('store', data )
+			this._externalStorage('store', data)
 		} else {
 			this._internalState = data
 		}
@@ -36,5 +36,4 @@ export class StateObjectStorage {
 			this._internalState = new CF.State()
 		}
 	}
-
 }

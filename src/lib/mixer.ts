@@ -1,11 +1,12 @@
 import * as _ from 'underscore'
-import {Enum as CCG_Enum } from 'casparcg-connection'
+import { Enum as CCG_Enum } from 'casparcg-connection'
 import { TransitionObject } from './transitionObject'
+import { CasparCG } from './api'
 export class Mixer {
 
-	inTransition: Object
-	changeTransition: Object
-	outTransition: Object
+	inTransition?: CasparCG.ITransition
+	changeTransition?: CasparCG.ITransition
+	outTransition?: CasparCG.ITransition
 
 	anchor?: {x: number, y: number } | TransitionObject
 	blend?: CCG_Enum.BlendMode | TransitionObject
@@ -71,7 +72,7 @@ export class Mixer {
 			'bundleWithCommands']
 	}
 
-	public static getDefaultValues (attr: string): Object|number|boolean|null {
+	public static getDefaultValues (attr: string): Object | number | boolean | null {
 		// this is a temporary function, to replaced by some logic from ccg-connection
 		switch (attr) {
 
