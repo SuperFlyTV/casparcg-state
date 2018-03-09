@@ -5,10 +5,8 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "scripts": {
-
     "link": "npm link casparcg-connection",
     "unlink": "npm unlink casparcg-connection",
-
     "info": "npm-scripts-info",
     "build": "trash dist && yarn build:main",
     "build:main": "tsc -p tsconfig.json",
@@ -42,15 +40,18 @@
   "directories": {
     "lib": "src/"
   },
-  "contributors":[{
-    "name": "Johan Nyman",
-    "email": "johan@superfly.tv",
-    "url": "http://superfly.tv"
-  },{
-    "name": "Jesper Stærkær",
-    "email": "jesper@superfly.tv",
-    "url": "http://superfly.tv"
-  }],
+  "contributors": [
+    {
+      "name": "Johan Nyman",
+      "email": "johan@superfly.tv",
+      "url": "http://superfly.tv"
+    },
+    {
+      "name": "Jesper Stærkær",
+      "email": "jesper@superfly.tv",
+      "url": "http://superfly.tv"
+    }
+  ],
   "homepage": "http://superfly.tv",
   "keywords": [
     "casparcg",
@@ -69,13 +70,14 @@
   "dependencies": {
     "casparcg-connection": "git+https://github.com/superflytv/casparcg-connection.git",
     "deep-diff": "^0.3.4",
+    "fast-clone": "^1.4.2",
     "underscore": "^1.8.3"
   },
   "devDependencies": {
     "@types/deep-diff": "0.0.29",
+    "@types/jest": "^22.1.3",
     "@types/node": "^8.0.10",
     "@types/underscore": "^1.7.36",
-    "@types/jest": "^22.1.3",
     "codecov": "^2.2.0",
     "cpx": "^1.5.0",
     "gh-pages": "^1.0.0",

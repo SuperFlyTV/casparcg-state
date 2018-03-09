@@ -1,4 +1,5 @@
 import * as _ from 'underscore'
+const clone = require('fast-clone')
 import { Command as CommandNS, AMCP as AMCP } from 'casparcg-connection'
 import IAMCPCommandVO = CommandNS.IAMCPCommandVO
 
@@ -16,17 +17,18 @@ const CasparCGStateVersion = '2017-11-06 19:15'
 // import CasparCGConfig210 = ConfigNS.v21x.CasparCGConfigVO;
 
 /** */
-export class CasparCGState {
+export class CasparCGState0 {
 
 	public bufferedCommands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}> = []
 
+	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
+
 	private minTimeSincePlay: number = 0.2
 
-	private _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 	private _currentTimeFunction: () => number
-	private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void
+	// private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void
 	private _isInitialised: boolean
-	private _externalLog?: (arg0?: any,arg1?: any,arg2?: any,arg3?: any) => void
+	private _externalLog?: (...args: Array<any>) => void
 
 	/** */
 	constructor (config?: {
@@ -45,20 +47,25 @@ export class CasparCGState {
 				return Date.now() / 1000
 			}
 		}
+		// Verify this._currentTimeFunction
+		let time = this._currentTimeFunction()
+		if (!time || !_.isNumber(time) || !(time > 0)) throw Error('currentTime function should return a positive number! (got ' + time + ')')
 
 		// set the callback for handling media duration query
-		if (config && config.getMediaDurationCallback) {
+		/* if (config && config.getMediaDurationCallback) {
 			this._getMediaDuration = (clip: string, channelNo: number, layerNo: number) => {
-				config!.getMediaDurationCallback!(clip, (duration: number) => {
-					this.applyState(channelNo, layerNo, { duration: duration })
-				})
+				if (config.getMediaDurationCallback) {
+					config.getMediaDurationCallback!(clip, (duration: number) => {
+						this._applyState(channelNo, layerNo, { duration: duration })
+					})
+				}
 			}
 		} else {
 			this._getMediaDuration = (clip: string, channelNo: number, layerNo: number) => {
 				// clip
-				this.applyState(channelNo, layerNo, { duration: null })
+				this._applyState(channelNo, layerNo, { duration: null })
 			}
-		}
+		} */
 
 		// set the callback for handling externalStorage
 		if (config && config.externalStorage) {
@@ -83,6 +90,8 @@ export class CasparCGState {
 		_.each(channels, (channel: CasparCG.ChannelInfo, i: number) => {
 			if (!channel.videoMode) throw Error('State: Missing channel.videoMode!')
 			if (!channel.fps) throw Error('State: Missing channel.fps!')
+
+			if (!(_.isNumber(channel.fps) && channel.fps > 0)) throw Error('State:Bad channel.fps, it should be a number > 0 (got ' + channel.fps + ')!')
 
 			let existingChannel: CF.Channel = currentState.channels[(i + 1) + '']
 
@@ -111,10 +120,23 @@ export class CasparCGState {
 		this._currentStateStorage.storeState(state)
 	}
 	/**
+	 * Get the gurrent state
+	 * @param  {true}}   options [description]
+	 * @return {CF.State} The current state
+	 */
+	getState (): CF.State {
+		if (!this.isInitialised) {
+			throw new Error('CasparCG State is not initialised')
+		}
+
+		return this._currentStateStorage.fetchState()
+	}
+	/**
 	 * Resets / clears the current state
 	 */
 	clearState (): void {
 		this._currentStateStorage.clearState()
+		this.isInitialised = false
 	}
 	/**
 	 * A soft clear, ie clears any content, but keeps channel settings
@@ -126,28 +148,6 @@ export class CasparCGState {
 		})
 		// Save new state:
 		this._currentStateStorage.storeState(currentState)
-	}
-
-	/**
-	 * Get the gurrent state
-	 * @param  {true}}   options [description]
-	 * @return {CF.State} The current state
-	 */
-	getState (options: {full: boolean} = { full: true }): CF.State {
-		if (!this.isInitialised) {
-			// The needs to be initialised
-			throw new Error('CasparCG State is not initialised')
-		}
-
-		let currentState = this._currentStateStorage.fetchState()
-		// return state without defaults added:
-		if (!options.full) {
-			return currentState
-		} else {
-			// add defaults to state and then return it:
-			// @todo: iterate and generate default values
-			return currentState
-		}
 	}
 
 	/**
@@ -188,10 +188,8 @@ export class CasparCGState {
 
 			if ((command._objectParams || {})['_defaultOptions']) {
 				// the command sent, contains "default parameters"
-
 				delete layer.mixer[attr]
 			} else {
-
 				if (_.isArray(subValue)) {
 					let o = {}
 					_.each(subValue,(sv) => {
@@ -253,7 +251,7 @@ export class CasparCGState {
 
 					layer.pauseTime = Number(command._objectParams['pauseTime']) || 0
 
-					this._getMediaDuration((layer.media || '').toString(), channel.channelNo, layer.layerNo)
+					// this._getMediaDuration((layer.media || '').toString(), channel.channelNo, layer.layerNo)
 
 				} else {
 					if (cmdName === 'PlayCommand' && layer.content === CasparCG.LayerContentType.MEDIA && layer.media && layer.pauseTime && layer.playTime) {
@@ -399,59 +397,41 @@ export class CasparCGState {
 
 			} else if (cmdName === 'MixerAnchorCommand') {
 				setMixerState(channel, command,'anchor',['x','y'])
-
 			} else if (cmdName === 'MixerBlendCommand') {
 				setMixerState(channel, command,'blend','blend')
-
 			} else if (cmdName === 'MixerBrightnessCommand') {
 				setMixerState(channel, command,'brightness','brightness')
-
 			} else if (cmdName === 'MixerChromaCommand') {
 				setMixerState(channel, command,'chroma',['keyer', 'threshold', 'softness', 'spill'])
-
 			} else if (cmdName === 'MixerClipCommand') {
 				setMixerState(channel, command,'clip',['x','y','width','height'])
-
 			} else if (cmdName === 'MixerContrastCommand') {
 				setMixerState(channel, command,'contrast','contrast')
-
 			} else if (cmdName === 'MixerCropCommand') {
 				setMixerState(channel, command,'crop',['left','top','right','bottom'])
-
 			} else if (cmdName === 'MixerFillCommand') {
 				setMixerState(channel, command,'fill',['x','y','xScale','yScale'])
-
 			// grid
 			} else if (cmdName === 'MixerKeyerCommand') {
 				setMixerState(channel, command,'keyer','keyer')
-
 			} else if (cmdName === 'MixerLevelsCommand') {
 				setMixerState(channel, command,'levels',['minInput', 'maxInput', 'gamma', 'minOutput', 'maxOutput'])
-
 			} else if (cmdName === 'MixerMastervolumeCommand') {
 				setMixerState(channel, command,'mastervolume','mastervolume')
-
 			// mipmap
 			} else if (cmdName === 'MixerOpacityCommand') {
 				setMixerState(channel, command,'opacity','opacity')
-
 			} else if (cmdName === 'MixerPerspectiveCommand') {
 				setMixerState(channel, command,'perspective',['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottomLeftX','bottomLeftY'])
-
 			} else if (cmdName === 'MixerRotationCommand') {
 				setMixerState(channel, command,'rotation','rotation')
-
 			} else if (cmdName === 'MixerSaturationCommand') {
 				setMixerState(channel, command,'saturation','saturation')
-
 			} else if (cmdName === 'MixerStraightAlphaOutputCommand') {
 				setMixerState(channel, command,'straightAlpha','state')
-
 			} else if (cmdName === 'MixerVolumeCommand') {
 				setMixerState(channel, command,'volume','volume')
-
 			/*
-
 				ResumeCommand
 
 				CallCommand
@@ -523,26 +503,14 @@ export class CasparCGState {
 
 			}
 		})
-
 	}
-
-	/** */
-	applyState (channelNo: number, layerNo: number, stateData: {[key: string]: any}): void {
-
-		// TODO: what to do with this?
-
-		/*let channel: CF.Channel = _.findWhere(this.getState().channels, {channelNo: channelNo});
-		let layer: CF.Layer = _.findWhere(channel.layers, {layerNo: layerNo});
-		_.extend(layer, stateData);*/
-	}
-	/** */
 	getDiff (
-		newState: CasparCG.State): Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> {
+		newState: CasparCG.State
+	): Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> {
 		// needs to be initialised
 		if (!this.isInitialised) {
 			throw new Error('CasparCG State is not initialised')
 		}
-
 		let currentState = this._currentStateStorage.fetchState()
 		return this.diffStates(currentState, newState)
 	}
@@ -564,17 +532,23 @@ export class CasparCGState {
 		let commands: Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> = []
 		let time: number = this._currentTimeFunction()
 
-		let setTransition = (options: Object | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any) => {
+		let setTransition = (options: Object | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any, isRemove: boolean) => {
 			if (!options) options = {}
 
 			if (_.isObject(content)) {
 
 				let transition: Transition | undefined
 
-				if (oldLayer.playing && content.changeTransition) {
-					transition = new Transition(content.changeTransition)
-				} else if (content.inTransition) {
-					transition = new Transition(content.inTransition)
+				if (isRemove) {
+					if (content.outTransition) {
+						transition = new Transition(content.outTransition)
+					}
+				} else {
+					if (oldLayer.playing && content.changeTransition) {
+						transition = new Transition(content.changeTransition)
+					} else if (content.inTransition) {
+						transition = new Transition(content.inTransition)
+					}
 				}
 
 				if (transition) {
@@ -618,6 +592,7 @@ export class CasparCGState {
 				let oldLayer: CF.Layer = oldChannel.layers[layerKey + ''] || (new CF.Layer())
 
 				if (newLayer) {
+					// this.log('diff ' + channelKey + '-' + layerKey, newLayer, oldLayer)
 
 					/*
 					console.log('newLayer '+channelKey+'-'+layerKey);
@@ -693,7 +668,7 @@ export class CasparCGState {
 							noClear: !!newLayer.noClear
 						}
 
-						setTransition(options, newChannel, oldLayer, newLayer.media)
+						setTransition(options, newChannel, oldLayer, newLayer.media, false)
 
 						if (newLayer.content === CasparCG.LayerContentType.MEDIA && newLayer.media !== null) {
 
@@ -744,6 +719,7 @@ export class CasparCGState {
 
 									cmd = new AMCP.PlayCommand(options)
 								} else {
+
 									cmd = new AMCP.PlayCommand(_.extend(options,{
 										clip: (nl.media || '').toString(),
 										seek: seek,
@@ -888,6 +864,7 @@ export class CasparCGState {
 							}
 
 						} else {
+							// @todo: When does this happen? Do we need this? /Johan
 							if (oldLayer.content === CasparCG.LayerContentType.MEDIA) { // || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
 								cmd = new AMCP.StopCommand(options)
 							}
@@ -917,19 +894,18 @@ export class CasparCGState {
 								}))
 							}
 						}
-
 					}
 					// -------------------------------------------------------------
 					// Mixer commands:
 					if (!newLayer.mixer) newLayer.mixer = new Mixer()
 					if (!oldLayer.mixer) oldLayer.mixer = new Mixer()
 
-					let compareMixerValues = function (
+					let compareMixerValues = (
 						layer: CasparCG.ILayerBase,
 						oldLayer: CF.Layer,
 						attr: string,
 						attrs?: Array<string>
-					): boolean {
+					): boolean => {
 						let val0: any = Mixer.getValue((layer.mixer || {})[attr])
 						let val1: any = Mixer.getValue((oldLayer.mixer || {})[attr])
 
@@ -951,6 +927,7 @@ export class CasparCGState {
 							}
 							return areSame
 						} else if (_.isObject(val0) || _.isObject(val1)) {
+							// @todo is this used anymore?
 							if (_.isObject(val0) && _.isObject(val1)) {
 								let omitAttrs = ['inTransition','changeTransition','outTransition']
 
@@ -964,14 +941,7 @@ export class CasparCGState {
 						}
 					}
 
-					let pushMixerCommand = function (attr: string, Command: any, subValue?: Array<string> | string) {
-
-						/*if (attr == 'fill') {
-							console.log('pushMixerCommand '+attr);
-							console.log(oldLayer.mixer)
-							console.log(layer.mixer)
-							console.log(subValue)
-						}*/
+					let pushMixerCommand = (attr: string, Command: any, subValue?: Array<string> | string) => {
 
 						if (!compareMixerValues(
 								newLayer,
@@ -985,23 +955,18 @@ export class CasparCGState {
 							)
 						) {
 
-							/*
-							console.log('pushMixerCommand change: '+attr)
-							console.log(oldLayer.mixer)
-							console.log(Mixer.getValue(oldLayer.mixer[attr]));
-							console.log(newLayer.mixer)
-							console.log(Mixer.getValue(newLayer.mixer[attr]));
-							*/
+							// this.log('pushMixerCommand change: ' + attr)
+							// this.log(oldLayer.mixer, newLayer.mixer)
+							// this.log(Mixer.getValue(oldLayer.mixer[attr]), Mixer.getValue(newLayer.mixer[attr]))
 
 							let options: any = {}
 							options.channel = newChannel.channelNo
 							options.layer 	= newLayer.layerNo
 
-							setTransition(options, newChannel, oldLayer, newLayer.mixer)
-
 							let o = Mixer.getValue((newLayer.mixer || {})[attr])
 
 							if (newLayer.mixer && _.has(newLayer.mixer,attr) && !_.isUndefined(o)) {
+								setTransition(options, newChannel, oldLayer, newLayer.mixer, false)
 
 								if (_.isArray(subValue)) {
 									_.each(subValue,(sv) => {
@@ -1014,7 +979,6 @@ export class CasparCGState {
 										options[subValue] = o
 									}
 								}
-
 								if (newLayer.mixer.bundleWithCommands) {
 
 									options['bundleWithCommands'] = newLayer.mixer.bundleWithCommands
@@ -1030,9 +994,9 @@ export class CasparCGState {
 								}
 
 							} else {
-								// @todo: implement
-								// reset this mixer?
-								// temporary workaround, default values
+								// use default values
+
+								setTransition(options, newChannel, oldLayer, newLayer.mixer, true)
 
 								let defaultValue: any = Mixer.getDefaultValues(attr)
 								if (_.isObject(defaultValue)) {
@@ -1041,7 +1005,7 @@ export class CasparCGState {
 									options[attr] = defaultValue
 								}
 
-								options._defaultOptions = true	// this is used in ApplyCommands to set state to "default"
+								options._defaultOptions = true	// this is used in ApplyCommands to set state to "default", and not use the mixer values
 
 								additionalCmds.push(new Command(options))
 							}
@@ -1059,13 +1023,13 @@ export class CasparCGState {
 						// grid
 					pushMixerCommand('keyer',AMCP.MixerKeyerCommand,'keyer')
 					pushMixerCommand('levels',AMCP.MixerLevelsCommand,['minInput', 'maxInput', 'gamma', 'minOutput', 'maxOutput'])
-					pushMixerCommand('mastervolume',AMCP.MixerMastervolumeCommand,'mastervolume')
+					if (newLayer.layerNo === -1) pushMixerCommand('mastervolume',AMCP.MixerMastervolumeCommand,'mastervolume')
 						// mipmap
 					pushMixerCommand('opacity',AMCP.MixerOpacityCommand,'opacity')
 					pushMixerCommand('perspective',AMCP.MixerPerspectiveCommand, ['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottomLeftX','bottomLeftY'])
 					pushMixerCommand('rotation',AMCP.MixerRotationCommand,'rotation')
 					pushMixerCommand('saturation',AMCP.MixerSaturationCommand,'saturation')
-					pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'state')
+					if (newLayer.layerNo === -1) pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'state')
 					pushMixerCommand('volume',AMCP.MixerVolumeCommand,'volume')
 
 					let cmds: Array<any> = []
@@ -1099,7 +1063,8 @@ export class CasparCGState {
 
 					if (!newLayer.content && oldLayer.content) {
 
-						// this.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content)
+						this.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content + ' | ' + newLayer.content)
+						this.log(oldLayer)
 
 						if (oldLayer.noClear) {
 							// hack: don't do the clear command:
@@ -1121,9 +1086,7 @@ export class CasparCGState {
 									customCommand: 'remove file'
 
 								})
-							}
-
-							if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
+							} else if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
 								if (oldLayer.media.outTransition) {
 									cmd = new AMCP.PlayCommand({
 										channel: oldChannel.channelNo,
@@ -1151,12 +1114,21 @@ export class CasparCGState {
 									}
 								}
 							}
-							if (!cmd) {
-								if (oldLayer.content === CasparCG.LayerContentType.FUNCTION) {
-									// send nothing
-									noCommand = true
-								}
+							if (oldLayer.content === CasparCG.LayerContentType.FUNCTION) {
+								// Functions only trigger action when they start, no action on end
+								// send nothing
+								noCommand = true
+							} else if (
+								oldLayer.content === CasparCG.LayerContentType.MEDIA &&
+								oldLayer.media &&
+								oldLayer.media.valueOf() + '' === 'empty'
+							) {
+								// the old layer is an empty, thats essentially something that is cleared
+								// (or an out transition)
+								// send nothing then
+								noCommand = true
 							}
+
 							if (!noCommand) {
 								if (!cmd) {
 
@@ -1208,10 +1180,10 @@ export class CasparCGState {
 	}
 
 	valueOf (): CF.State {
-		return this.getState({ full: true })
+		return this.getState()
 	}
 	toString (): string {
-		return JSON.stringify(this.getState({ full: true }))
+		return JSON.stringify(this.getState())
 	}
 
 	/** */
@@ -1229,17 +1201,39 @@ export class CasparCGState {
 			}
 		}
 	}
+	// /**
+	//  * Apply attributes to a the state
+	//  * @param channelNo Channel number
+	//  * @param layerNo Layer number
+	//  * @param stateData
+	//  */
+	// private _applyState (channelNo: number, layerNo: number, stateData: {[key: string]: any}): void {
 
-	private log (arg0?: any,arg1?: any,arg2?: any,arg3?: any): void {
+	// 	let state = this.getState()
+
+	// 	let channel: CF.Channel | undefined = _.find(state.channels, (channel) => {
+	// 		return channel.channelNo === channelNo
+	// 	})
+
+	// 	if (channel) {
+	// 		let layer: CF.Layer | undefined = _.find(channel.layers, (layer) => {
+	// 			return layer.layerNo === layerNo
+	// 		})
+	// 		if (layer) {
+	// 			_.extend(layer, stateData)
+	// 		}
+	// 	}
+	// }
+	private log (...args: Array<any>): void {
 		if (this._externalLog) {
-			this._externalLog(arg0,arg1,arg2,arg3)
+			this._externalLog(...args)
 		} else {
-			console.log(arg0,arg1,arg2,arg3)
+			console.log(...args)
 		}
 	}
 	/** */
 	private ensureLayer (channel: CF.Channel, layerNo: number): CF.Layer {
-		if (! (layerNo > 0)) {
+		if (! (layerNo > 0 || layerNo === -1)) { // -1 is a "spare layer" for non-layer bound things, like master volume
 			throw new Error("State.ensureLayer: tried to get layer '" + layerNo + "' on channel '" + channel + "'")
 		}
 		let layer: CF.Layer = channel.layers[layerNo + '']
@@ -1305,5 +1299,22 @@ export class CasparCGState {
 			) difference = '' + (!!obj0) + ' t/f ' + (!!obj1)
 		}
 		return difference
+	}
+}
+export class CasparCGState extends CasparCGState0 {
+	/**
+	 * Set the current state to provided state
+	 * @param state The new state
+	 */
+	setState (state: CF.State): void {
+		super.setState(clone(state))
+	}
+	/**
+	 * Get the gurrent state
+	 * @param  {true}}   options [description]
+	 * @return {CF.State} The current state
+	 */
+	getState (): CF.State {
+		return clone(super.getState())
 	}
 }

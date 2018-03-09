@@ -7,9 +7,18 @@ export class TransitionObject {
 	outTransition: Transition
 
 	/** */
-	constructor (value?: any) {
+	constructor (value?: any, options ?: {
+		inTransition?: Transition,
+		changeTransition?: Transition,
+		outTransition?: Transition
+	}) {
 		if (!_.isUndefined(value)) {
 			this._value = value
+		}
+		if (options) {
+			if (options.inTransition) this.inTransition = options.inTransition
+			if (options.changeTransition) this.changeTransition = options.changeTransition
+			if (options.outTransition) this.outTransition = options.outTransition
 		}
 	}
 

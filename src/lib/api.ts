@@ -1,4 +1,7 @@
-import { TransitionObject } from './transitionObject'
+import {
+	TransitionObject as TransitionObject0,
+	Transition as Transition0
+} from './transitionObject'
 import { Mixer as Mixer0 } from './mixer'
 
 export namespace CasparCG { // for external use
@@ -23,7 +26,7 @@ export namespace CasparCG { // for external use
 	export class ILayerBase {
 		layerNo: number
 		content: LayerContentType // string | null 		// @todo: enum?
-		media?: string | TransitionObject | null // clip or templatename
+		media?: string | TransitionObject0 | null // clip or templatename
 		looping?: boolean
 		playTime?: number | null // timestamp when content started playing, (null == 'irrelevant')
 		duration?: number
@@ -36,7 +39,7 @@ export namespace CasparCG { // for external use
 	}
 	export interface IMediaLayer extends ILayerBase {
 		content: LayerContentType.MEDIA
-		media: string | TransitionObject | null // clip name
+		media: string | TransitionObject0 | null // clip name
 		playTime: number | null
 		playing: boolean
 
@@ -48,7 +51,7 @@ export namespace CasparCG { // for external use
 	}
 	export interface ITemplateLayer extends ILayerBase {
 		content: LayerContentType.TEMPLATE
-		media: string | TransitionObject | null // template name
+		media: string | TransitionObject0 | null // template name
 		playTime: number | null
 		playing: boolean
 
@@ -127,4 +130,6 @@ export namespace CasparCG { // for external use
 		direction?: string
 
 	}
+	export class TransitionObject extends TransitionObject0 {}
+	export class Transition extends Transition0 {}
 }
