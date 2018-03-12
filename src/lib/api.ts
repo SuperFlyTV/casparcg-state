@@ -64,7 +64,7 @@ export namespace CasparCG { // for external use
 	}
 	export interface IInputLayer extends ILayerBase {
 		content: LayerContentType.INPUT
-		media: 'decklink'
+		media: 'decklink' | TransitionObject0
 		input: {
 			device: number,
 			format?: string,

@@ -922,6 +922,61 @@ test('Play a Route with transition, then stop it with transition', () => {
 		transitionEasing: 'linear'
 	}).serialize())
 })
+test('Play a Decklink-input with transition, then stop it with transition', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Play a video file:
+	let layer10: CasparCG.IInputLayer = {
+		content: CasparCG.LayerContentType.INPUT,
+		layerNo: 10,
+		media: new CasparCG.TransitionObject('decklink', {
+			inTransition: new CasparCG.Transition('mix', 0.5),
+			outTransition: new CasparCG.Transition('mix', 1)
+		}),
+		input: {
+			device: 1,
+			format: '720p5000'
+			// channelLayout: 'stereo'
+		},
+		playing: true,
+		playTime: null
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayDecklinkCommand({
+		channel: 1,
+		layer: 10,
+		channelLayout: null,
+		device: 1,
+		format: '720p5000',
+		transition: 'mix',
+		transitionDirection: 'right',
+		transitionDuration: 25,
+		transitionEasing: 'linear'
+	})).serialize())
+
+	// Remove the layer from the state
+	delete channel1.layers['10']
+	cc = getDiff(c, targetState)
+
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'empty',
+		transition: 'mix',
+		transitionDirection: 'right',
+		transitionDuration: 50,
+		transitionEasing: 'linear'
+	}).serialize())
+})
 test('Apply commands before init', () => {
 	let c = getCasparCGState()
 	initState(c.ccgState)
