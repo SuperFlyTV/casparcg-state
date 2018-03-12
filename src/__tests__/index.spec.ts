@@ -879,6 +879,49 @@ test('Play a video with transition, then stop it with transition', () => {
 		transitionEasing: 'linear'
 	}).serialize())
 })
+test('Play a Route with transition, then stop it with transition', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Play a Route:
+	let layer10: CasparCG.IRouteLayer = {
+		content: CasparCG.LayerContentType.ROUTE,
+		layerNo: 10,
+		media: new CasparCG.TransitionObject('route', {
+			inTransition: new CasparCG.Transition('mix', 0.5),
+			outTransition: new CasparCG.Transition('mix', 1)
+		}),
+		route: {
+			channel: 3
+		},
+		playing: true,
+		playTime: null
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://3 mix 25 linear')
+
+	// Remove the layer from the state
+	delete channel1.layers['10']
+	cc = getDiff(c, targetState)
+
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'empty',
+		transition: 'mix',
+		transitionDirection: 'right',
+		transitionDuration: 50,
+		transitionEasing: 'linear'
+	}).serialize())
+})
 test('Apply commands before init', () => {
 	let c = getCasparCGState()
 	initState(c.ccgState)

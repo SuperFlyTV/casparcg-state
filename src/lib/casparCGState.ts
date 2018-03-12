@@ -454,7 +454,19 @@ export class CasparCGState0 {
 					let layer: CF.IRouteLayer = this.ensureLayer(channel, layerNo) as CF.IRouteLayer
 
 					layer.content = CasparCG.LayerContentType.ROUTE
-					layer.media = 'route'
+
+					// layer.media = 'route'
+					layer.media = new TransitionObject('route')
+					if (command._objectParams['transition']) {
+						layer.media.inTransition = new Transition(
+							command._objectParams['transition'] as string,
+							+(command._objectParams['transitionDuration'] || 0),
+							command._objectParams['transitionEasing'] as string,
+							command._objectParams['transitionDirection'] as string)
+					}
+					if (i.additionalLayerState && i.additionalLayerState.media) {
+						_.extend(layer.media, { outTransition: i.additionalLayerState.media['outTransition'] })
+					}
 
 					let routeChannel: any 	= command._objectParams['routeChannel']
 
