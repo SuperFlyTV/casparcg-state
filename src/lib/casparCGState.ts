@@ -810,8 +810,8 @@ export class CasparCGState0 {
 							// let ol: CF.IRouteLayer = oldLayer as CF.IRouteLayer
 
 							if (nl.route) {
-								let routeChannel: number 	= nl.route.channel
-								let routeLayer: number | null	= nl.route.layer
+								let routeChannel: number 		= nl.route.channel
+								let routeLayer: number | null	= nl.route.layer || null
 
 								_.extend(options,{
 									routeChannel: 		routeChannel,
