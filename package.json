@@ -68,7 +68,7 @@
     "resolve"
   ],
   "dependencies": {
-    "casparcg-connection": "git+https://github.com/superflytv/casparcg-connection.git",
+    "casparcg-connection": "^4.0.3",
     "deep-diff": "^0.3.4",
     "fast-clone": "^1.4.2",
     "underscore": "^1.8.3"
