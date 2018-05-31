@@ -18,6 +18,7 @@ export namespace CasparCGFull { // for internal use
 
 	export interface IMediaLayer extends CasparCG.IMediaLayer {}
 	export interface ITemplateLayer extends CasparCG.ITemplateLayer {}
+	export interface IHtmlPageLayer extends CasparCG.IHtmlPageLayer {}
 	export interface IInputLayer extends CasparCG.IInputLayer {}
 	export interface IRouteLayer extends CasparCG.IRouteLayer {}
 	export interface IRecordLayer extends CasparCG.IRecordLayer {}

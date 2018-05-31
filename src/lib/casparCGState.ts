@@ -321,7 +321,7 @@ export class CasparCGState0 {
 
 				// Note: we don't support flashLayer for the moment
 				if (command._objectParams['templateName']) {
-					layer.content = CasparCG.LayerContentType.TEMPLATE		// @todo: string literal
+					layer.content = CasparCG.LayerContentType.TEMPLATE
 
 					layer.media = command._objectParams['templateName'] as string
 
@@ -343,6 +343,12 @@ export class CasparCGState0 {
 
 					layer.noClear = command._objectParams['noClear'] as boolean
 				}
+			} else if (cmdName === 'PlayHtmlPageCommand') {
+
+				let layer: CF.IHtmlPageLayer = this.ensureLayer(channel, layerNo) as CF.IHtmlPageLayer
+				layer.content = CasparCG.LayerContentType.HTMLPAGE
+				layer.media = command._objectParams['url'] as string
+
 			} else if (cmdName === 'CGUpdateCommand') {
 				let layer: CF.ITemplateLayer = this.ensureLayer(channel, layerNo) as CF.ITemplateLayer
 				if (layer.content === CasparCG.LayerContentType.TEMPLATE) {
@@ -647,6 +653,13 @@ export class CasparCGState0 {
 							setDefaultValue([nl, ol], ['templateType'], '')
 
 							diff = this.compareAttrs(nl, ol ,['media','templateType'])
+						} else if (newLayer.content === CasparCG.LayerContentType.HTMLPAGE) {
+							let nl: CasparCG.IHtmlPageLayer = newLayer as CasparCG.IHtmlPageLayer
+							let ol: CF.IHtmlPageLayer = oldLayer as CF.IHtmlPageLayer
+
+							setDefaultValue([nl, ol], ['media'], '')
+
+							diff = this.compareAttrs(nl, ol ,['media'])
 
 						} else if (newLayer.content === CasparCG.LayerContentType.INPUT) {
 							let nl: CasparCG.IInputLayer = newLayer as CasparCG.IInputLayer
@@ -785,6 +798,14 @@ export class CasparCGState0 {
 
 								cgStop: 		nl.cgStop,
 								templateType: 	nl.templateType
+							}))
+						} else if (newLayer.content === CasparCG.LayerContentType.HTMLPAGE && newLayer.media !== null) {
+
+							let nl: CasparCG.IHtmlPageLayer = newLayer as CasparCG.IHtmlPageLayer
+							// let ol: CF.ITemplateLayer = oldLayer as CF.ITemplateLayer
+
+							cmd = new AMCP.PlayHtmlPageCommand(_.extend(options,{
+								url: 	(nl.media || '').toString()
 							}))
 						} else if (newLayer.content === CasparCG.LayerContentType.INPUT && newLayer.media !== null) {
 							let nl: CasparCG.IInputLayer = newLayer as CasparCG.IInputLayer

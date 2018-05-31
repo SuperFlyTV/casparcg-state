@@ -77,7 +77,8 @@ function fixCommand (c, options?: any) {
 		c instanceof AMCP.LoadCommand ||
 		c instanceof AMCP.PauseCommand ||
 		c instanceof AMCP.CGAddCommand ||
-		c instanceof AMCP.PlayDecklinkCommand
+		c instanceof AMCP.PlayDecklinkCommand ||
+		c instanceof AMCP.PlayHtmlPageCommand
 	) {
 		c['_objectParams'].noClear = !!options.noClear
 	}
@@ -445,6 +446,44 @@ test('Play a template, update the data & cgstop', () => {
 		channel: 1,
 		layer: 10,
 		flashLayer: 1
+	})).serialize())
+})
+test('Play an html-page', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Play a template file:
+
+	let layer10: CasparCG.IHtmlPageLayer = {
+		content: CasparCG.LayerContentType.HTMLPAGE,
+		layerNo: 10,
+		media: 'http://superfly.tv',
+		playing: true,
+		playTime: 990 // 10s ago
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayHtmlPageCommand({
+		channel: 1,
+		layer: 10,
+		url: 'http://superfly.tv'
+	})).serialize())
+
+	// Remove the layer
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
 	})).serialize())
 })
 test('Play an input', () => {

@@ -62,6 +62,14 @@ export namespace CasparCG { // for external use
 
 		nextUp?: NextUp | null
 	}
+	export interface IHtmlPageLayer extends ILayerBase {
+		content: LayerContentType.HTMLPAGE
+		media: string | TransitionObject0 | null // template name
+		playTime: number | null
+		playing: true
+
+		nextUp?: NextUp | null
+	}
 	export interface IInputLayer extends ILayerBase {
 		content: LayerContentType.INPUT
 		media: 'decklink' | TransitionObject0
@@ -115,6 +123,7 @@ export namespace CasparCG { // for external use
 		NOTHING = '',
 		MEDIA = 'media',
 		TEMPLATE = 'template',
+		HTMLPAGE = 'htmlpage',
 		INPUT = 'input',
 		ROUTE = 'route',
 		RECORD = 'record',
