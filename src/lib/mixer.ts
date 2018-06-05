@@ -3,7 +3,7 @@ import { Enum as CCG_Enum } from 'casparcg-connection'
 import { TransitionObject } from './transitionObject'
 import { CasparCG } from './api'
 export class Mixer {
-
+	[key: string]: any
 	inTransition?: CasparCG.ITransition
 	changeTransition?: CasparCG.ITransition
 	outTransition?: CasparCG.ITransition

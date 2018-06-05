@@ -1,5 +1,3 @@
-import * as _ from 'underscore'
-
 import { CasparCGFull as CF } from './interfaces'
 /**
  * StateObjectStorage is used for exposing the internal state variable

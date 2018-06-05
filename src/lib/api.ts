@@ -2,7 +2,7 @@ import {
 	TransitionObject as TransitionObject0,
 	Transition as Transition0
 } from './transitionObject'
-import { Mixer as Mixer0 } from './mixer'
+import { Mixer as MixerBase } from './mixer'
 
 export namespace CasparCG { // for external use
 	export class Mappings {
@@ -32,7 +32,7 @@ export namespace CasparCG { // for external use
 		duration?: number
 		noClear?: boolean
 		playing?: boolean
-		mixer?: Mixer0
+		mixer?: MixerBase
 	}
 	export class NextUp extends ILayerBase {
 		auto: boolean
@@ -130,7 +130,7 @@ export namespace CasparCG { // for external use
 		FUNCTION = 'function'
 
 	}
-	export interface Mixer extends Mixer0 {}
+	export interface Mixer extends MixerBase {}
 	export interface ITransition {
 
 		type?: string
