@@ -1,5 +1,6 @@
 
 Dev install instructions:
+[![CircleCI](https://circleci.com/gh/SuperFlyTV/casparcg-state.svg?style=svg)](https://circleci.com/gh/SuperFlyTV/casparcg-state)
 
 * Install yarn
 	https://yarnpkg.com
