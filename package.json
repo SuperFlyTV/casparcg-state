@@ -64,7 +64,6 @@
     "url": "https://bitbucket.org/superflytv/casparcg-state/issues"
   },
   "license": "UNLICENSED",
-  "private": true,
   "directories": {
     "lib": "src/"
   },
