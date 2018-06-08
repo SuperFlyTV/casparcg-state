@@ -128,5 +128,9 @@
     "typedoc": "^0.8.0",
     "typescript": "^2.4.1",
     "node-license-validator": "^1.3.0"
+  },
+  "standard-version": {
+    "message": "chore(release): %s [skip ci]",
+    "tagPrefix": ""
   }
 }
