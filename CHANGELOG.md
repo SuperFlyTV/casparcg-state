@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.1.1"></a>
+## [0.1.1](https://bitbucket.org/superflytv/casparcg-state/compare/0.1.0...0.1.1) (2018-06-08)
+
+
+### Bug Fixes
+
+* remove private: true ([19b1469](https://bitbucket.org/superflytv/casparcg-state/commits/19b1469))
+
+
+
 <a name="0.1.0"></a>
 # [0.1.0](https://bitbucket.org/superflytv/casparcg-state/compare/v0.0.4...v0.1.0) (2018-06-08)
 
