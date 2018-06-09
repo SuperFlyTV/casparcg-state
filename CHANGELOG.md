@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.0"></a>
+# [1.0.0](https://bitbucket.org/superflytv/casparcg-state/compare/0.1.1...1.0.0) (2018-06-09)
+
+
+### Feat
+
+* implemented tests for all mixerCommands ([b3108c4](https://bitbucket.org/superflytv/casparcg-state/commits/b3108c4))
+
+
+### BREAKING CHANGES
+
+* changed API to better reflekt casparcg-connection: mixer.blend => mixer.blendmode
+
+
+
 <a name="0.1.1"></a>
 ## [0.1.1](https://bitbucket.org/superflytv/casparcg-state/compare/0.1.0...0.1.1) (2018-06-08)
 
