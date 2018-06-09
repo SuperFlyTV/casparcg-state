@@ -1,6 +1,7 @@
 import * as _ from 'underscore'
 import { CasparCG } from './api'
 export class TransitionObject {
+	_transition: true
 	_value: string | number | boolean
 	inTransition: Transition
 	changeTransition: Transition
@@ -12,6 +13,7 @@ export class TransitionObject {
 		changeTransition?: Transition,
 		outTransition?: Transition
 	}) {
+		this._transition = true
 		if (!_.isUndefined(value)) {
 			this._value = value
 		}
