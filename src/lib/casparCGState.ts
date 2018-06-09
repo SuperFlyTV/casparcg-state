@@ -184,7 +184,13 @@ export class CasparCGState0 {
 	 * @param {CF.Layer}>} commands
 	 */
 	applyCommandsToState (currentState: any, commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}>): void {
-		let setMixerState = (channel: CF.Channel, command: IAMCPCommandVO, /* TODO: attr should probably be an enum or something */ attr: string, subValue: Array<string> | string) => {
+		let setMixerState = (
+			channel: CF.Channel,
+			command: IAMCPCommandVO,
+			/* TODO: attr should probably be an enum or something */
+			attr: string,
+			subValue: Array<string> | string
+		) => {
 			let layer = this.ensureLayer(channel, command.layer)
 
 			if (!layer.mixer) layer.mixer = new Mixer()
@@ -427,7 +433,7 @@ export class CasparCGState0 {
 			} else if (cmdName === 'MixerAnchorCommand') {
 				setMixerState(channel, command,'anchor',['x','y'])
 			} else if (cmdName === 'MixerBlendCommand') {
-				setMixerState(channel, command,'blend','blend')
+				setMixerState(channel, command,'blendmode','blendmode')
 			} else if (cmdName === 'MixerBrightnessCommand') {
 				setMixerState(channel, command,'brightness','brightness')
 			} else if (cmdName === 'MixerChromaCommand') {
@@ -457,7 +463,7 @@ export class CasparCGState0 {
 			} else if (cmdName === 'MixerSaturationCommand') {
 				setMixerState(channel, command,'saturation','saturation')
 			} else if (cmdName === 'MixerStraightAlphaOutputCommand') {
-				setMixerState(channel, command,'straightAlpha','state')
+				setMixerState(channel, command,'straightAlpha','straight_alpha_output')
 			} else if (cmdName === 'MixerVolumeCommand') {
 				setMixerState(channel, command,'volume','volume')
 			/*
@@ -1012,65 +1018,61 @@ export class CasparCGState0 {
 							)
 						) {
 
-							// this.log('pushMixerCommand change: ' + attr)
-							// this.log(oldLayer.mixer, newLayer.mixer)
-							// this.log(Mixer.getValue(oldLayer.mixer[attr]), Mixer.getValue(newLayer.mixer[attr]))
+							this.log('pushMixerCommand change: ' + attr, subValue)
+							this.log('oldLayer.mixer',oldLayer.mixer)
+							this.log('newLayer.mixer',newLayer.mixer)
+							this.log('oldAttr',Mixer.getValue((oldLayer.mixer || {})[attr]))
+							this.log('newAttr', Mixer.getValue((newLayer.mixer || {})[attr]))
 
 							let options: any = {}
 							options.channel = newChannel.channelNo
-							options.layer 	= newLayer.layerNo
+							if (newLayer.layerNo !== -1) options.layer 	= newLayer.layerNo
 
-							let o = Mixer.getValue((newLayer.mixer || {})[attr])
-
+							let o: any = Mixer.getValue((newLayer.mixer || {})[attr])
 							if (newLayer.mixer && _.has(newLayer.mixer,attr) && !_.isUndefined(o)) {
 								setTransition(options, newChannel, oldLayer, newLayer.mixer, false)
-
-								if (_.isArray(subValue)) {
-									_.each(subValue,(sv) => {
-										options[sv] = o[sv]
-									})
-								} else if (_.isString(subValue)) {
-									if (_.isObject(o)) {
-										options[subValue] = o._value
-									} else {
-										options[subValue] = o
-									}
-								}
-								if (newLayer.mixer.bundleWithCommands) {
-
-									options['bundleWithCommands'] = newLayer.mixer.bundleWithCommands
-									let key = newLayer.mixer.bundleWithCommands + ''
-									if (!bundledCmds[key]) bundledCmds[key] = []
-
-									options['defer'] = true
-
-									bundledCmds[key].push(new Command(options))
-
+							} else {
+								setTransition(options, newChannel, oldLayer, newLayer.mixer, true)
+								o = Mixer.getDefaultValues(attr)
+								options._defaultOptions = true	// this is used in ApplyCommands to set state to "default", and not use the mixer values
+							}
+							this.log('o', o)
+							if (_.isArray(subValue)) {
+								_.each(subValue,(sv) => {
+									options[sv] = o[sv]
+								})
+							} else if (_.isString(subValue)) {
+								if (_.isObject(o) && o._transition) {
+									options[subValue] = o._value
 								} else {
-									additionalCmds.push(new Command(options))
+									options[subValue] = o
 								}
+							}
+							// if (_.isObject(o) && o._spread) {
+							// 	_.extend(options,_.omit(o,['_spread']))
+							// } else {
+							// 	options[attr] = o
+							// }
+
+							this.log('options', options)
+							if (newLayer && newLayer.mixer && newLayer.mixer.bundleWithCommands) {
+
+								options['bundleWithCommands'] = newLayer.mixer.bundleWithCommands
+								let key = newLayer.mixer.bundleWithCommands + ''
+								if (!bundledCmds[key]) bundledCmds[key] = []
+
+								options['defer'] = true
+
+								bundledCmds[key].push(new Command(options))
 
 							} else {
-								// use default values
-
-								setTransition(options, newChannel, oldLayer, newLayer.mixer, true)
-
-								let defaultValue: any = Mixer.getDefaultValues(attr)
-								if (_.isObject(defaultValue)) {
-									_.extend(options,defaultValue)
-								} else {
-									options[attr] = defaultValue
-								}
-
-								options._defaultOptions = true	// this is used in ApplyCommands to set state to "default", and not use the mixer values
-
 								additionalCmds.push(new Command(options))
 							}
 						}
 					}
 
 					pushMixerCommand('anchor',AMCP.MixerAnchorCommand,['x','y'])
-					pushMixerCommand('blend',AMCP.MixerBlendCommand,'blend')
+					pushMixerCommand('blendmode',AMCP.MixerBlendCommand,'blendmode')
 					pushMixerCommand('brightness',AMCP.MixerBrightnessCommand,'brightness')
 					pushMixerCommand('chroma',AMCP.MixerChromaCommand, ['keyer', 'threshold', 'softness', 'spill'])
 					pushMixerCommand('clip',AMCP.MixerClipCommand,['x','y','width','height'])
@@ -1086,7 +1088,7 @@ export class CasparCGState0 {
 					pushMixerCommand('perspective',AMCP.MixerPerspectiveCommand, ['topLeftX','topLeftY','topRightX','topRightY','bottomRightX','bottomRightY','bottomLeftX','bottomLeftY'])
 					pushMixerCommand('rotation',AMCP.MixerRotationCommand,'rotation')
 					pushMixerCommand('saturation',AMCP.MixerSaturationCommand,'saturation')
-					if (newLayer.layerNo === -1) pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'state')
+					if (newLayer.layerNo === -1) pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'straight_alpha_output')
 					pushMixerCommand('volume',AMCP.MixerVolumeCommand,'volume')
 
 					let cmds: Array<any> = []

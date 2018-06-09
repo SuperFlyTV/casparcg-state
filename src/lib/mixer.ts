@@ -9,7 +9,7 @@ export class Mixer {
 	outTransition?: CasparCG.ITransition
 
 	anchor?: {x: number, y: number } | TransitionObject
-	blend?: CCG_Enum.BlendMode | TransitionObject
+	blendmode?: CCG_Enum.BlendMode | TransitionObject
 	brightness?: number | TransitionObject
 	chroma?: {
 		keyer: CCG_Enum.Chroma,
@@ -53,7 +53,7 @@ export class Mixer {
 	public static supportedAttributes (): Array<string> {
 		return [
 			'anchor',
-			'blend',
+			'blendmode',
 			'brightness',
 			'chroma',
 			'clip',
@@ -78,17 +78,19 @@ export class Mixer {
 
 			case 'anchor':
 				return {
+					_spread: true,
 					x: 0,
 					y: 0
 				}
 
-			case 'blend':
+			case 'blendmode':
 				return CCG_Enum.BlendMode.NORMAL
 			case 'brightness':
 				return 1
 
 			case 'chroma':
 				return {
+					_spread: true,
 					keyer: CCG_Enum.Chroma.NONE,
 					threshold: 0,
 					softness: 0,
@@ -97,6 +99,7 @@ export class Mixer {
 
 			case 'clip':
 				return {
+					_spread: true,
 					x: 0,
 					y: 0,
 					width: 1,
@@ -106,6 +109,7 @@ export class Mixer {
 				return 1
 			case 'crop':
 				return {
+					_spread: true,
 					left: 0,
 					top: 0,
 					right: 0,
@@ -113,6 +117,7 @@ export class Mixer {
 				}
 			case 'fill':
 				return {
+					_spread: true,
 					x: 0,
 					y: 0,
 					xScale: 1,
@@ -123,6 +128,7 @@ export class Mixer {
 				return false
 			case 'levels':
 				return {
+					_spread: true,
 					minInput: 	0,
 					maxInput: 	1,
 					gamma: 		1,
@@ -137,6 +143,7 @@ export class Mixer {
 				return 1
 			case 'perspective':
 				return {
+					_spread: true,
 					topLeftX: 0,
 					topLeftY: 0,
 					topRightX: 1,
