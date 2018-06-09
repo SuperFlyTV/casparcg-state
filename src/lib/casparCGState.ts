@@ -1021,8 +1021,8 @@ export class CasparCGState0 {
 							this.log('pushMixerCommand change: ' + attr, subValue)
 							this.log('oldLayer.mixer',oldLayer.mixer)
 							this.log('newLayer.mixer',newLayer.mixer)
-							this.log('oldAttr',Mixer.getValue(oldLayer.mixer[attr]))
-							this.log('newAttr', Mixer.getValue(newLayer.mixer[attr]))
+							this.log('oldAttr',Mixer.getValue((oldLayer.mixer || {})[attr]))
+							this.log('newAttr', Mixer.getValue((newLayer.mixer || {})[attr]))
 
 							let options: any = {}
 							options.channel = newChannel.channelNo
