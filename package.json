@@ -58,12 +58,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.org/superflytv/casparcg-state"
+    "url": "https://github.com/SuperFlyTV/casparcg-state"
   },
   "bugs": {
-    "url": "https://bitbucket.org/superflytv/casparcg-state/issues"
+    "url": "https://github.com/SuperFlyTV/casparcg-state/issues"
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
   "directories": {
     "lib": "src/"
   },
