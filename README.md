@@ -1,7 +1,8 @@
 # Casparcg-state
 [![CircleCI](https://circleci.com/gh/SuperFlyTV/casparcg-state.svg?style=svg)](https://circleci.com/gh/SuperFlyTV/casparcg-state)
 
-The Casparcg-state tracks the state of CasparCG and generates commands to be used be casparcg-connection.
+The Casparcg-state tracks the state of CasparCG and generates commands to be used in casparcg-connection.
+
 
 Licence: MIT
 
