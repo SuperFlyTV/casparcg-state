@@ -33,9 +33,11 @@ export namespace CasparCG { // for external use
 		noClear?: boolean
 		playing?: boolean
 		mixer?: MixerBase
+		nextUp?: NextUp | undefined | null
 	}
 	export class NextUp extends ILayerBase {
 		auto: boolean
+		content: LayerContentType.MEDIA | LayerContentType.HTMLPAGE | LayerContentType.INPUT // not sure about input...
 	}
 	export interface IMediaLayer extends ILayerBase {
 		content: LayerContentType.MEDIA

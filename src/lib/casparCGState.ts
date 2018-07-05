@@ -958,6 +958,68 @@ export class CasparCGState0 {
 							}
 						}
 					}
+					// ------------------------------------------------------------
+					// Background layer:
+					let bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['content'])
+					if (!bgDiff && newLayer.nextUp) {
+						if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
+							let nl: CasparCG.IMediaLayer = newLayer.nextUp as CasparCG.IMediaLayer
+							let ol: CF.IMediaLayer = oldLayer.nextUp as CF.IMediaLayer
+
+							setDefaultValue([nl, ol], ['seek'], 0)
+							setDefaultValue([nl, ol], ['auto'], false)
+
+							bgDiff = this.compareAttrs(nl, ol ,['media','seek','auto'])
+						}
+
+						if (!bgDiff && newLayer.nextUp && oldLayer.nextUp && (typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')) {
+							let nl = newLayer.nextUp.media
+							let ol = oldLayer.nextUp.media
+
+							bgDiff = this.compareAttrs(nl, ol ,['inTransition','outTransition','changeTransition'])
+						}
+					}
+					if (bgDiff) {
+						let options: OptionsInterface = {
+							channel: newChannel.channelNo,
+							layer: newLayer.layerNo,
+							noClear: !!newLayer.noClear
+						}
+						if (newLayer.nextUp) {
+							this.log('ADD BG', newLayer.nextUp.content)
+
+							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false)
+
+							if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
+								const layer = newLayer.nextUp as CasparCG.IMediaLayer & CasparCG.NextUp
+								additionalCmds.push(new AMCP.LoadbgCommand(_.extend(options, {
+									auto: layer.auto,
+									clip: (newLayer.nextUp.media || '').toString()
+								})))
+							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) {
+								const layer = newLayer.nextUp as CasparCG.IHtmlPageLayer & CasparCG.NextUp
+								additionalCmds.push(new AMCP.LoadHtmlPageBgCommand(_.extend(options, {
+									auto: layer.auto,
+									url: (newLayer.nextUp.media || '').toString()
+								})))
+							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.INPUT) {
+								const layer = newLayer.nextUp as CasparCG.IInputLayer & CasparCG.NextUp
+								additionalCmds.push(new AMCP.LoadDecklinkBgCommand(_.extend(options, {
+									auto: layer.auto,
+									device: layer.input.device,
+									format: layer.input.format,
+									channelLayout: layer.input.channelLayout
+								})))
+							}
+						} else {
+							this.log('REMOVE BG')
+							additionalCmds.push(new AMCP.LoadbgCommand({
+								channel: newChannel.channelNo,
+								layer: newLayer.layerNo,
+								clip: 'EMPTY'
+							}))
+						}
+					}
 					// -------------------------------------------------------------
 					// Mixer commands:
 					if (!newLayer.mixer) newLayer.mixer = new Mixer()
