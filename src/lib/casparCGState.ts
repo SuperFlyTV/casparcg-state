@@ -765,21 +765,33 @@ export class CasparCGState0 {
 
 								let oldTimeSincePlay = getTimeSincePlay(ol)
 								let oldSeek = getSeek(ol, oldTimeSincePlay)
+								let newMedia = this.compareAttrs(nl, ol ,['media'])
 								if (
-									!this.compareAttrs(nl, ol ,['media']) &&
+									!newMedia &&
 									ol.pauseTime &&
 									Math.abs(oldSeek - seek) < this.minTimeSincePlay
 
 								) {
 
-									cmd = new AMCP.PlayCommand(options as any)
+									cmd = new AMCP.ResumeCommand(options as any)
 								} else {
-
-									cmd = new AMCP.PlayCommand(_.extend(options,{
-										clip: (nl.media || '').toString(),
-										seek: seek,
-										loop: !!nl.looping
-									}))
+									if (newMedia) {
+										cmd = new AMCP.PlayCommand(_.extend(options,{
+											clip: (nl.media || '').toString(),
+											seek: seek,
+											loop: !!nl.looping
+										}))
+									} else {
+										cmd = new AMCP.ResumeCommand(options as any)
+										additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
+											seek: seek
+										})))
+										if (ol.looping !== nl.looping) {
+											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
+												loop: !!nl.looping
+											})))
+										}
+									}
 								}
 
 							} else {
