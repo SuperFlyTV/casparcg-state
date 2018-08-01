@@ -864,6 +864,7 @@ export class CasparCGState0 {
 							if (nl.route) {
 								let routeChannel: number 		= nl.route.channel
 								let routeLayer: number | null	= nl.route.layer || null
+								let mode = nl.mode
 
 								_.extend(options,{
 									routeChannel: 		routeChannel,
@@ -874,6 +875,7 @@ export class CasparCGState0 {
 										' route://' +
 											routeChannel +
 											(routeLayer ? '-' + routeLayer : '') +
+										(mode ? ' ' + mode : '') +
 										(
 											options.transition
 											? (' ' + options.transition + ' ' + options.transitionDuration + ' ' + options.transitionEasing)
