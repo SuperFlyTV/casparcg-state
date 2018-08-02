@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.2"></a>
+## [1.1.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.1...1.1.2) (2018-08-02)
+
+
+### Bug Fixes
+
+* empty layers get stop command, not clear command ([08ad7ce](https://github.com/SuperFlyTV/casparcg-state/commit/08ad7ce))
+
+
+
 <a name="1.1.1"></a>
 ## [1.1.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.0...1.1.1) (2018-08-02)
 
