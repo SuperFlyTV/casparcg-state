@@ -940,6 +940,9 @@ img { max-width: 100%; }
 					<a href="casparcg.transition.html#constructor" class="tsd-kind-icon">constructor</a>
 				</li>
 				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+					<a href="casparcg.transition.html#delay" class="tsd-kind-icon">delay</a>
+				</li>
+				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
 					<a href="casparcg.transition.html#direction" class="tsd-kind-icon">direction</a>
 				</li>
 				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
@@ -949,7 +952,16 @@ img { max-width: 100%; }
 					<a href="casparcg.transition.html#easing" class="tsd-kind-icon">easing</a>
 				</li>
 				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+					<a href="casparcg.transition.html#maskfile" class="tsd-kind-icon">mask<wbr>File</a>
+				</li>
+				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+					<a href="casparcg.transition.html#overlayfile" class="tsd-kind-icon">overlay<wbr>File</a>
+				</li>
+				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
 					<a href="casparcg.transition.html#type" class="tsd-kind-icon">type</a>
+				</li>
+				<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+					<a href="casparcg.transition.html#getoptions" class="tsd-kind-icon">get<wbr>Options</a>
 				</li>
 			</ul>
 		</li>
@@ -1022,10 +1034,19 @@ img { max-width: 100%; }
 					<section class="tsd-index-section tsd-is-inherited tsd-is-external">
 						<h3>Properties</h3>
 						<ul class="tsd-index-list">
+							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#delay" class="tsd-kind-icon">delay</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#direction" class="tsd-kind-icon">direction</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#duration" class="tsd-kind-icon">duration</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#easing" class="tsd-kind-icon">easing</a></li>
+							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#maskfile" class="tsd-kind-icon">mask<wbr>File</a></li>
+							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#overlayfile" class="tsd-kind-icon">overlay<wbr>File</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#type" class="tsd-kind-icon">type</a></li>
+						</ul>
+					</section>
+					<section class="tsd-index-section tsd-is-inherited tsd-is-external">
+						<h3>Methods</h3>
+						<ul class="tsd-index-list">
+							<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.transition.html#getoptions" class="tsd-kind-icon">get<wbr>Options</a></li>
 						</ul>
 					</section>
 				</div>
@@ -1037,14 +1058,14 @@ img { max-width: 100%; }
 				<a name="constructor" class="tsd-anchor"></a>
 				<h3>constructor</h3>
 				<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited tsd-is-external">
-					<li class="tsd-signature tsd-kind-icon">new <wbr>Transition<span class="tsd-signature-symbol">(</span>typeOrTransition<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">any</span>, duration<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span>, easing<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, direction<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="casparcg.transition.html" class="tsd-signature-type">Transition</a></li>
+					<li class="tsd-signature tsd-kind-icon">new <wbr>Transition<span class="tsd-signature-symbol">(</span>typeOrTransition<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">any</span>, durationOrMaskFile<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, easingOrDelay<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span>, directionOrOverlayFile<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="casparcg.transition.html" class="tsd-signature-type">Transition</a></li>
 				</ul>
 				<ul class="tsd-descriptions">
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#constructor">constructor</a></p>
 							<ul>
-								<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/transitionObject.ts#L43">lib/transitionObject.ts:43</a></li>
+								<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L47">lib/transitionObject.ts:47</a></li>
 							</ul>
 						</aside>
 						<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1053,13 +1074,13 @@ img { max-width: 100%; }
 								<h5><span class="tsd-flag ts-flagOptional">Optional</span> typeOrTransition: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">any</span></h5>
 							</li>
 							<li>
-								<h5><span class="tsd-flag ts-flagOptional">Optional</span> duration: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h5>
+								<h5><span class="tsd-flag ts-flagOptional">Optional</span> durationOrMaskFile: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 							</li>
 							<li>
-								<h5><span class="tsd-flag ts-flagOptional">Optional</span> easing: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								<h5><span class="tsd-flag ts-flagOptional">Optional</span> easingOrDelay: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h5>
 							</li>
 							<li>
-								<h5><span class="tsd-flag ts-flagOptional">Optional</span> direction: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								<h5><span class="tsd-flag ts-flagOptional">Optional</span> directionOrOverlayFile: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 							</li>
 						</ul>
 						<h4 class="tsd-returns-title">Returns <a href="casparcg.transition.html" class="tsd-signature-type">Transition</a></h4>
@@ -1070,6 +1091,18 @@ img { max-width: 100%; }
 		<section class="tsd-panel-group tsd-member-group tsd-is-inherited tsd-is-external">
 			<h2>Properties</h2>
 			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+				<a name="delay" class="tsd-anchor"></a>
+				<h3>delay</h3>
+				<div class="tsd-signature tsd-kind-icon">delay<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+				<aside class="tsd-sources">
+					<p>Implementation of <a href="../interfaces/casparcg.itransition.html">ITransition</a>.<a href="../interfaces/casparcg.itransition.html#delay">delay</a></p>
+					<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#delay">delay</a></p>
+					<ul>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L46">lib/transitionObject.ts:46</a></li>
+					</ul>
+				</aside>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
 				<a name="direction" class="tsd-anchor"></a>
 				<h3>direction</h3>
 				<div class="tsd-signature tsd-kind-icon">direction<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;right&quot;</span></div>
@@ -1077,7 +1110,7 @@ img { max-width: 100%; }
 					<p>Implementation of <a href="../interfaces/casparcg.itransition.html">ITransition</a>.<a href="../interfaces/casparcg.itransition.html#direction">direction</a></p>
 					<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#direction">direction</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/transitionObject.ts#L43">lib/transitionObject.ts:43</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L43">lib/transitionObject.ts:43</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1089,7 +1122,7 @@ img { max-width: 100%; }
 					<p>Implementation of <a href="../interfaces/casparcg.itransition.html">ITransition</a>.<a href="../interfaces/casparcg.itransition.html#duration">duration</a></p>
 					<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#duration">duration</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/transitionObject.ts#L41">lib/transitionObject.ts:41</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L41">lib/transitionObject.ts:41</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1101,7 +1134,31 @@ img { max-width: 100%; }
 					<p>Implementation of <a href="../interfaces/casparcg.itransition.html">ITransition</a>.<a href="../interfaces/casparcg.itransition.html#easing">easing</a></p>
 					<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#easing">easing</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/transitionObject.ts#L42">lib/transitionObject.ts:42</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L42">lib/transitionObject.ts:42</a></li>
+					</ul>
+				</aside>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+				<a name="maskfile" class="tsd-anchor"></a>
+				<h3>mask<wbr>File</h3>
+				<div class="tsd-signature tsd-kind-icon">mask<wbr>File<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+				<aside class="tsd-sources">
+					<p>Implementation of <a href="../interfaces/casparcg.itransition.html">ITransition</a>.<a href="../interfaces/casparcg.itransition.html#maskfile">maskFile</a></p>
+					<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#maskfile">maskFile</a></p>
+					<ul>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L45">lib/transitionObject.ts:45</a></li>
+					</ul>
+				</aside>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+				<a name="overlayfile" class="tsd-anchor"></a>
+				<h3>overlay<wbr>File</h3>
+				<div class="tsd-signature tsd-kind-icon">overlay<wbr>File<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+				<aside class="tsd-sources">
+					<p>Implementation of <a href="../interfaces/casparcg.itransition.html">ITransition</a>.<a href="../interfaces/casparcg.itransition.html#overlayfile">overlayFile</a></p>
+					<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#overlayfile">overlayFile</a></p>
+					<ul>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L47">lib/transitionObject.ts:47</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1113,9 +1170,39 @@ img { max-width: 100%; }
 					<p>Implementation of <a href="../interfaces/casparcg.itransition.html">ITransition</a>.<a href="../interfaces/casparcg.itransition.html#type">type</a></p>
 					<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#type">type</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/transitionObject.ts#L40">lib/transitionObject.ts:40</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L40">lib/transitionObject.ts:40</a></li>
 					</ul>
 				</aside>
+			</section>
+		</section>
+		<section class="tsd-panel-group tsd-member-group tsd-is-inherited tsd-is-external">
+			<h2>Methods</h2>
+			<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+				<a name="getoptions" class="tsd-anchor"></a>
+				<h3>get<wbr>Options</h3>
+				<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+					<li class="tsd-signature tsd-kind-icon">get<wbr>Options<span class="tsd-signature-symbol">(</span>fps<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">object</span></li>
+				</ul>
+				<ul class="tsd-descriptions">
+					<li class="tsd-description">
+						<aside class="tsd-sources">
+							<p>Inherited from <a href="transition.html">Transition</a>.<a href="transition.html#getoptions">getOptions</a></p>
+							<ul>
+								<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/transitionObject.ts#L89">lib/transitionObject.ts:89</a></li>
+							</ul>
+						</aside>
+						<h4 class="tsd-parameters-title">Parameters</h4>
+						<ul class="tsd-parameters">
+							<li>
+								<h5><span class="tsd-flag ts-flagOptional">Optional</span> fps: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h5>
+							</li>
+						</ul>
+						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">object</span>
+							<span class="tsd-signature-symbol"> | </span>
+							<span class="tsd-signature-type">object</span>
+						</h4>
+					</li>
+				</ul>
 			</section>
 		</section>
 		<footer class="with-border-bottom">

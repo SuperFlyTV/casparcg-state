@@ -933,7 +933,7 @@ img { max-width: 100%; }
 				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-external">
 					<a href="casparcg.nextup.html#auto" class="tsd-kind-icon">auto</a>
 				</li>
-				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-external">
 					<a href="casparcg.nextup.html#content" class="tsd-kind-icon">content</a>
 				</li>
 				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
@@ -950,6 +950,9 @@ img { max-width: 100%; }
 				</li>
 				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
 					<a href="casparcg.nextup.html#mixer" class="tsd-kind-icon">mixer</a>
+				</li>
+				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+					<a href="casparcg.nextup.html#nextup" class="tsd-kind-icon">next<wbr>Up</a>
 				</li>
 				<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
 					<a href="casparcg.nextup.html#noclear" class="tsd-kind-icon">no<wbr>Clear</a>
@@ -1026,12 +1029,13 @@ img { max-width: 100%; }
 						<h3>Properties</h3>
 						<ul class="tsd-index-list">
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-external"><a href="casparcg.nextup.html#auto" class="tsd-kind-icon">auto</a></li>
-							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#content" class="tsd-kind-icon">content</a></li>
+							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-external"><a href="casparcg.nextup.html#content" class="tsd-kind-icon">content</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#duration" class="tsd-kind-icon">duration</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#layerno" class="tsd-kind-icon">layer<wbr>No</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#looping" class="tsd-kind-icon">looping</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#media" class="tsd-kind-icon">media</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#mixer" class="tsd-kind-icon">mixer</a></li>
+							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#nextup" class="tsd-kind-icon">next<wbr>Up</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#noclear" class="tsd-kind-icon">no<wbr>Clear</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#playtime" class="tsd-kind-icon">play<wbr>Time</a></li>
 							<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external"><a href="casparcg.nextup.html#playing" class="tsd-kind-icon">playing</a></li>
@@ -1048,18 +1052,18 @@ img { max-width: 100%; }
 				<div class="tsd-signature tsd-kind-icon">auto<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L38">lib/api.ts:38</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L39">lib/api.ts:39</a></li>
 					</ul>
 				</aside>
 			</section>
-			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-external">
 				<a name="content" class="tsd-anchor"></a>
 				<h3>content</h3>
-				<div class="tsd-signature tsd-kind-icon">content<span class="tsd-signature-symbol">:</span> <a href="../enums/casparcg.layercontenttype.html" class="tsd-signature-type">LayerContentType</a></div>
+				<div class="tsd-signature tsd-kind-icon">content<span class="tsd-signature-symbol">:</span> <a href="../enums/casparcg.layercontenttype.html#media" class="tsd-signature-type">MEDIA</a><span class="tsd-signature-symbol"> | </span><a href="../enums/casparcg.layercontenttype.html#htmlpage" class="tsd-signature-type">HTMLPAGE</a><span class="tsd-signature-symbol"> | </span><a href="../enums/casparcg.layercontenttype.html#input" class="tsd-signature-type">INPUT</a></div>
 				<aside class="tsd-sources">
-					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#content">content</a></p>
+					<p>Overrides <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#content">content</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L28">lib/api.ts:28</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L40">lib/api.ts:40</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1070,7 +1074,7 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#duration">duration</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L32">lib/api.ts:32</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L32">lib/api.ts:32</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1081,7 +1085,7 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#layerno">layerNo</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L27">lib/api.ts:27</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L27">lib/api.ts:27</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1092,7 +1096,7 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#looping">looping</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L30">lib/api.ts:30</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L30">lib/api.ts:30</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1103,7 +1107,7 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#media">media</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L29">lib/api.ts:29</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L29">lib/api.ts:29</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1114,7 +1118,18 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#mixer">mixer</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L35">lib/api.ts:35</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L35">lib/api.ts:35</a></li>
+					</ul>
+				</aside>
+			</section>
+			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-external">
+				<a name="nextup" class="tsd-anchor"></a>
+				<h3><span class="tsd-flag ts-flagOptional">Optional</span> next<wbr>Up</h3>
+				<div class="tsd-signature tsd-kind-icon">next<wbr>Up<span class="tsd-signature-symbol">:</span> <a href="casparcg.nextup.html" class="tsd-signature-type">NextUp</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></div>
+				<aside class="tsd-sources">
+					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#nextup">nextUp</a></p>
+					<ul>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L36">lib/api.ts:36</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1125,7 +1140,7 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#noclear">noClear</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L33">lib/api.ts:33</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L33">lib/api.ts:33</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1136,7 +1151,7 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#playtime">playTime</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L31">lib/api.ts:31</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L31">lib/api.ts:31</a></li>
 					</ul>
 				</aside>
 			</section>
@@ -1147,7 +1162,7 @@ img { max-width: 100%; }
 				<aside class="tsd-sources">
 					<p>Inherited from <a href="casparcg.ilayerbase.html">ILayerBase</a>.<a href="casparcg.ilayerbase.html#playing">playing</a></p>
 					<ul>
-						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/113b8f5/src/lib/api.ts#L34">lib/api.ts:34</a></li>
+						<li>Defined in <a href="https://github.com/SuperFlyTV/casparcg-state/blob/74827c6/src/lib/api.ts#L34">lib/api.ts:34</a></li>
 					</ul>
 				</aside>
 			</section>
