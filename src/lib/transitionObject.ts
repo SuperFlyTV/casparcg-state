@@ -42,15 +42,19 @@ export class Transition implements CasparCG.ITransition {
 	easing: string = 'linear'
 	direction: string = 'right'
 
-	constructor (typeOrTransition?: string | object, duration?: number, easing?: string, direction?: string) {
+	maskFile: string
+	delay: number
+	overlayFile: string
+
+	constructor (typeOrTransition?: string | object, durationOrMaskFile?: number | string, easingOrDelay?: string | number, directionOrOverlayFile?: string) {
 		let type: string
 
 		if (_.isObject(typeOrTransition)) {
 			let t: CasparCG.ITransition = typeOrTransition as CasparCG.ITransition
 			type = t.type as string
-			duration = t.duration
-			easing = t.easing
-			direction = t.direction
+			durationOrMaskFile = t.duration || t.maskFile
+			easingOrDelay = t.easing || t.delay
+			directionOrOverlayFile = t.direction || t.overlayFile
 		} else {
 			type = typeOrTransition as string
 		}
@@ -59,14 +63,44 @@ export class Transition implements CasparCG.ITransition {
 		if (type) {
 			this.type = type
 		}
-		if (duration) {
-			this.duration = duration
+		if (this.type === 'sting') {
+			if (durationOrMaskFile) {
+				this.maskFile = durationOrMaskFile as string
+			}
+			if (easingOrDelay) {
+				this.delay = easingOrDelay as number
+			}
+			if (directionOrOverlayFile) {
+				this.overlayFile = directionOrOverlayFile
+			}
+		} else {
+			if (durationOrMaskFile) {
+				this.duration = durationOrMaskFile as number
+			}
+			if (easingOrDelay) {
+				this.easing = easingOrDelay as string
+			}
+			if (directionOrOverlayFile) {
+				this.direction = directionOrOverlayFile
+			}
 		}
-		if (easing) {
-			this.easing = easing
-		}
-		if (direction) {
-			this.direction = direction
+	}
+
+	getOptions (fps?: number) {
+		if (this.type === 'sting') {
+			return {
+				transition: 'STING',
+				stingMaskFilename: this.maskFile,
+				stingDelay: this.delay,
+				stingOverlayFilename: this.overlayFile
+			}
+		} else {
+			return {
+				transition: this.type,
+				transitionDuration: Math.round(this.duration * (fps || 50)),
+				transitionEasing: this.easing,
+				transitionDirection: this.direction
+			}
 		}
 	}
 }

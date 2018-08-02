@@ -33,9 +33,11 @@ export namespace CasparCG { // for external use
 		noClear?: boolean
 		playing?: boolean
 		mixer?: MixerBase
+		nextUp?: NextUp | undefined | null
 	}
 	export class NextUp extends ILayerBase {
 		auto: boolean
+		content: LayerContentType.MEDIA | LayerContentType.HTMLPAGE | LayerContentType.INPUT // not sure about input...
 	}
 	export interface IMediaLayer extends ILayerBase {
 		content: LayerContentType.MEDIA
@@ -88,6 +90,7 @@ export namespace CasparCG { // for external use
 			channel: number,
 			layer?: number | null
 		} | null
+		mode?: 'BACKGROUND' | 'NEXT'
 		playing: true
 		playTime: null
 	}
@@ -134,9 +137,13 @@ export namespace CasparCG { // for external use
 	export interface ITransition {
 
 		type?: string
-		duration: number
+		duration?: number
 		easing?: string
 		direction?: string
+
+		maskFile?: string
+		delay?: number
+		overlayFile?: string
 
 	}
 	export class TransitionObject extends TransitionObject0 {}
