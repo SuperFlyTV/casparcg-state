@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.0"></a>
+# [1.1.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.0.5...1.1.0) (2018-08-02)
+
+
+### Bug Fixes
+
+* logic around playing after loadbg ([2f219ac](https://github.com/SuperFlyTV/casparcg-state/commit/2f219ac))
+* use resume command when possible ([82907cc](https://github.com/SuperFlyTV/casparcg-state/commit/82907cc))
+
+
+### Features
+
+* background/next routes ([ee241bd](https://github.com/SuperFlyTV/casparcg-state/commit/ee241bd))
+* sting transition ([f5b8a47](https://github.com/SuperFlyTV/casparcg-state/commit/f5b8a47))
+* support preloading ([903315d](https://github.com/SuperFlyTV/casparcg-state/commit/903315d))
+
+
+
 <a name="1.0.5"></a>
 ## [1.0.5](https://github.com/SuperFlyTV/casparcg-state/compare/1.0.4...1.0.5) (2018-06-15)
 
