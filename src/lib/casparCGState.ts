@@ -1202,7 +1202,7 @@ export class CasparCGState0 {
 				let newLayer: CasparCG.ILayerBase = newChannel.layers[layerKey + ''] || (new CasparCG.ILayerBase())
 				if (newLayer) {
 
-					if (!newLayer.content && oldLayer.content) {
+					if (!newLayer.content && oldLayer.content && newLayer.content !== CasparCG.LayerContentType.NOTHING) {
 
 						this.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content + ' | ' + newLayer.content)
 						this.log(oldLayer)
