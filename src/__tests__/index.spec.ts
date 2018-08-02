@@ -395,6 +395,94 @@ test('Loadbg a video, then play it', () => {
 	})).serialize())
 
 })
+test('Play a video, stop and loadbg another video', () => {
+	let c = getCasparCGState()
+	c.log = true
+	initState(c.ccgState)
+
+	let cc: any
+	// Play a video file:
+	let layer10: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		seek: 0
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'AMB',
+		loop: false,
+		seek: 0
+	})).serialize())
+
+	// Load a video file (paused):
+
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 10,
+			media: 'AMB',
+			auto: false
+		}
+	} as CasparCG.IEmptyLayer
+
+	cc = getDiff(c, targetState, true)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.StopCommand({
+		channel: 1,
+		layer: 10,
+		noClear: false
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'AMB',
+		noClear: false
+	})).serialize())
+
+	// Start playing it:
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.MEDIA,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		layerNo: 10
+	}
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+
+	// Remove the video
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+
+})
 test('Play a looping video, pause & resume it', () => {
 	let c = getCasparCGState()
 	initState(c.ccgState)
