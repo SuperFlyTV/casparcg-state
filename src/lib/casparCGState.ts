@@ -605,10 +605,7 @@ export class CasparCGState0 {
 				}
 
 				if (transition) {
-					options.transition 			= transition.type
-					options.transitionDuration 	= Math.round(transition.duration * (channel.fps || 50))
-					options.transitionEasing 	= transition.easing
-					options.transitionDirection 	= transition.direction
+					_.extend(options, transition.getOptions(channel.fps))
 				}
 			}
 

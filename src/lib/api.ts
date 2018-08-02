@@ -137,9 +137,13 @@ export namespace CasparCG { // for external use
 	export interface ITransition {
 
 		type?: string
-		duration: number
+		duration?: number
 		easing?: string
 		direction?: string
+
+		maskFile?: string
+		delay?: number
+		overlayFile?: string
 
 	}
 	export class TransitionObject extends TransitionObject0 {}
