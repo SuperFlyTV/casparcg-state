@@ -25,3 +25,5 @@ myTestState0.applyCommands([myTestPlayCommand.serialize()]);
 
 let myState0: stateNS.CasparCG = myTestState0.getState();
 console.log(new CasparCGState().diffStates(new CasparCGState().getState(), myState0));*/
+
+// @todo: remove this magic line that bumps a rebuild for us :S
