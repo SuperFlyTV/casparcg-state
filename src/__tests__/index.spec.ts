@@ -372,7 +372,7 @@ test('Loadbg a video, then play it', () => {
 		content: CasparCG.LayerContentType.MEDIA,
 		media: 'AMB',
 		playing: true,
-		playTime: 1000,	
+		playTime: 1000,
 		layerNo: 10
 	}
 	cc = getDiff(c, targetState)
