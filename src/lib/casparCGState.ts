@@ -252,11 +252,7 @@ export class CasparCGState0 {
 					} else {
 						layer.media = new TransitionObject(command._objectParams['clip'] as string)
 						if (command._objectParams.transition) {
-							layer.media.inTransition = new Transition(
-								command._objectParams.transition as string,
-								+(command._objectParams.transitionDuration || 0),
-								command._objectParams.transitionEasing as string,
-								command._objectParams.transitionDirection as string)
+							layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
 						}
 					}
 
@@ -327,12 +323,7 @@ export class CasparCGState0 {
 					layer.nextUp.media = new TransitionObject(command._objectParams['clip'] as string)
 					// layer.nextUp.media = command._objectParams['clip'] as string
 					if (command._objectParams['transition']) {
-						layer.nextUp.media.inTransition = new Transition(
-							command._objectParams['transition'] as string,
-							+(command._objectParams['transitionDuration'] || 0),
-							command._objectParams['transitionEasing'] as string,
-							command._objectParams['transitionDirection'] as string
-						)
+						layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
 					}
 
 					layer.nextUp.looping = !!command._objectParams['loop']
@@ -413,11 +404,7 @@ export class CasparCGState0 {
 				// layer.media = 'decklink'
 				layer.media = new TransitionObject('decklink')
 				if (command._objectParams['transition']) {
-					layer.media.inTransition = new Transition(
-						command._objectParams['transition'] as string,
-						+(command._objectParams['transitionDuration'] || 0),
-						command._objectParams['transitionEasing'] as string,
-						command._objectParams['transitionDirection'] as string)
+					layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
 				}
 
 				// TODO: The change below has functional changes, but prevents crashes.
@@ -498,11 +485,7 @@ export class CasparCGState0 {
 					// layer.media = 'route'
 					layer.media = new TransitionObject('route')
 					if (command._objectParams.transition) {
-						layer.media.inTransition = new Transition(
-							command._objectParams.transition as string,
-							+(command._objectParams.transitionDuration || 0),
-							command._objectParams.transitionEasing as string,
-							command._objectParams.transitionDirection as string)
+						layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
 					}
 
 					// TODO: The change below has functional changes, but prevents crashes.
@@ -585,8 +568,16 @@ export class CasparCGState0 {
 		let commands: Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> = []
 		let time: number = this._currentTimeFunction()
 
-		let setTransition = (options: any | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any, isRemove: boolean) => {
+		let setTransition = (options: any | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any, isRemove: boolean, isBg?: boolean) => {
 			if (!options) options = {}
+			const comesFromBG = (transitionObj: CasparCG.TransitionObject) => {
+				if (oldLayer.nextUp && _.isObject(oldLayer.nextUp.media)) {
+					let t0 = new Transition(transitionObj)
+					let t1 = new Transition((oldLayer.nextUp.media as CasparCG.TransitionObject).inTransition)
+					return t0.getString() === t1.getString()
+				}
+				return false
+			}
 
 			if (_.isObject(content)) {
 
@@ -599,7 +590,7 @@ export class CasparCGState0 {
 				} else {
 					if (oldLayer.playing && content.changeTransition) {
 						transition = new Transition(content.changeTransition)
-					} else if (content.inTransition) {
+					} else if (content.inTransition && (isBg || !comesFromBG(content.inTransition))) {
 						transition = new Transition(content.inTransition)
 					}
 				}
@@ -884,7 +875,7 @@ export class CasparCGState0 {
 										(mode ? ' ' + mode : '') +
 										(
 											options.transition
-											? (' ' + options.transition + ' ' + options.transitionDuration + ' ' + options.transitionEasing)
+											? (' ' + new Transition().fromCommand({ _objectParams: options }, oldChannel.fps).getString(oldChannel.fps))
 											: ''
 										)
 									),
@@ -1008,7 +999,7 @@ export class CasparCGState0 {
 						if (newLayer.nextUp) {
 							this.log('ADD BG', newLayer.nextUp.content)
 
-							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false)
+							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false, true)
 
 							if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
 								const layer = newLayer.nextUp as CasparCG.IMediaLayer & CasparCG.NextUp
@@ -1233,10 +1224,7 @@ export class CasparCGState0 {
 										channel: oldChannel.channelNo,
 										layer: oldLayer.layerNo,
 										clip: 'empty',
-										transition: oldLayer.media.outTransition.type,
-										transitionDuration: Math.round(+(oldLayer.media.outTransition.duration) * oldChannel.fps),
-										transitionEasing: oldLayer.media.outTransition.easing,
-										transitionDirection: oldLayer.media.outTransition.direction
+										...(new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps))
 									})
 								}
 							}
@@ -1395,6 +1383,7 @@ export class CasparCGState0 {
 		let diff1 = ''
 
 		let getValue: any = function (val: any) {
+			if (val && val.getString) return val.getString()
 			return Mixer.getValue(val)
 		}
 		let cmp = (a: any, b: any, name: any) => {
