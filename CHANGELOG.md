@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.3"></a>
+## [1.1.3](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.2...1.1.3) (2018-08-03)
+
+
+### Bug Fixes
+
+* don't resend transitions that were set on the background layer ([4afe3d9](https://github.com/SuperFlyTV/casparcg-state/commit/4afe3d9))
+* refactored handling of commands ([9398c51](https://github.com/SuperFlyTV/casparcg-state/commit/9398c51))
+
+
+
 <a name="1.1.2"></a>
 ## [1.1.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.1...1.1.2) (2018-08-02)
 
