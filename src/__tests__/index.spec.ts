@@ -333,7 +333,6 @@ test('Load a video, then play it', () => {
 })
 test('Loadbg a video, then play it', () => {
 	let c = getCasparCGState()
-	c.log = true
 	initState(c.ccgState)
 
 	let cc: any
@@ -397,7 +396,6 @@ test('Loadbg a video, then play it', () => {
 })
 test('Play a video, stop and loadbg another video', () => {
 	let c = getCasparCGState()
-	c.log = true
 	initState(c.ccgState)
 
 	let cc: any
@@ -1074,7 +1072,7 @@ test('Play a video with transition, then stop it with transition', () => {
 		layerNo: 10,
 		media: new CasparCG.TransitionObject('AMB', {
 			inTransition: new CasparCG.Transition('mix', 1),
-			outTransition: new CasparCG.Transition('mix', 1)
+			outTransition: new CasparCG.Transition({ type: 'sting', maskFile: 'mask_transition' })
 
 		}),
 		playing: true,
@@ -1107,10 +1105,10 @@ test('Play a video with transition, then stop it with transition', () => {
 		channel: 1,
 		layer: 10,
 		clip: 'empty',
-		transition: 'mix',
-		transitionDirection: 'right',
-		transitionDuration: 50,
-		transitionEasing: 'linear'
+		transition: 'sting',
+		stingMaskFilename: 'mask_transition',
+		stingDelay: 0,
+		stingOverlayFilename: ''
 	}).serialize())
 })
 test('Play a Route with transition, then stop it with transition', () => {
@@ -1138,7 +1136,7 @@ test('Play a Route with transition, then stop it with transition', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://3 mix 25 linear')
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://3 mix 25 linear right')
 
 	// Remove the layer from the state
 	delete channel1.layers['10']
