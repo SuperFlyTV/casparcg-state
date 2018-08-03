@@ -1,5 +1,6 @@
 import * as _ from 'underscore'
 import { CasparCG } from './api'
+
 export class TransitionObject {
 	_transition: true
 	_value: string | number | boolean
@@ -42,15 +43,19 @@ export class Transition implements CasparCG.ITransition {
 	easing: string = 'linear'
 	direction: string = 'right'
 
-	constructor (typeOrTransition?: string | object, duration?: number, easing?: string, direction?: string) {
+	maskFile: string = ''
+	delay: number = 0
+	overlayFile: string = ''
+
+	constructor (typeOrTransition?: string | object, durationOrMaskFile?: number | string, easingOrDelay?: string | number, directionOrOverlayFile?: string) {
 		let type: string
 
 		if (_.isObject(typeOrTransition)) {
 			let t: CasparCG.ITransition = typeOrTransition as CasparCG.ITransition
 			type = t.type as string
-			duration = t.duration
-			easing = t.easing
-			direction = t.direction
+			durationOrMaskFile = type === 'sting' ? t.maskFile : t.duration
+			easingOrDelay = type === 'sting' ? t.delay : t.easing
+			directionOrOverlayFile = type === 'sting' ? t.overlayFile : t.direction
 		} else {
 			type = typeOrTransition as string
 		}
@@ -59,14 +64,93 @@ export class Transition implements CasparCG.ITransition {
 		if (type) {
 			this.type = type
 		}
-		if (duration) {
-			this.duration = duration
+		if (this.type === 'sting') {
+			if (durationOrMaskFile) {
+				this.maskFile = durationOrMaskFile as string
+			}
+			if (easingOrDelay) {
+				this.delay = easingOrDelay as number
+			}
+			if (directionOrOverlayFile) {
+				this.overlayFile = directionOrOverlayFile
+			}
+		} else {
+			if (durationOrMaskFile) {
+				this.duration = durationOrMaskFile as number
+			}
+			if (easingOrDelay) {
+				this.easing = easingOrDelay as string
+			}
+			if (directionOrOverlayFile) {
+				this.direction = directionOrOverlayFile
+			}
 		}
-		if (easing) {
-			this.easing = easing
+	}
+
+	getOptions (fps?: number) {
+		if (this.type === 'sting') {
+			return {
+				transition: 'sting',
+				stingMaskFilename: this.maskFile,
+				stingDelay: this.delay * (fps || 50),
+				stingOverlayFilename: this.overlayFile
+			}
+		} else {
+			return {
+				transition: this.type,
+				transitionDuration: Math.round(this.duration * (fps || 50)),
+				transitionEasing: this.easing,
+				transitionDirection: this.direction
+			}
 		}
-		if (direction) {
-			this.direction = direction
+	}
+
+	getString (fps?: number): string {
+		if (this.type === 'sting') {
+			return [
+				'STING',
+				this.maskFile,
+				this.delay * (fps || 50),
+				this.overlayFile
+			].join(' ')
+		} else {
+			return [
+				this.type,
+				Math.round(this.duration * (fps || 50)),
+				this.easing,
+				this.direction
+			].join(' ')
 		}
+	}
+
+	fromCommand (command: any, fps?: number): Transition {
+		if (command._objectParams) {
+			if (command._objectParams.type === 'sting') {
+				this.type = 'sting'
+				if (command._objectParams.stingMaskFilename) {
+					this.maskFile = command._objectParams.stingMaskFilename
+				}
+				if (command._objectParams.stingDelay) {
+					this.delay = command._objectParams.stingDelay / (fps || 50)
+				}
+				if (command._objectParams.stingOverlayFilename) {
+					this.overlayFile = command._objectParams.stingOverlayFilename
+				}
+			} else {
+				if (command._objectParams.transition) {
+					this.type = command._objectParams.transition
+				}
+				if (command._objectParams.transitionDuration) {
+					this.duration = command._objectParams.transitionDuration / (fps || 50)
+				}
+				if (command._objectParams.transitionEasing) {
+					this.easing = command._objectParams.transitionEasing
+				}
+				if (command._objectParams.transitionDirection) {
+					this.direction = command._objectParams.transitionDirection
+				}
+			}
+		}
+		return this
 	}
 }

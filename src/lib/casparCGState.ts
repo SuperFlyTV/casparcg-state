@@ -236,24 +236,24 @@ export class CasparCGState0 {
 
 			let cmdName = command._commandName
 
-			if (cmdName === 'PlayCommand' || cmdName === 'LoadCommand') {
+			if (cmdName === 'PlayCommand' || cmdName === 'LoadCommand' || cmdName === 'ResumeCommand') {
 				let layer: CF.IMediaLayer = this.ensureLayer(channel, layerNo) as CF.IMediaLayer
 
 				let seek: number = command._objectParams['seek'] as number
 
 				let playDeltaTime = (seek || 0) / channel.fps
 
-				if (command._objectParams['clip']) {
+				if (command._objectParams['clip'] || (cmdName === 'PlayCommand' && layer.nextUp)) {
 					layer.content = CasparCG.LayerContentType.MEDIA
-					layer.playing = (cmdName === 'PlayCommand')
+					layer.playing = (cmdName === 'PlayCommand' || cmdName === 'ResumeCommand')
 
-					layer.media = new TransitionObject(command._objectParams['clip'] as string)
-					if (command._objectParams.transition) {
-						layer.media.inTransition = new Transition(
-							command._objectParams.transition as string,
-							+(command._objectParams.transitionDuration || 0),
-							command._objectParams.transitionEasing as string,
-							command._objectParams.transitionDirection as string)
+					if (!command._objectParams['clip'] && layer.nextUp && layer.nextUp.media) {
+						layer.media = layer.nextUp.media
+					} else {
+						layer.media = new TransitionObject(command._objectParams['clip'] as string)
+						if (command._objectParams.transition) {
+							layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
+						}
 					}
 
 					layer.looping = !!command._objectParams['loop']
@@ -269,7 +269,7 @@ export class CasparCGState0 {
 					// this._getMediaDuration((layer.media || '').toString(), channel.channelNo, layer.layerNo)
 
 				} else {
-					if (cmdName === 'PlayCommand' && layer.content === CasparCG.LayerContentType.MEDIA && layer.media && layer.pauseTime && layer.playTime) {
+					if ((cmdName === 'PlayCommand' || cmdName === 'ResumeCommand') && layer.content === CasparCG.LayerContentType.MEDIA && layer.media && layer.pauseTime && layer.playTime) {
 						// resuming a paused clip
 						layer.playing = true
 
@@ -320,14 +320,10 @@ export class CasparCGState0 {
 				if (command._objectParams['clip']) {
 					layer.nextUp.content = CasparCG.LayerContentType.MEDIA
 
-					layer.media = new TransitionObject(command._objectParams['clip'] as string)
+					layer.nextUp.media = new TransitionObject(command._objectParams['clip'] as string)
+					// layer.nextUp.media = command._objectParams['clip'] as string
 					if (command._objectParams['transition']) {
-						layer.media.inTransition = new Transition(
-							command._objectParams['transition'] as string,
-							+(command._objectParams['transitionDuration'] || 0),
-							command._objectParams['transitionEasing'] as string,
-							command._objectParams['transitionDirection'] as string
-						)
+						layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
 					}
 
 					layer.nextUp.looping = !!command._objectParams['loop']
@@ -408,11 +404,7 @@ export class CasparCGState0 {
 				// layer.media = 'decklink'
 				layer.media = new TransitionObject('decklink')
 				if (command._objectParams['transition']) {
-					layer.media.inTransition = new Transition(
-						command._objectParams['transition'] as string,
-						+(command._objectParams['transitionDuration'] || 0),
-						command._objectParams['transitionEasing'] as string,
-						command._objectParams['transitionDirection'] as string)
+					layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
 				}
 
 				// TODO: The change below has functional changes, but prevents crashes.
@@ -493,11 +485,7 @@ export class CasparCGState0 {
 					// layer.media = 'route'
 					layer.media = new TransitionObject('route')
 					if (command._objectParams.transition) {
-						layer.media.inTransition = new Transition(
-							command._objectParams.transition as string,
-							+(command._objectParams.transitionDuration || 0),
-							command._objectParams.transitionEasing as string,
-							command._objectParams.transitionDirection as string)
+						layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
 					}
 
 					// TODO: The change below has functional changes, but prevents crashes.
@@ -600,10 +588,7 @@ export class CasparCGState0 {
 				}
 
 				if (transition) {
-					options.transition 			= transition.type
-					options.transitionDuration 	= Math.round(transition.duration * (channel.fps || 50))
-					options.transitionEasing 	= transition.easing
-					options.transitionDirection 	= transition.direction
+					_.extend(options, transition.getOptions(channel.fps))
 				}
 			}
 
@@ -765,21 +750,37 @@ export class CasparCGState0 {
 
 								let oldTimeSincePlay = getTimeSincePlay(ol)
 								let oldSeek = getSeek(ol, oldTimeSincePlay)
+								let newMedia = this.compareAttrs(nl, ol ,['media'])
+								let diffMediaFromBg = this.compareAttrs(nl, ol.nextUp, ['media'])
 								if (
-									!this.compareAttrs(nl, ol ,['media']) &&
+									!newMedia &&
 									ol.pauseTime &&
 									Math.abs(oldSeek - seek) < this.minTimeSincePlay
 
 								) {
 
-									cmd = new AMCP.PlayCommand(options as any)
+									cmd = new AMCP.ResumeCommand(options as any)
 								} else {
-
-									cmd = new AMCP.PlayCommand(_.extend(options,{
-										clip: (nl.media || '').toString(),
-										seek: seek,
-										loop: !!nl.looping
-									}))
+									if (newMedia && diffMediaFromBg) {
+										cmd = new AMCP.PlayCommand(_.extend(options,{
+											clip: (nl.media || '').toString(),
+											seek: seek,
+											loop: !!nl.looping
+										}))
+									} else if (!diffMediaFromBg) {
+										// @todo: remove transitions perhaps?
+										cmd = new AMCP.PlayCommand({ ...options })
+									} else {
+										cmd = new AMCP.ResumeCommand(options as any)
+										additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
+											seek: seek
+										})))
+										if (ol.looping !== nl.looping) {
+											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
+												loop: !!nl.looping
+											})))
+										}
+									}
 								}
 
 							} else {
@@ -852,6 +853,7 @@ export class CasparCGState0 {
 							if (nl.route) {
 								let routeChannel: number 		= nl.route.channel
 								let routeLayer: number | null	= nl.route.layer || null
+								let mode = nl.mode
 
 								_.extend(options,{
 									routeChannel: 		routeChannel,
@@ -862,9 +864,10 @@ export class CasparCGState0 {
 										' route://' +
 											routeChannel +
 											(routeLayer ? '-' + routeLayer : '') +
+										(mode ? ' ' + mode : '') +
 										(
 											options.transition
-											? (' ' + options.transition + ' ' + options.transitionDuration + ' ' + options.transitionEasing)
+											? (' ' + new Transition().fromCommand({ _objectParams: options }, oldChannel.fps).getString(oldChannel.fps))
 											: ''
 										)
 									),
@@ -956,6 +959,68 @@ export class CasparCGState0 {
 									data: nl.templateData || undefined
 								}))
 							}
+						}
+					}
+					// ------------------------------------------------------------
+					// Background layer:
+					let bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['content'])
+					if (!bgDiff && newLayer.nextUp) {
+						if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
+							let nl: CasparCG.IMediaLayer = newLayer.nextUp as CasparCG.IMediaLayer
+							let ol: CF.IMediaLayer = oldLayer.nextUp as CF.IMediaLayer
+
+							setDefaultValue([nl, ol], ['seek'], 0)
+							setDefaultValue([nl, ol], ['auto'], false)
+
+							bgDiff = this.compareAttrs(nl, ol ,['media','seek','auto'])
+						}
+
+						if (!bgDiff && newLayer.nextUp && oldLayer.nextUp && (typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')) {
+							let nl = newLayer.nextUp.media
+							let ol = oldLayer.nextUp.media
+
+							bgDiff = this.compareAttrs(nl, ol ,['inTransition','outTransition','changeTransition'])
+						}
+					}
+					if (bgDiff) {
+						let options: OptionsInterface = {
+							channel: newChannel.channelNo,
+							layer: newLayer.layerNo,
+							noClear: !!newLayer.noClear
+						}
+						if (newLayer.nextUp) {
+							this.log('ADD BG', newLayer.nextUp.content)
+
+							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false)
+
+							if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
+								const layer = newLayer.nextUp as CasparCG.IMediaLayer & CasparCG.NextUp
+								additionalCmds.push(new AMCP.LoadbgCommand(_.extend(options, {
+									auto: layer.auto,
+									clip: (newLayer.nextUp.media || '').toString()
+								})))
+							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) {
+								const layer = newLayer.nextUp as CasparCG.IHtmlPageLayer & CasparCG.NextUp
+								additionalCmds.push(new AMCP.LoadHtmlPageBgCommand(_.extend(options, {
+									auto: layer.auto,
+									url: (newLayer.nextUp.media || '').toString()
+								})))
+							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.INPUT) {
+								const layer = newLayer.nextUp as CasparCG.IInputLayer & CasparCG.NextUp
+								additionalCmds.push(new AMCP.LoadDecklinkBgCommand(_.extend(options, {
+									auto: layer.auto,
+									device: layer.input.device,
+									format: layer.input.format,
+									channelLayout: layer.input.channelLayout
+								})))
+							}
+						} else if (this.compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {
+							this.log('REMOVE BG')
+							additionalCmds.push(new AMCP.LoadbgCommand({
+								channel: newChannel.channelNo,
+								layer: newLayer.layerNo,
+								clip: 'EMPTY'
+							}))
 						}
 					}
 					// -------------------------------------------------------------
@@ -1120,7 +1185,7 @@ export class CasparCGState0 {
 				let newLayer: CasparCG.ILayerBase = newChannel.layers[layerKey + ''] || (new CasparCG.ILayerBase())
 				if (newLayer) {
 
-					if (!newLayer.content && oldLayer.content) {
+					if (!newLayer.content && oldLayer.content && newLayer.content !== CasparCG.LayerContentType.NOTHING) {
 
 						this.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content + ' | ' + newLayer.content)
 						this.log(oldLayer)
@@ -1151,10 +1216,7 @@ export class CasparCGState0 {
 										channel: oldChannel.channelNo,
 										layer: oldLayer.layerNo,
 										clip: 'empty',
-										transition: oldLayer.media.outTransition.type,
-										transitionDuration: Math.round(+(oldLayer.media.outTransition.duration) * oldChannel.fps),
-										transitionEasing: oldLayer.media.outTransition.easing,
-										transitionDirection: oldLayer.media.outTransition.direction
+										...(new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps))
 									})
 								}
 							}

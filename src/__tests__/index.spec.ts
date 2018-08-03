@@ -271,9 +271,10 @@ test('Play a video, pause & resume it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ResumeCommand({
 		channel: 1,
-		layer: 10
+		layer: 10,
+		noClear: false
 	})).serialize())
 })
 test('Load a video, then play it', () => {
@@ -309,6 +310,157 @@ test('Load a video, then play it', () => {
 
 	// Start playing it:
 	layer10.playing = true
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ResumeCommand({
+		channel: 1,
+		layer: 10,
+		noClear: false
+	})).serialize())
+
+	// Remove the video
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+
+})
+test('Loadbg a video, then play it', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Load a video file (paused):
+
+	let layer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 10,
+			media: 'AMB',
+			auto: false
+		}
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'AMB',
+		noClear: false
+	})).serialize())
+
+	// Start playing it:
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.MEDIA,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		layerNo: 10
+	}
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+
+	// Remove the video
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+
+})
+test('Play a video, stop and loadbg another video', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+	// Play a video file:
+	let layer10: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		seek: 0
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'AMB',
+		loop: false,
+		seek: 0
+	})).serialize())
+
+	// Load a video file (paused):
+
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 10,
+			media: 'AMB',
+			auto: false
+		}
+	} as CasparCG.IEmptyLayer
+
+	cc = getDiff(c, targetState, true)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.StopCommand({
+		channel: 1,
+		layer: 10,
+		noClear: false
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'AMB',
+		noClear: false
+	})).serialize())
+
+	// Start playing it:
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.MEDIA,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		layerNo: 10
+	}
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -382,9 +534,10 @@ test('Play a looping video, pause & resume it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ResumeCommand({
 		channel: 1,
-		layer: 10
+		layer: 10,
+		noClear: false
 	})).serialize())
 })
 test('Play a template, update the data & cgstop', () => {
@@ -559,6 +712,48 @@ test('Play a Route', () => {
 	expect(cc[0].cmds).toHaveLength(1)
 
 	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15')
+
+	// Remove the layer
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+
+})
+test('Play a BG Route', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Play a template file:
+
+	let layer10: CasparCG.IRouteLayer = {
+		content: CasparCG.LayerContentType.ROUTE,
+		layerNo: 10,
+		media: 'route',
+		playing: true,
+
+		route: {
+			channel: 2,
+			layer: 15
+		},
+		mode: 'BACKGROUND',
+		playTime: null // playtime is null because it is irrelevant
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15 BACKGROUND')
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -877,7 +1072,7 @@ test('Play a video with transition, then stop it with transition', () => {
 		layerNo: 10,
 		media: new CasparCG.TransitionObject('AMB', {
 			inTransition: new CasparCG.Transition('mix', 1),
-			outTransition: new CasparCG.Transition('mix', 1)
+			outTransition: new CasparCG.Transition({ type: 'sting', maskFile: 'mask_transition' })
 
 		}),
 		playing: true,
@@ -910,10 +1105,10 @@ test('Play a video with transition, then stop it with transition', () => {
 		channel: 1,
 		layer: 10,
 		clip: 'empty',
-		transition: 'mix',
-		transitionDirection: 'right',
-		transitionDuration: 50,
-		transitionEasing: 'linear'
+		transition: 'sting',
+		stingMaskFilename: 'mask_transition',
+		stingDelay: 0,
+		stingOverlayFilename: ''
 	}).serialize())
 })
 test('Play a Route with transition, then stop it with transition', () => {
@@ -941,7 +1136,7 @@ test('Play a Route with transition, then stop it with transition', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://3 mix 25 linear')
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://3 mix 25 linear right')
 
 	// Remove the layer from the state
 	delete channel1.layers['10']
