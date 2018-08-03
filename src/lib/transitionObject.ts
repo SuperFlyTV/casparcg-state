@@ -92,7 +92,7 @@ export class Transition implements CasparCG.ITransition {
 			return {
 				transition: 'sting',
 				stingMaskFilename: this.maskFile,
-				stingDelay: this.delay * (fps || 50),
+				stingDelay: Math.round(this.delay * (fps || 50)),
 				stingOverlayFilename: this.overlayFile
 			}
 		} else {
@@ -110,7 +110,7 @@ export class Transition implements CasparCG.ITransition {
 			return [
 				'STING',
 				this.maskFile,
-				this.delay * (fps || 50),
+				Math.round(this.delay * (fps || 50)),
 				this.overlayFile
 			].join(' ')
 		} else {
@@ -125,7 +125,7 @@ export class Transition implements CasparCG.ITransition {
 
 	fromCommand (command: any, fps?: number): Transition {
 		if (command._objectParams) {
-			if (command._objectParams.type === 'sting') {
+			if (command._objectParams.transition === 'sting') {
 				this.type = 'sting'
 				if (command._objectParams.stingMaskFilename) {
 					this.maskFile = command._objectParams.stingMaskFilename
