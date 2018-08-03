@@ -568,8 +568,16 @@ export class CasparCGState0 {
 		let commands: Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> = []
 		let time: number = this._currentTimeFunction()
 
-		let setTransition = (options: any | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any, isRemove: boolean) => {
+		let setTransition = (options: any | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any, isRemove: boolean, isBg?: boolean) => {
 			if (!options) options = {}
+			const comesFromBG = (transitionObj: CasparCG.TransitionObject) => {
+				if (oldLayer.nextUp && _.isObject(oldLayer.nextUp.media)) {
+					let t0 = new Transition(transitionObj)
+					let t1 = new Transition((oldLayer.nextUp.media as CasparCG.TransitionObject).inTransition)
+					return t0.getString() === t1.getString()
+				}
+				return false
+			}
 
 			if (_.isObject(content)) {
 
@@ -582,7 +590,7 @@ export class CasparCGState0 {
 				} else {
 					if (oldLayer.playing && content.changeTransition) {
 						transition = new Transition(content.changeTransition)
-					} else if (content.inTransition) {
+					} else if (content.inTransition && (isBg || !comesFromBG(content.inTransition))) {
 						transition = new Transition(content.inTransition)
 					}
 				}
@@ -991,7 +999,7 @@ export class CasparCGState0 {
 						if (newLayer.nextUp) {
 							this.log('ADD BG', newLayer.nextUp.content)
 
-							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false)
+							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false, true)
 
 							if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
 								const layer = newLayer.nextUp as CasparCG.IMediaLayer & CasparCG.NextUp
@@ -1375,6 +1383,7 @@ export class CasparCGState0 {
 		let diff1 = ''
 
 		let getValue: any = function (val: any) {
+			if (val && val.getString) return val.getString()
 			return Mixer.getValue(val)
 		}
 		let cmp = (a: any, b: any, name: any) => {
