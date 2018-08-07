@@ -938,9 +938,39 @@ export class CasparCGState0 {
 							}
 
 						} else {
-							// @todo: When does this happen? Do we need this? /Johan
-							if (oldLayer.content === CasparCG.LayerContentType.MEDIA) { // || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
+							// oldLayer had content, newLayer had no content, newLayer has a nextup
+							if (oldLayer.content === CasparCG.LayerContentType.MEDIA
+								|| oldLayer.content === CasparCG.LayerContentType.INPUT
+								|| oldLayer.content === CasparCG.LayerContentType.HTMLPAGE
+								|| oldLayer.content === CasparCG.LayerContentType.ROUTE) { // || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
 								cmd = new AMCP.StopCommand(options as any)
+								if (_.isObject(oldLayer.media) && (oldLayer.media as TransitionObject).outTransition) {
+									cmd = new AMCP.PlayCommand({
+										channel: oldChannel.channelNo,
+										layer: oldLayer.layerNo,
+										clip: 'empty',
+										...(new Transition((oldLayer.media as TransitionObject).outTransition).getOptions(oldChannel.fps))
+									})
+								}
+							} else if (oldLayer.content === CasparCG.LayerContentType.TEMPLATE) {
+								let ol = oldLayer as CasparCG.ITemplateLayer
+								if (ol.cgStop) {
+									cmd = new AMCP.CGStopCommand({ ...options as any, flashLayer: 1 })
+								} else {
+									cmd = new AMCP.ClearCommand(options as any)
+								}
+							} else if (oldLayer.content === CasparCG.LayerContentType.RECORD) {
+								cmd = new AMCP.CustomCommand({
+									layer: oldLayer.layerNo,
+									channel: oldChannel.channelNo,
+
+									command: (
+										'REMOVE ' + oldChannel.channelNo + ' FILE'
+									),
+
+									customCommand: 'remove file'
+
+								})
 							}
 						}
 					} else if (newLayer.content === CasparCG.LayerContentType.TEMPLATE) {
