@@ -955,7 +955,7 @@ export class CasparCGState0 {
 							} else if (oldLayer.content === CasparCG.LayerContentType.TEMPLATE) {
 								let ol = oldLayer as CasparCG.ITemplateLayer
 								if (ol.cgStop) {
-									cmd = new AMCP.CGStopCommand({ ...options as any, flashLayer: 1})
+									cmd = new AMCP.CGStopCommand({ ...options as any, flashLayer: 1 })
 								} else {
 									cmd = new AMCP.ClearCommand(options as any)
 								}
