@@ -99,7 +99,7 @@
     "resolve"
   ],
   "dependencies": {
-    "casparcg-connection": "^4.1.0",
+    "casparcg-connection": "^4.4.0",
     "fast-clone": "^1.5.3",
     "underscore": "^1.9.1"
   },
@@ -112,6 +112,7 @@
     "gh-pages": "^1.2.0",
     "jest": "^23.1.0",
     "mkdirp": "^0.5.1",
+    "node-license-validator": "^1.3.0",
     "npm-scripts-info": "^0.3.7",
     "nsp": "^3.2.1",
     "nyc": "^12.0.2",
@@ -123,8 +124,7 @@
     "tslint": "^5.10.0",
     "tslint-config-standard": "^7.0.0",
     "typedoc": "^0.11.1",
-    "typescript": "^2.4.1",
-    "node-license-validator": "^1.3.0"
+    "typescript": "^2.4.1"
   },
   "standard-version": {
     "message": "chore(release): %s [skip ci]",
