@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.1.5"></a>
+## [1.1.5](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.4...1.1.5) (2018-08-10)
+
+
+### Bug Fixes
+
+* maintain background layer when a clip is played on foreground ([c1ccb9f](https://github.com/SuperFlyTV/casparcg-state/commit/c1ccb9f))
+
+
+
 <a name="1.1.4"></a>
 ## [1.1.4](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.3...1.1.4) (2018-08-07)
 
