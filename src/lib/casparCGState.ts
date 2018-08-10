@@ -776,7 +776,6 @@ export class CasparCGState0 {
 											loop: !!nl.looping
 										}))
 									} else if (!diffMediaFromBg) {
-										// @todo: remove transitions perhaps?
 										cmd = new AMCP.PlayCommand({ ...options })
 									} else {
 										cmd = new AMCP.ResumeCommand(options as any)
@@ -1018,6 +1017,11 @@ export class CasparCGState0 {
 							let ol = oldLayer.nextUp.media
 
 							bgDiff = this.compareAttrs(nl, ol ,['inTransition','outTransition','changeTransition'])
+						}
+
+						// @todo: should this be a flag set during the generation of the commands for the foreground layer? /Balte
+						if (!bgDiff && newLayer.nextUp && diff && cmd && !(cmd.name === 'PauseCommand' || cmd.name === 'ResumeCommand' || cmd.name === 'CallCommand')) {
+							bgDiff = 'Foreground Layer Changed'
 						}
 					}
 					if (bgDiff) {
