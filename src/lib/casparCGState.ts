@@ -727,10 +727,10 @@ export class CasparCGState0 {
 								if (timeSincePlay < this.minTimeSincePlay) {
 									timeSincePlay = 0
 								}
-								if (layer.looping) {
-									// we don't support looping and seeking at the same time right now..
-									timeSincePlay = 0
-								}
+								// if (layer.looping) {
+								// 	// we don't support looping and seeking at the same time right now..
+								// 	timeSincePlay = 0
+								// }
 
 								if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
 									timeSincePlay = null
@@ -749,7 +749,7 @@ export class CasparCGState0 {
 							}
 
 							let timeSincePlay = getTimeSincePlay(nl)
-							let seek = getSeek(nl, timeSincePlay)
+							let seek = getSeek(nl, !nl.looping ? timeSincePlay : 0) // @todo: looping and seeking requires us to know the media duration
 
 							if (nl.playing) {
 
@@ -778,9 +778,11 @@ export class CasparCGState0 {
 										cmd = new AMCP.PlayCommand({ ...options })
 									} else {
 										cmd = new AMCP.ResumeCommand(options as any)
-										additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
-											seek: seek
-										})))
+										if (oldSeek !== seek && !nl.looping) {
+											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
+												seek: seek
+											})))
+										}
 										if (ol.looping !== nl.looping) {
 											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
 												loop: !!nl.looping
@@ -792,8 +794,8 @@ export class CasparCGState0 {
 							} else {
 								if (
 									(
-										(nl.pauseTime && (time - nl.pauseTime) < this.minTimeSincePlay) ||
-										_.isNull(timeSincePlay)
+										_.isNull(timeSincePlay) ||
+										(nl.pauseTime && (time - timeSincePlay!) > this.minTimeSincePlay)
 									) &&
 									!this.compareAttrs(nl, ol ,['media'])
 								) {
