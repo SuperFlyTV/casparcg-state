@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.2.0"></a>
+# [1.2.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.5...1.2.0) (2018-08-16)
+
+
+### Bug Fixes
+
+* default minTimeSIncePlay in ms ([acbda87](https://github.com/SuperFlyTV/casparcg-state/commit/acbda87))
+* looping does not interfere with play / pause ([3141581](https://github.com/SuperFlyTV/casparcg-state/commit/3141581))
+
+
+### Features
+
+* native route command ([86f6298](https://github.com/SuperFlyTV/casparcg-state/commit/86f6298))
+
+
+
 <a name="1.1.5"></a>
 ## [1.1.5](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.4...1.1.5) (2018-08-10)
 
