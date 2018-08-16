@@ -795,7 +795,7 @@ export class CasparCGState0 {
 								if (
 									(
 										_.isNull(timeSincePlay) ||
-										(nl.pauseTime && (time - timeSincePlay!) > this.minTimeSincePlay)
+										(nl.pauseTime && timeSincePlay! > this.minTimeSincePlay)
 									) &&
 									!this.compareAttrs(nl, ol ,['media'])
 								) {

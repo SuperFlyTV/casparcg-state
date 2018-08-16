@@ -39,6 +39,12 @@ function initState (s: CasparCGState) {
 		fps: 50
 	}])
 }
+function initStateMS (s: CasparCGState) {
+	s.initStateFromChannelInfo([{
+		videoMode: 'PAL',
+		fps: 50 / 1000
+	}])
+}
 function getDiff (c, targetState: CasparCG.State, loggingAfter?: boolean) {
 
 	let cc = c.ccgState.getDiff(targetState)
@@ -220,7 +226,7 @@ test('Play a video, then stop it', () => {
 })
 test('Play a video, pause & resume it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initStateMS(c.ccgState)
 
 	let cc: any
 
@@ -231,7 +237,7 @@ test('Play a video, pause & resume it', () => {
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
-		playTime: 995 // 5 s ago
+		playTime: -4000 // 5 s ago
 	}
 	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
 	let targetState: CasparCG.State = { channels: { '1': channel1 } }
@@ -248,8 +254,8 @@ test('Play a video, pause & resume it', () => {
 	})).serialize())
 
 	// Pause the video
-	c.time = 1010 // Advance the time
-	layer10.pauseTime = 1010
+	c.time = 11000 // Advance the time
+	layer10.pauseTime = 11000
 	layer10.playing = false
 
 	cc = getDiff(c, targetState)
@@ -258,15 +264,15 @@ test('Play a video, pause & resume it', () => {
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PauseCommand({
 		channel: 1,
 		layer: 10,
-		pauseTime: 1010
+		pauseTime: 11000
 	})).serialize())
 
 	// Resume playing:
-	c.time = 1020 // Advance the time
+	c.time = 22000 // Advance the time
 	layer10.playing = true
 	// it was paused for 10 seconds:
 	layer10.playTime = c.time - (layer10.pauseTime - layer10.playTime)
-	layer10.pauseTime = 0
+	delete layer10.pauseTime
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -628,7 +634,7 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 })
 test('Play a looping video, pause & resume it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initStateMS(c.ccgState)
 
 	let cc: any
 
@@ -639,7 +645,7 @@ test('Play a looping video, pause & resume it', () => {
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
-		playTime: 990, // 10 s ago
+		playTime: -9000, // 10 s ago
 		looping: true
 	}
 	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
@@ -657,8 +663,8 @@ test('Play a looping video, pause & resume it', () => {
 	})).serialize())
 
 	// Pause the video
-	c.time = 1005 // Advance the time
-	layer10.pauseTime = 1005
+	c.time = 6000 // Advance the time
+	layer10.pauseTime = 6000
 	layer10.playing = false
 
 	cc = getDiff(c, targetState)
@@ -667,11 +673,11 @@ test('Play a looping video, pause & resume it', () => {
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PauseCommand({
 		channel: 1,
 		layer: 10,
-		pauseTime: 1005
+		pauseTime: 6000
 	})).serialize())
 
 	// Resume playing:
-	c.time = 1010 // Advance the time
+	c.time = 11000 // Advance the time
 	layer10.playing = true
 	layer10.pauseTime = 0
 	layer10.playTime = c.time
@@ -914,7 +920,7 @@ test('Play a BG Route', () => {
 })
 test('Record to a file', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initStateMS(c.ccgState)
 
 	let cc: any
 
@@ -926,7 +932,7 @@ test('Record to a file', () => {
 		media: 'OUTPUT.mp4',
 		playing: true,
 		encoderOptions: '--fastdecode',
-		playTime: 995
+		playTime: -4000
 	}
 	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
 	let targetState: CasparCG.State = { channels: { '1': channel1 } }
