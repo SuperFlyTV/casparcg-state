@@ -32,7 +32,7 @@ export class CasparCGState0 {
 
 	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 
-	private minTimeSincePlay: number = 0.2
+	private minTimeSincePlay: number = 50
 
 	private _currentTimeFunction: () => number
 	// private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void
@@ -422,6 +422,33 @@ export class CasparCGState0 {
 
 				layer.noClear = command._objectParams['noClear'] as boolean
 
+			} else if (cmdName === 'PlayRouteCommand') {
+				let layer: CF.IRouteLayer = this.ensureLayer(channel, layerNo) as CF.IRouteLayer
+
+				layer.content = CasparCG.LayerContentType.ROUTE
+
+				// layer.media = 'route'
+				layer.media = new TransitionObject('route')
+				if (command._objectParams.transition) {
+					layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
+				}
+
+				// TODO: The change below has functional changes, but prevents crashes.
+				if (i.additionalLayerState && i.additionalLayerState.media && typeof(i.additionalLayerState.media) !== 'string') {
+					_.extend(layer.media, { outTransition: i.additionalLayerState.media.outTransition })
+				}
+
+				let routeChannel: any 	= command._objectParams.routeChannel
+
+				let routeLayer: any 		= command._objectParams.routeLayer
+
+				layer.route = {
+					channel: 	parseInt(routeChannel, 10),
+					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
+				}
+
+				layer.playing = true
+				layer.playTime = null // playtime is irrelevant
 			} else if (cmdName === 'MixerAnchorCommand') {
 				setMixerState(channel, command,'anchor',['x','y'])
 			} else if (cmdName === 'MixerBlendCommand') {
@@ -476,35 +503,7 @@ export class CasparCGState0 {
 				// specials/temporary workaraounds:
 
 				let customCommand: any = command._objectParams['customCommand']
-				if (customCommand === 'route') {
-
-					let layer: CF.IRouteLayer = this.ensureLayer(channel, layerNo) as CF.IRouteLayer
-
-					layer.content = CasparCG.LayerContentType.ROUTE
-
-					// layer.media = 'route'
-					layer.media = new TransitionObject('route')
-					if (command._objectParams.transition) {
-						layer.media.inTransition = new Transition().fromCommand(command, channel.fps)
-					}
-
-					// TODO: The change below has functional changes, but prevents crashes.
-					if (i.additionalLayerState && i.additionalLayerState.media && typeof(i.additionalLayerState.media) !== 'string') {
-						_.extend(layer.media, { outTransition: i.additionalLayerState.media.outTransition })
-					}
-
-					let routeChannel: any 	= command._objectParams.routeChannel
-
-					let routeLayer: any 		= command._objectParams.routeLayer
-
-					layer.route = {
-						channel: 	parseInt(routeChannel, 10),
-						layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
-					}
-
-					layer.playing = true
-					layer.playTime = null // playtime is irrelevant
-				} else if (customCommand === 'add file') {
+				if (customCommand === 'add file') {
 
 					let layer: CF.IRecordLayer = this.ensureLayer(channel, layerNo) as CF.IRecordLayer
 
@@ -728,10 +727,10 @@ export class CasparCGState0 {
 								if (timeSincePlay < this.minTimeSincePlay) {
 									timeSincePlay = 0
 								}
-								if (layer.looping) {
-									// we don't support looping and seeking at the same time right now..
-									timeSincePlay = 0
-								}
+								// if (layer.looping) {
+								// 	// we don't support looping and seeking at the same time right now..
+								// 	timeSincePlay = 0
+								// }
 
 								if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
 									timeSincePlay = null
@@ -750,7 +749,7 @@ export class CasparCGState0 {
 							}
 
 							let timeSincePlay = getTimeSincePlay(nl)
-							let seek = getSeek(nl, timeSincePlay)
+							let seek = getSeek(nl, !nl.looping ? timeSincePlay : 0) // @todo: looping and seeking requires us to know the media duration
 
 							if (nl.playing) {
 
@@ -779,9 +778,11 @@ export class CasparCGState0 {
 										cmd = new AMCP.PlayCommand({ ...options })
 									} else {
 										cmd = new AMCP.ResumeCommand(options as any)
-										additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
-											seek: seek
-										})))
+										if (oldSeek !== seek && !nl.looping) {
+											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
+												seek: seek
+											})))
+										}
 										if (ol.looping !== nl.looping) {
 											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
 												loop: !!nl.looping
@@ -793,8 +794,8 @@ export class CasparCGState0 {
 							} else {
 								if (
 									(
-										(nl.pauseTime && (time - nl.pauseTime) < this.minTimeSincePlay) ||
-										_.isNull(timeSincePlay)
+										_.isNull(timeSincePlay) ||
+										(nl.pauseTime && (time - timeSincePlay!) > this.minTimeSincePlay)
 									) &&
 									!this.compareAttrs(nl, ol ,['media'])
 								) {
@@ -881,7 +882,9 @@ export class CasparCGState0 {
 									customCommand: 'route'
 								})
 
-								cmd = new AMCP.CustomCommand(options as any)
+								// cmd = new AMCP.CustomCommand(options as any)
+
+								cmd = new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode }))
 							}
 						} else if (newLayer.content === CasparCG.LayerContentType.RECORD && newLayer.media !== null) {
 							let nl: CasparCG.IRecordLayer = newLayer as CasparCG.IRecordLayer
