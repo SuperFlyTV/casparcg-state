@@ -32,7 +32,7 @@ export class CasparCGState0 {
 
 	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 
-	private minTimeSincePlay: number = 0.2
+	private minTimeSincePlay: number = 50
 
 	private _currentTimeFunction: () => number
 	// private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void
