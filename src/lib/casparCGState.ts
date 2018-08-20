@@ -449,6 +449,25 @@ export class CasparCGState0 {
 
 				layer.playing = true
 				layer.playTime = null // playtime is irrelevant
+			} else if (cmdName === 'LoadRouteBgCommand') {
+				let layer: CF.IRouteLayer = this.ensureLayer(channel, layerNo) as CF.IRouteLayer
+				layer.nextUp = new CasparCG.NextUp()
+
+				layer.nextUp.content = CasparCG.LayerContentType.ROUTE
+
+				layer.nextUp.media = new TransitionObject('route')
+				if (command._objectParams.transition) {
+					layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
+				}
+
+				let routeChannel: any 	= command._objectParams.route.channel
+
+				let routeLayer: any 		= command._objectParams.route.layer
+
+				layer.route = {
+					channel: 	parseInt(routeChannel, 10),
+					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
+				}
 			} else if (cmdName === 'MixerAnchorCommand') {
 				setMixerState(channel, command,'anchor',['x','y'])
 			} else if (cmdName === 'MixerBlendCommand') {
@@ -1057,6 +1076,12 @@ export class CasparCGState0 {
 									device: layer.input.device,
 									format: layer.input.format,
 									channelLayout: layer.input.channelLayout
+								})))
+							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.ROUTE) {
+								const layer = newLayer.nextUp as CasparCG.IRouteLayer & CasparCG.NextUp
+								additionalCmds.push(new AMCP.LoadRouteBgCommand(_.extend(options, {
+									route: layer.route,
+									mode: layer.mode
 								})))
 							}
 						} else if (this.compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {
