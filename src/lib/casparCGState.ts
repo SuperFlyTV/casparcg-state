@@ -867,8 +867,8 @@ export class CasparCGState0 {
 
 								_.extend(options,{
 									device: 		device,
-									format: 		format,
-									channelLayout: channelLayout
+									format: 		format || undefined,
+									channelLayout: channelLayout || undefined
 								})
 
 								cmd = new AMCP.PlayDecklinkCommand(options as any)
