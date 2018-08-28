@@ -30,9 +30,9 @@ export class CasparCGState0 {
 
 	public bufferedCommands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}> = []
 
-	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
+	public minTimeSincePlay: number = 150
 
-	private minTimeSincePlay: number = 50
+	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 
 	private _currentTimeFunction: () => number
 	// private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void
