@@ -1055,6 +1055,14 @@ export class CasparCGState0 {
 						if (newLayer.nextUp) {
 							this.log('ADD BG', newLayer.nextUp.content)
 
+							// make sure the layer is empty before trying to load something new
+							// this prevents weird behaviour when files don't load correctly
+							additionalCmds.push(new AMCP.LoadbgCommand({
+								channel: newChannel.channelNo,
+								layer: newLayer.layerNo,
+								clip: 'EMPTY'
+							}))
+
 							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false, true)
 
 							if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
