@@ -37,7 +37,7 @@ export namespace CasparCG { // for external use
 	}
 	export class NextUp extends ILayerBase {
 		auto: boolean
-		content: LayerContentType.MEDIA | LayerContentType.HTMLPAGE | LayerContentType.INPUT // not sure about input...
+		content: LayerContentType.MEDIA | LayerContentType.HTMLPAGE | LayerContentType.INPUT | LayerContentType.ROUTE // not sure about input...
 	}
 	export interface IMediaLayer extends ILayerBase {
 		content: LayerContentType.MEDIA
