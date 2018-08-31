@@ -1335,7 +1335,7 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayDecklinkCommand({
 		channel: 1,
 		layer: 10,
-		channelLayout: null,
+		channelLayout: undefined,
 		device: 1,
 		format: '720p5000',
 		transition: 'mix',
