@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.0"></a>
+# [1.3.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.2.0...1.3.0) (2018-08-31)
+
+
+### Bug Fixes
+
+* decklink play command should not get null parameters ([7671a83](https://github.com/SuperFlyTV/casparcg-state/commit/7671a83))
+* minTimeSincePlay is a public property and defaults to 150ms ([6c4be29](https://github.com/SuperFlyTV/casparcg-state/commit/6c4be29))
+
+
+### Features
+
+* loadbg routes ([401f3b0](https://github.com/SuperFlyTV/casparcg-state/commit/401f3b0))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.1.5...1.2.0) (2018-08-16)
 
