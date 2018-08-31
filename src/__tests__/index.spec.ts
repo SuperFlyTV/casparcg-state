@@ -363,8 +363,13 @@ test('Loadbg a video, then play it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -428,8 +433,13 @@ test('Loadbg a video with a transition, then play it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -516,13 +526,18 @@ test('Play a video, stop and loadbg another video', () => {
 
 	cc = getDiff(c, targetState, true)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(3)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.StopCommand({
 		channel: 1,
 		layer: 10,
 		noClear: false
 	})).serialize())
 	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[2]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -584,8 +599,13 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -604,7 +624,7 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 	channel1.layers['10'] = newLayer10
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(3)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
 		channel: 1,
 		layer: 10,
@@ -613,6 +633,11 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 		seek: 0
 	})).serialize())
 	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[2]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
