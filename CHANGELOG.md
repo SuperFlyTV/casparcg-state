@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.1"></a>
+## [1.3.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.3.0...1.3.1) (2018-08-31)
+
+
+### Bug Fixes
+
+* empty bg layer before loadbg'ing ([40654bc](https://github.com/SuperFlyTV/casparcg-state/commit/40654bc))
+
+
+
 <a name="1.3.0"></a>
 # [1.3.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.2.0...1.3.0) (2018-08-31)
 
