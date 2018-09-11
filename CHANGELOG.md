@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.2"></a>
+## [1.3.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.3.1...1.3.2) (2018-09-11)
+
+
+
 <a name="1.3.1"></a>
 ## [1.3.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.3.0...1.3.1) (2018-08-31)
 
