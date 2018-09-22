@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.3"></a>
+## [1.3.3](https://github.com/SuperFlyTV/casparcg-state/compare/1.3.2...1.3.3) (2018-09-22)
+
+
+### Bug Fixes
+
+* a route should not reload when it was preloaded ([6afa888](https://github.com/SuperFlyTV/casparcg-state/commit/6afa888))
+* loadbg with loop + seek ([0c3daf0](https://github.com/SuperFlyTV/casparcg-state/commit/0c3daf0))
+
+
+
 <a name="1.3.2"></a>
 ## [1.3.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.3.1...1.3.2) (2018-09-11)
 
