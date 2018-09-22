@@ -1069,7 +1069,9 @@ export class CasparCGState0 {
 								const layer = newLayer.nextUp as CasparCG.IMediaLayer & CasparCG.NextUp
 								additionalCmds.push(new AMCP.LoadbgCommand(_.extend(options, {
 									auto: layer.auto,
-									clip: (newLayer.nextUp.media || '').toString()
+									clip: (newLayer.nextUp.media || '').toString(),
+									loop: !!layer.looping,
+									seek: layer.seek
 								})))
 							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) {
 								const layer = newLayer.nextUp as CasparCG.IHtmlPageLayer & CasparCG.NextUp

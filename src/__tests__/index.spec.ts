@@ -374,7 +374,9 @@ test('Loadbg a video, then play it', () => {
 		layer: 10,
 		auto: false,
 		clip: 'AMB',
-		noClear: false
+		noClear: false,
+		loop: false,
+		seek: undefined
 	})).serialize())
 
 	// Start playing it:
@@ -448,7 +450,9 @@ test('Loadbg a video with a transition, then play it', () => {
 		stingMaskFilename: 'mask_file',
 		stingDelay: 0,
 		stingOverlayFilename: '',
-		noClear: false
+		noClear: false,
+		loop: false,
+		seek: undefined
 	})).serialize())
 
 	// Start playing it:
@@ -542,7 +546,9 @@ test('Play a video, stop and loadbg another video', () => {
 		layer: 10,
 		auto: false,
 		clip: 'AMB',
-		noClear: false
+		noClear: false,
+		loop: false,
+		seek: undefined
 	})).serialize())
 
 	// Start playing it:
@@ -610,7 +616,9 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 		layer: 10,
 		auto: false,
 		clip: 'AMB',
-		noClear: false
+		noClear: false,
+		loop: false,
+		seek: undefined
 	})).serialize())
 
 	let newLayer10: CasparCG.IMediaLayer = {
@@ -642,7 +650,9 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 		layer: 10,
 		auto: false,
 		clip: 'AMB',
-		noClear: false
+		noClear: false,
+		loop: false,
+		seek: 0
 	})).serialize())
 
 	// Remove the video
