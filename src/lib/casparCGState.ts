@@ -875,35 +875,40 @@ export class CasparCGState0 {
 							}
 						} else if (newLayer.content === CasparCG.LayerContentType.ROUTE) {
 							let nl: CasparCG.IRouteLayer = newLayer as CasparCG.IRouteLayer
-							// let ol: CF.IRouteLayer = oldLayer as CF.IRouteLayer
+							let olNext: CF.IRouteLayer = oldLayer.nextUp as any
 
 							if (nl.route) {
 								let routeChannel: number 		= nl.route.channel
 								let routeLayer: number | null	= nl.route.layer || null
 								let mode = nl.mode
+								let diffMediaFromBg = !olNext || !olNext.route ? true : !(nl.route.channel === olNext.route.channel && nl.route.layer === olNext.route.layer)
 
-								_.extend(options,{
-									routeChannel: 		routeChannel,
-									routeLayer: 		routeLayer,
+								if (diffMediaFromBg) {
+									_.extend(options,{
+										routeChannel: 		routeChannel,
+										routeLayer: 		routeLayer,
 
-									command: (
-										'PLAY ' + options.channel + '-' + options.layer +
-										' route://' +
-											routeChannel +
-											(routeLayer ? '-' + routeLayer : '') +
-										(mode ? ' ' + mode : '') +
-										(
-											options.transition
-											? (' ' + new Transition().fromCommand({ _objectParams: options }, oldChannel.fps).getString(oldChannel.fps))
-											: ''
-										)
-									),
-									customCommand: 'route'
-								})
+										command: (
+											'PLAY ' + options.channel + '-' + options.layer +
+											' route://' +
+												routeChannel +
+												(routeLayer ? '-' + routeLayer : '') +
+											(mode ? ' ' + mode : '') +
+											(
+												options.transition
+												? (' ' + new Transition().fromCommand({ _objectParams: options }, oldChannel.fps).getString(oldChannel.fps))
+												: ''
+											)
+										),
+										customCommand: 'route'
+									})
 
-								// cmd = new AMCP.CustomCommand(options as any)
+									// cmd = new AMCP.CustomCommand(options as any)
 
-								cmd = new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode }))
+									cmd = new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode }))
+								} else {
+									cmd = new AMCP.PlayCommand({ ...options })
+								}
 							}
 						} else if (newLayer.content === CasparCG.LayerContentType.RECORD && newLayer.media !== null) {
 							let nl: CasparCG.IRecordLayer = newLayer as CasparCG.IRecordLayer
