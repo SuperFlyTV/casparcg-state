@@ -1,20 +1,17 @@
 # Casparcg-state
 [![CircleCI](https://circleci.com/gh/SuperFlyTV/casparcg-state.svg?style=svg)](https://circleci.com/gh/SuperFlyTV/casparcg-state)
 
-The Casparcg-state tracks the state of CasparCG and generates commands to be used in casparcg-connection.
+This library tracks the state of CasparCG Servers and generates commands to be used in [casparcg-connection](https://github.com/SuperFlyTV/casparcg-connection). 
 
-
-Licence: MIT
+As an example, this library is used in the [**Sofie** TV News Studio Automation System](https://github.com/nrkno/Sofie-TV-automation/).
 
 ## Dev install instructions:
 
 * Install yarn
 	https://yarnpkg.com
-	This is like npm, but better
 
 * Install jest
 	yarn global add jest
-	This is our resting framework
 
 * Install dependencies
 	yarn
