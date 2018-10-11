@@ -33,6 +33,8 @@ export namespace CasparCG { // for external use
 		noClear?: boolean
 		playing?: boolean
 		mixer?: MixerBase
+		input?: Object
+		route?: Object
 		nextUp?: NextUp | undefined | null
 	}
 	export class NextUp extends ILayerBase {

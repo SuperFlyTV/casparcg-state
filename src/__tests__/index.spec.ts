@@ -407,6 +407,84 @@ test('Loadbg a video, then play it', () => {
 	})).serialize())
 
 })
+test('Loadbg a video, then remove it', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Load a video file (paused):
+
+	let layer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 10,
+			media: 'AMB',
+			auto: false
+		}
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'AMB',
+		noClear: false,
+		loop: false,
+		seek: undefined
+	})).serialize())
+
+	// Remove the nextup
+	let layer10noNext = _.clone(layer10)
+	delete layer10noNext.nextUp
+
+	channel1.layers['10'] = layer10noNext
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(0)
+	expect(cc[1].cmds).toHaveLength(1)
+	expect(cc[1].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+
+	// Load the video again:
+	channel1.layers['10'] = layer10
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+
+	// Remove the nextup
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+
+})
 test('Loadbg a video with a transition, then play it', () => {
 	let c = getCasparCGState()
 	initState(c.ccgState)
@@ -824,6 +902,77 @@ test('Play an html-page', () => {
 		layer: 10
 	})).serialize())
 })
+test('Loadbg a html-page, then play it', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// put a html-template on onNext:
+
+	let layer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			auto: false,
+			content: CasparCG.LayerContentType.HTMLPAGE,
+			layerNo: 10,
+			media: 'http://superfly.tv',
+			// playing: true,
+			// playTime: 990 // 10s ago
+		}
+	}
+
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadHtmlPageBgCommand({
+		channel: 1,
+		layer: 10,
+		url: 'http://superfly.tv',
+		auto: false,
+		noClear: false
+	})).serialize())
+
+	// Start playing the template:
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.HTMLPAGE,
+		layerNo: 10,
+		media: 'http://superfly.tv',
+		playTime: 1000
+	}
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayHtmlPageCommand({
+		channel: 1,
+		layer: 10,
+		url: 'http://superfly.tv'
+	})).serialize())
+
+	// Remove the layer
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+})
 test('Play an input', () => {
 	let c = getCasparCGState()
 	initState(c.ccgState)
@@ -870,6 +1019,93 @@ test('Play an input', () => {
 		layer: 10
 	})).serialize())
 })
+test('Loadbg an input, then play it', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Play a template file:
+
+	let layer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.INPUT,
+			layerNo: 10,
+			playing: true,
+			media: 'decklink',
+			input: {
+				device: 1,
+				format: '720p5000',
+				channelLayout: 'stereo'
+			},
+			auto: false
+		},
+
+		playTime: null
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadDecklinkBgCommand({
+		channel: 1,
+		layer: 10,
+		channelLayout: 'stereo',
+		device: 1,
+		format: '720p5000',
+		auto: false,
+		noClear: false
+	})).serialize())
+
+	// Start playing the input:
+
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.INPUT,
+		layerNo: 10,
+		playing: true,
+		media: 'decklink',
+		input: {
+			device: 1,
+			format: '720p5000',
+			channelLayout: 'stereo'
+		}
+	}
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayDecklinkCommand({
+		channel: 1,
+		layer: 10,
+		channelLayout: 'stereo',
+		device: 1,
+		format: '720p5000'
+	})).serialize())
+
+	// Remove the layer
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+})
+
 test('Play a Route', () => {
 	let c = getCasparCGState()
 	initState(c.ccgState)
@@ -898,6 +1134,92 @@ test('Play a Route', () => {
 	expect(cc[0].cmds).toHaveLength(1)
 
 	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15')
+
+	// Remove the layer
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+
+})
+test('Loadbg a Route, then play it', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Play a template file:
+
+	let layer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.ROUTE,
+			layerNo: 10,
+			media: 'route',
+			playing: true,
+
+			route: {
+				channel: 2,
+				layer: 15
+			},
+			auto: false
+		},
+		playTime: null // playtime is null because it is irrelevant
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
+		channel: 1,
+		layer: 10,
+		route: {
+			channel: 2,
+			layer: 15
+		},
+		mode: undefined,
+		noClear: false
+	})).serialize())
+
+	// Start playing it:
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.ROUTE,
+		layerNo: 10,
+		media: 'route',
+		playing: true,
+
+		route: {
+			channel: 2,
+			layer: 15
+		}
+	}
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toMatchObject(fixCommand(new AMCP.PlayRouteCommand({
+		channel: 1,
+		layer: 10,
+		route: {
+			channel: 2,
+			layer: 15
+		}
+	})).serialize())
 
 	// Remove the layer
 	delete channel1.layers['10']

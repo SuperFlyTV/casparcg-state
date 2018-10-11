@@ -315,18 +315,46 @@ export class CasparCGState0 {
 				layer.pauseTime = 0
 			} else if (cmdName === 'LoadbgCommand') {
 				let layer: CF.IMediaLayer = this.ensureLayer(channel, layerNo) as CF.IMediaLayer
-				layer.nextUp = new CasparCG.NextUp()
 
 				if (command._objectParams['clip']) {
-					layer.nextUp.content = CasparCG.LayerContentType.MEDIA
+					if (command._objectParams['clip'] === 'EMPTY') {
+						delete layer.nextUp
+					} else {
 
-					layer.nextUp.media = new TransitionObject(command._objectParams['clip'] as string)
-					// layer.nextUp.media = command._objectParams['clip'] as string
-					if (command._objectParams['transition']) {
-						layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
+						layer.nextUp = new CasparCG.NextUp()
+						layer.nextUp.content = CasparCG.LayerContentType.MEDIA
+
+						layer.nextUp.media = new TransitionObject(command._objectParams['clip'] as string)
+						// layer.nextUp.media = command._objectParams['clip'] as string
+						if (command._objectParams['transition']) {
+							layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
+						}
+						layer.nextUp.looping = !!command._objectParams['loop']
 					}
 
-					layer.nextUp.looping = !!command._objectParams['loop']
+				}
+			} else if (cmdName === 'LoadHtmlPageBgCommand') {
+				let layer: CF.IHtmlPageLayer = this.ensureLayer(channel, layerNo) as CF.IHtmlPageLayer
+				layer.nextUp = new CasparCG.NextUp()
+
+				if (command._objectParams['url']) {
+					layer.nextUp.content = CasparCG.LayerContentType.HTMLPAGE
+
+					layer.nextUp.media = new TransitionObject(command._objectParams['url'] as string)
+				}
+			} else if (cmdName === 'LoadDecklinkBgCommand') {
+				let layer: CF.IInputLayer = this.ensureLayer(channel, layerNo) as CF.IInputLayer
+				layer.nextUp = new CasparCG.NextUp()
+
+				if (command._objectParams['device']) {
+					layer.nextUp.content = CasparCG.LayerContentType.INPUT
+
+					layer.nextUp.media = new TransitionObject('decklink')
+					layer.nextUp.input = {
+						device: command._objectParams['device'],
+						format: command._objectParams['format'],
+						channelLayout: command._objectParams['channelLayout']
+					}
 				}
 			} else if (cmdName === 'CGAddCommand') {
 				let layer: CF.ITemplateLayer = this.ensureLayer(channel, layerNo) as CF.ITemplateLayer
@@ -578,6 +606,9 @@ export class CasparCGState0 {
 		additionalLayerState?: CF.Layer
 	}> {
 
+		// console.log('diffStates')
+		// console.log('newState', newState)
+		// console.log('oldState', oldState)
 		// needs to be initialised
 		if (!this.isInitialised) {
 			throw new Error('CasparCG State is not initialised')
@@ -653,12 +684,10 @@ export class CasparCGState0 {
 				if (newLayer) {
 					// this.log('diff ' + channelKey + '-' + layerKey, newLayer, oldLayer)
 
-					/*
-					console.log('newLayer '+channelKey+'-'+layerKey);
-					console.log(newLayer)
-					console.log('old layer');
-					console.log(oldLayer)
-					*/
+					// console.log('newLayer ' + channelKey + '-' + layerKey)
+					// console.log(newLayer)
+					// console.log('old layer')
+					// console.log(oldLayer)
 
 					let cmd
 					let additionalCmds: Array<any> = []
@@ -1027,6 +1056,8 @@ export class CasparCGState0 {
 					}
 					// ------------------------------------------------------------
 					// Background layer:
+					// console.log('oldLayer', oldLayer.nextUp)
+					// console.log('newLayer', newLayer.nextUp)
 					let bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['content'])
 					if (!bgDiff && newLayer.nextUp) {
 						if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
@@ -1100,12 +1131,13 @@ export class CasparCGState0 {
 								})))
 							}
 						} else if (this.compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {
-							this.log('REMOVE BG')
-							additionalCmds.push(new AMCP.LoadbgCommand({
-								channel: newChannel.channelNo,
-								layer: newLayer.layerNo,
-								clip: 'EMPTY'
-							}))
+							// this.log('REMOVE BG')
+							// console.log('REMOVE BG', oldLayer.nextUp, newLayer)
+							// additionalCmds.push(new AMCP.LoadbgCommand({
+							// 	channel: newChannel.channelNo,
+							// 	layer: newLayer.layerNo,
+							// 	clip: 'EMPTY'
+							// }))
 						}
 					}
 					// -------------------------------------------------------------
@@ -1270,6 +1302,9 @@ export class CasparCGState0 {
 				let newLayer: CasparCG.ILayerBase = newChannel.layers[layerKey + ''] || (new CasparCG.ILayerBase())
 				if (newLayer) {
 
+					// console.log('oldLayer', oldLayer)
+					// console.log('newLayer', newLayer)
+					let cmds: CommandNS.IAMCPCommand[] = []
 					if (!newLayer.content && oldLayer.content && newLayer.content !== CasparCG.LayerContentType.NOTHING) {
 
 						this.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content + ' | ' + newLayer.content)
@@ -1347,18 +1382,44 @@ export class CasparCGState0 {
 								}
 
 								if (cmd) {
-									commands.push({
-										cmds: [
-											cmd.serialize()
-										]
-									})
+									cmds.push(cmd)
 								}
 							}
 						}
 					}
+					if (
+						oldLayer.nextUp &&
+						!newLayer.nextUp &&
+						this.compareAttrs(oldLayer.nextUp, newLayer, ['media'])
+					) {
+						let prevClearCommand = _.find(cmds, (cmd) => {
+							return !!(cmd instanceof AMCP.ClearCommand)
+						})
+						if (!prevClearCommand) { // if ClearCommand is run, it clears bg too
+							this.log('REMOVE nextUp ' + channelKey + '-' + layerKey + ': ' + oldLayer.nextUp + ' | ' + newLayer.nextUp)
+							// console.log('REMOVE nextUp ' + channelKey + '-' + layerKey, oldLayer.nextUp, newLayer.nextUp)
+							// console.log('oldLayer', oldLayer)
+							// console.log('newLayer', newLayer)
+
+							let cmd = new AMCP.LoadbgCommand({
+								channel: oldChannel.channelNo,
+								layer: oldLayer.layerNo,
+								clip: 'EMPTY'
+							})
+							if (cmd) {
+								cmds.push(cmd)
+							}
+						}
+					}
+					if (cmds.length) {
+						commands.push({
+							cmds: _.map(cmds, (cmd) => {
+								return cmd.serialize()
+							})
+						})
+					}
 				}
 			})
-
 		})
 
 		// bundled commands:
@@ -1381,6 +1442,8 @@ export class CasparCGState0 {
 
 			commands.push({ cmds: cmds })
 		})
+
+		// console.log('commands', commands)
 
 		return commands
 	}
