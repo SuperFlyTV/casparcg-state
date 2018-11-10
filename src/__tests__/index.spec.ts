@@ -1859,6 +1859,120 @@ test('Bundle commands', () => {
 	})).serialize())
 })
 
+test('Prioritize commands', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	// Load a video file (paused):
+	let layer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 10,
+			media: 'AMB',
+			auto: false
+		}
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	let cmds = c.ccgState.diffStatesOrderedCommands(c.ccgState.getState(), targetState)
+
+	expect(cmds).toHaveLength(2)
+	expect(cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'AMB',
+		noClear: false,
+		loop: false,
+		seek: undefined
+	})).serialize())
+
+	let oldState = JSON.parse(JSON.stringify(targetState))
+	// First loadbg another video:
+	let layer8: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 8,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 8,
+			media: 'AMB',
+			auto: false
+		}
+	}
+	channel1.layers['8'] = layer8
+	// Then play a new video:
+	let layer9: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		layerNo: 9,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		seek: 0
+	}
+	channel1.layers['9'] = layer9
+	// Start playing the preloaded video:
+	channel1.layers['10'] = {
+		content: CasparCG.LayerContentType.MEDIA,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		layerNo: 10
+	}
+	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState)
+	// Note that the order should be reversed: first play 1-10, then play 1-9 amb, then loadbg 1-8 amb
+	expect(cmds).toHaveLength(4)
+	expect(cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+	expect(cmds[1]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 9,
+		clip: 'AMB',
+		loop: false,
+		seek: 0
+	})).serialize())
+	expect(cmds[2]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 8,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cmds[3]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 8,
+		auto: false,
+		clip: 'AMB',
+		noClear: false,
+		loop: false,
+		seek: undefined
+	})).serialize())
+
+	// Remove the video
+	oldState = JSON.parse(JSON.stringify(targetState))
+	delete channel1.layers['10']
+
+	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState)
+	expect(cmds).toHaveLength(1)
+	expect(cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+})
+
 describe('MixerCommands', () => {
 	let c
 	let cc: any
