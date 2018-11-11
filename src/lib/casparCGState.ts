@@ -597,6 +597,11 @@ export class CasparCGState0 {
 		return this.diffStates(currentState, newState)
 	}
 
+	/**
+	 * Temporary, intermediate function, to deal with ordering of commands. (This might be replaced with something more permanent later)
+	 * @param oldState
+	 * @param newState
+	 */
 	public diffStatesOrderedCommands (
 		oldState: CF.State,
 		newState: CasparCG.State
