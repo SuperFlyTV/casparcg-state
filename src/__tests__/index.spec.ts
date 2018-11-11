@@ -147,6 +147,7 @@ test('bad initializations', () => {
 	expect(() => {
 		// @ts-ignore: Bad currentTime
 		let ccgState = new CasparCGState({
+			// @ts-ignore currentTime should return number
 			currentTime: () => {
 				// Nothing
 			}
@@ -920,7 +921,7 @@ test('Loadbg a html-page, then play it', () => {
 			auto: false,
 			content: CasparCG.LayerContentType.HTMLPAGE,
 			layerNo: 10,
-			media: 'http://superfly.tv',
+			media: 'http://superfly.tv'
 			// playing: true,
 			// playTime: 990 // 10s ago
 		}
