@@ -1,20 +1,25 @@
 import * as _ from 'underscore'
-import { AMCP, Enum as CCG_Enum } from 'casparcg-connection'
+import { AMCP, Enum as CCG_Enum, Command } from 'casparcg-connection'
 
 import {
 	CasparCG,
 	CasparCGState
 } from '../index'
 
-function getCasparCGState () {
+interface CGState {
+	time: number
+	log: boolean
+	ccgState: CasparCGState
+}
+function getCasparCGState (): CGState {
 	let time = 1000
 	let currentTime = jest.fn(() => {
 		return time
 	})
-	let logging = false
-	let externalLog = (...args) => {
+	let logging: boolean = false
+	let externalLog = (...args: any[]) => {
 		if (logging) {
-			console.log.apply(this, args)
+			console.log(...args)
 		}
 	}
 	return {
@@ -24,7 +29,7 @@ function getCasparCGState () {
 		get time () {
 			return time
 		},
-		set log (t) {
+		set log (t: boolean) {
 			logging = t
 		},
 		ccgState: new CasparCGState({
@@ -45,7 +50,7 @@ function initStateMS (s: CasparCGState) {
 		fps: 50 / 1000
 	}])
 }
-function getDiff (c, targetState: CasparCG.State, loggingAfter?: boolean) {
+function getDiff (c: CGState, targetState: CasparCG.State, loggingAfter?: boolean) {
 
 	let cc = c.ccgState.getDiff(targetState)
 
@@ -75,18 +80,21 @@ function applyCommands (s: CasparCGState, cc: any) {
 	})
 	s.applyCommands(commands)
 }
-function fixCommand (c, options?: any) {
+function fixCommand (c: any, options?: any) {
 	options = options || {}
-	if (
-		c instanceof AMCP.PlayCommand ||
-		c instanceof AMCP.LoadCommand ||
-		c instanceof AMCP.PauseCommand ||
-		c instanceof AMCP.CGAddCommand ||
-		c instanceof AMCP.PlayDecklinkCommand ||
-		c instanceof AMCP.PlayHtmlPageCommand
-	) {
-		c['_objectParams'].noClear = !!options.noClear
-	}
+	// @ts-ignore access _objectParams
+	if (c instanceof AMCP.PlayCommand) c._objectParams.noClear = !!options.noClear
+	// @ts-ignore access _objectParams
+	if (c instanceof AMCP.LoadCommand) c._objectParams.noClear = !!options.noClear
+	// @ts-ignore access _objectParams
+	if (c instanceof AMCP.PauseCommand) c._objectParams.noClear = !!options.noClear
+	// @ts-ignore access _objectParams
+	if (c instanceof AMCP.CGAddCommand) c._objectParams.noClear = !!options.noClear
+	// @ts-ignore access _objectParams
+	if (c instanceof AMCP.PlayDecklinkCommand) c._objectParams.noClear = !!options.noClear
+	// @ts-ignore access _objectParams
+	if (c instanceof AMCP.PlayHtmlPageCommand) c._objectParams.noClear = !!options.noClear
+
 	_.each(options, (val, key) => {
 		c['_objectParams'][key] = val
 	})
@@ -272,7 +280,7 @@ test('Play a video, pause & resume it', () => {
 	c.time = 22000 // Advance the time
 	layer10.playing = true
 	// it was paused for 10 seconds:
-	layer10.playTime = c.time - (layer10.pauseTime - layer10.playTime)
+	layer10.playTime = c.time - (layer10.pauseTime - (layer10.playTime || 0))
 	delete layer10.pauseTime
 
 	cc = getDiff(c, targetState)
@@ -1861,7 +1869,7 @@ test('Bundle commands', () => {
 })
 
 describe('MixerCommands', () => {
-	let c
+	let c: CGState
 	let cc: any
 	let targetState: CasparCG.State
 	let layer10: CasparCG.IMediaLayer
@@ -2255,7 +2263,14 @@ describe('MixerCommands', () => {
 	})
 })
 
-function testMixerEffect (c, targetState, layer, mixer: CasparCG.Mixer, cmd0, cmd1) {
+function testMixerEffect (
+	c: CGState,
+	targetState: CasparCG.State,
+	layer: CasparCG.ILayerBase,
+	mixer: CasparCG.Mixer,
+	cmd0: Command.IAMCPCommand,
+	cmd1: Command.IAMCPCommand
+) {
 	// apply mixer effect
 	layer.mixer = mixer
 	let cc = getDiff(c, targetState)
