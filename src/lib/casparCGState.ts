@@ -597,6 +597,68 @@ export class CasparCGState0 {
 		return this.diffStates(currentState, newState)
 	}
 
+	/**
+	 * Temporary, intermediate function, to deal with ordering of commands. (This might be replaced with something more permanent later)
+	 * @param oldState
+	 * @param newState
+	 */
+	public diffStatesOrderedCommands (
+		oldState: CF.State,
+		newState: CasparCG.State
+	): Array<IAMCPCommandVO> {
+		const diff = this.diffStates(oldState, newState)
+		const fastCommands: Array<IAMCPCommandVO> = [] // fast to exec, and direct visual impact: PLAY 1-10
+		const slowCommands: Array<IAMCPCommandVO> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
+		const lowPrioCommands: Array<IAMCPCommandVO> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
+
+		for (const layer of diff) {
+			let containsSlowCommand = false
+
+			// filter out lowPrioCommands
+			for (let i = 0; i < layer.cmds.length; i++) {
+				if (
+					layer.cmds[i]._commandName === 'LoadbgCommand'
+					||
+					layer.cmds[i]._commandName === 'LoadDecklinkBgCommand'
+					||
+					layer.cmds[i]._commandName === 'LoadRouteBgCommand'
+					||
+					layer.cmds[i]._commandName === 'LoadHtmlPageBgCommand'
+				) {
+					lowPrioCommands.push(layer.cmds[i])
+					layer.cmds.splice(i, 1)
+					i-- // next entry now has the same index as this one.
+				} else if (
+					(layer.cmds[i]._commandName === 'PlayCommand' && layer.cmds[i]._objectParams.clip)
+					||
+					(layer.cmds[i]._commandName === 'PlayDecklinkCommand' && layer.cmds[i]._objectParams.device)
+					||
+					(layer.cmds[i]._commandName === 'PlayRouteCommand' && layer.cmds[i]._objectParams.route)
+					||
+					(layer.cmds[i]._commandName === 'PlayHtmlPageCommand' && layer.cmds[i]._objectParams.url)
+					||
+					layer.cmds[i]._commandName === 'LoadCommand'
+					||
+					layer.cmds[i]._commandName === 'LoadDecklinkCommand'
+					||
+					layer.cmds[i]._commandName === 'LoadRouteCommand'
+					||
+					layer.cmds[i]._commandName === 'LoadHtmlPageCommand'
+				) {
+					containsSlowCommand = true
+				}
+			}
+
+			if (containsSlowCommand) {
+				slowCommands.push(...layer.cmds)
+			} else {
+				fastCommands.push(...layer.cmds)
+			}
+		}
+
+		return [ ...fastCommands, ...slowCommands, ...lowPrioCommands ]
+	}
+
 	/** */
 	public diffStates (
 		oldState: CF.State,

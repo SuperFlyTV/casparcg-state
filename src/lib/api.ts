@@ -88,10 +88,10 @@ export namespace CasparCG { // for external use
 	export interface IRouteLayer extends ILayerBase {
 		content: LayerContentType.ROUTE
 		media: 'route' | TransitionObject0
-		route: {
+		route?: {
 			channel: number,
 			layer?: number | null
-		} | null
+		}
 		mode?: 'BACKGROUND' | 'NEXT'
 		playing: true
 		playTime: null
