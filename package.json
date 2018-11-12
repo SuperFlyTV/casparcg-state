@@ -1,6 +1,6 @@
 {
   "name": "casparcg-state",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "Node.js Javascript/Typescript library for keeping and resolving a given state of CasparCG into commands for casparcg-connection.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

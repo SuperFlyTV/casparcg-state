@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.0"></a>
+# [1.4.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.3.3...1.4.0) (2018-11-12)
+
+
+### Bug Fixes
+
+* lint error ([f3efb9c](https://github.com/SuperFlyTV/casparcg-state/commit/f3efb9c))
+* lint error & updated yarn.lock file ([976a1f1](https://github.com/SuperFlyTV/casparcg-state/commit/976a1f1))
+
+
+### Features
+
+* added support & tests for clearing the nextUp / loadbg ([3e0ea2c](https://github.com/SuperFlyTV/casparcg-state/commit/3e0ea2c))
+* order commands for execution time ([e99722a](https://github.com/SuperFlyTV/casparcg-state/commit/e99722a))
+
+
+
 <a name="1.3.3"></a>
 ## [1.3.3](https://github.com/SuperFlyTV/casparcg-state/compare/1.3.2...1.3.3) (2018-09-22)
 
