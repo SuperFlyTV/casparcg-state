@@ -52,7 +52,9 @@ export class Transition implements CasparCG.ITransition {
 
 		if (_.isObject(typeOrTransition)) {
 			let t: CasparCG.ITransition = typeOrTransition as CasparCG.ITransition
-			type = (t.type as string).toLowerCase()
+			type = t.type as string
+			if (type) type = type.toLowerCase()
+
 			durationOrMaskFile = type === 'sting' ? t.maskFile : t.duration
 			easingOrDelay = type === 'sting' ? t.delay : t.easing
 			directionOrOverlayFile = type === 'sting' ? t.overlayFile : t.direction
