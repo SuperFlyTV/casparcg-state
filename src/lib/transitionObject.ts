@@ -53,20 +53,21 @@ export class Transition implements CasparCG.ITransition {
 		if (_.isObject(typeOrTransition)) {
 			let t: CasparCG.ITransition = typeOrTransition as CasparCG.ITransition
 			type = t.type as string
-			if (type) type = type.toLowerCase()
 
-			durationOrMaskFile = type === 'sting' ? t.maskFile : t.duration
-			easingOrDelay = type === 'sting' ? t.delay : t.easing
-			directionOrOverlayFile = type === 'sting' ? t.overlayFile : t.direction
+			const isSting = (type + '').match(/sting/i)
+
+			durationOrMaskFile = isSting ? t.maskFile : t.duration
+			easingOrDelay = isSting ? t.delay : t.easing
+			directionOrOverlayFile = isSting ? t.overlayFile : t.direction
 		} else {
 			type = typeOrTransition as string
 		}
 
 		// @todo: for all: string literal
 		if (type) {
-			this.type = type.toLowerCase()
+			this.type = type
 		}
-		if (this.type === 'sting') {
+		if ((this.type + '').match(/sting/i)) {
 			if (durationOrMaskFile) {
 				this.maskFile = durationOrMaskFile as string
 			}
@@ -90,7 +91,7 @@ export class Transition implements CasparCG.ITransition {
 	}
 
 	getOptions (fps?: number) {
-		if (this.type === 'sting') {
+		if ((this.type + '').match(/sting/i)) {
 			return {
 				transition: 'sting',
 				stingMaskFilename: this.maskFile,
@@ -108,7 +109,7 @@ export class Transition implements CasparCG.ITransition {
 	}
 
 	getString (fps?: number): string {
-		if (this.type === 'sting') {
+		if ((this.type + '').match(/sting/i)) {
 			return [
 				'STING',
 				this.maskFile,
@@ -127,7 +128,7 @@ export class Transition implements CasparCG.ITransition {
 
 	fromCommand (command: any, fps?: number): Transition {
 		if (command._objectParams) {
-			if (command._objectParams.transition === 'sting') {
+			if ((command._objectParams.transition + '').match(/sting/i)) {
 				this.type = 'sting'
 				if (command._objectParams.stingMaskFilename) {
 					this.maskFile = command._objectParams.stingMaskFilename
