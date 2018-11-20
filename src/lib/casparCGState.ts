@@ -1140,7 +1140,8 @@ export class CasparCGState0 {
 						}
 
 						// @todo: should this be a flag set during the generation of the commands for the foreground layer? /Balte
-						if (!bgDiff && newLayer.nextUp && diff && cmd && !(cmd.name === 'PauseCommand' || cmd.name === 'ResumeCommand' || cmd.name === 'CallCommand')) {
+						const fgNotChanged = new Set([ 'PauseCommand', 'ResumeCommand', 'CallCommand', 'StopCommand' ])
+						if (!bgDiff && newLayer.nextUp && diff && cmd && !fgNotChanged.has(cmd.name)) {
 							bgDiff = 'Foreground Layer Changed'
 						}
 					}

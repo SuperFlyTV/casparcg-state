@@ -746,6 +746,86 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 	})).serialize())
 
 })
+test('Loadbg a video and play another video. stop the foreground while maintaining the bg', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Load a video file (paused):
+
+	let layer10: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		media: 'CG1080i50',
+		playTime: null,
+		playing: true,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 10,
+			media: 'AMB',
+			auto: false
+		}
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(3)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'CG1080i50',
+		loop: false,
+		seek: 0
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[2]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'AMB',
+		noClear: false,
+		loop: false,
+		seek: undefined
+	})).serialize())
+
+	let newLayer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: layer10.nextUp
+	}
+	channel1.layers['10'] = newLayer10
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.StopCommand({
+		channel: 1,
+		layer: 10,
+		noClear: false
+	})).serialize())
+
+	// Remove the video
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+
+})
 test('Play a looping video, pause & resume it', () => {
 	let c = getCasparCGState()
 	initStateMS(c.ccgState)
