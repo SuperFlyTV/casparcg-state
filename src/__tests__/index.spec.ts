@@ -2035,7 +2035,7 @@ test('Prioritize commands', () => {
 	}
 	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState)
 	// Note that the order should be reversed: first play 1-10, then play 1-9 amb, then loadbg 1-8 amb
-	expect(cmds).toHaveLength(4)
+	expect(cmds).toHaveLength(3)
 	expect(cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
 		channel: 1,
 		layer: 10
@@ -2048,11 +2048,6 @@ test('Prioritize commands', () => {
 		seek: 0
 	})).serialize())
 	expect(cmds[2]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 8,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cmds[3]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 8,
 		auto: false,
