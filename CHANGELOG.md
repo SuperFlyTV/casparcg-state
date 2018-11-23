@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.2"></a>
+## [1.4.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.4.1...1.4.2) (2018-11-23)
+
+
+### Bug Fixes
+
+* do not reload bg on stop command ([851147f](https://github.com/SuperFlyTV/casparcg-state/commit/851147f))
+* only do loadbg empty if another clip was preloaded ([adf3e52](https://github.com/SuperFlyTV/casparcg-state/commit/adf3e52))
+
+
+
 <a name="1.4.1"></a>
 ## [1.4.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.4.0...1.4.1) (2018-11-19)
 
