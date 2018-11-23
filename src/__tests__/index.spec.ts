@@ -364,13 +364,8 @@ test('Loadbg a video, then play it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(1)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -434,13 +429,8 @@ test('Loadbg a video, then remove it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(1)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -471,9 +461,79 @@ test('Loadbg a video, then remove it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(1)
 
 	// Remove the nextup
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+
+})
+test('Loadbg a video, then loadbg another', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+
+	// Load a video file (paused):
+
+	let layer10: CasparCG.IEmptyLayer = {
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			content: CasparCG.LayerContentType.MEDIA,
+			layerNo: 10,
+			media: 'AMB',
+			auto: false
+		}
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'AMB',
+		noClear: false,
+		loop: false,
+		seek: undefined
+	})).serialize())
+
+	// Now load another
+	channel1.layers['10'].nextUp.media = 'go1080p25'
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'EMPTY'
+	})).serialize())
+	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+		channel: 1,
+		layer: 10,
+		auto: false,
+		clip: 'go1080p25',
+		noClear: false,
+		loop: false,
+		seek: 0
+	})).serialize())
+
+	// Remove the video
 	delete channel1.layers['10']
 
 	cc = getDiff(c, targetState)
@@ -514,13 +574,8 @@ test('Loadbg a video with a transition, then play it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(1)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -609,18 +664,13 @@ test('Play a video, stop and loadbg another video', () => {
 
 	cc = getDiff(c, targetState, true)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(3)
+	expect(cc[0].cmds).toHaveLength(2)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.StopCommand({
 		channel: 1,
 		layer: 10,
 		noClear: false
 	})).serialize())
 	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[2]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -684,13 +734,8 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(1)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -772,7 +817,7 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(3)
+	expect(cc[0].cmds).toHaveLength(2)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
 		channel: 1,
 		layer: 10,
@@ -781,11 +826,6 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 		seek: 0
 	})).serialize())
 	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[2]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -1012,13 +1052,8 @@ test('Loadbg a html-page, then play it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadHtmlPageBgCommand({
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadHtmlPageBgCommand({
 		channel: 1,
 		layer: 10,
 		url: 'http://superfly.tv',
@@ -1134,13 +1169,8 @@ test('Loadbg an input, then play it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadDecklinkBgCommand({
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadDecklinkBgCommand({
 		channel: 1,
 		layer: 10,
 		channelLayout: 'stereo',
@@ -1261,13 +1291,8 @@ test('Loadbg a Route, then play it', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(2)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cc[0].cmds[1]).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
 		channel: 1,
 		layer: 10,
 		route: {
@@ -1963,13 +1988,8 @@ test('Prioritize commands', () => {
 
 	let cmds = c.ccgState.diffStatesOrderedCommands(c.ccgState.getState(), targetState)
 
-	expect(cmds).toHaveLength(2)
+	expect(cmds).toHaveLength(1)
 	expect(cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(cmds[1]).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,

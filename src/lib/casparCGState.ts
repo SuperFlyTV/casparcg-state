@@ -1156,11 +1156,13 @@ export class CasparCGState0 {
 
 							// make sure the layer is empty before trying to load something new
 							// this prevents weird behaviour when files don't load correctly
-							additionalCmds.push(new AMCP.LoadbgCommand({
-								channel: newChannel.channelNo,
-								layer: newLayer.layerNo,
-								clip: 'EMPTY'
-							}))
+							if (oldLayer.nextUp) {
+								additionalCmds.push(new AMCP.LoadbgCommand({
+									channel: newChannel.channelNo,
+									layer: newLayer.layerNo,
+									clip: 'EMPTY'
+								}))
+							}
 
 							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false, true)
 
