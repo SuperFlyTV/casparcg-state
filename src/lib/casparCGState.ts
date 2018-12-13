@@ -257,6 +257,7 @@ export class CasparCGState0 {
 					}
 
 					layer.looping = !!command._objectParams['loop']
+					layer.channelLayout = command._objectParams['channelLayout']
 
 					if (i.additionalLayerState) {
 						layer.playTime = i.additionalLayerState.playTime || 0
@@ -765,7 +766,7 @@ export class CasparCGState0 {
 							setDefaultValue([nl, ol], ['seek', 'pauseTime'], 0)
 							setDefaultValue([nl, ol], ['looping', 'playing'], false)
 
-							diff = this.compareAttrs(nl, ol ,['media','playTie','looping','seek','pauseTime','playing'])
+							diff = this.compareAttrs(nl, ol ,['media','playTie','looping','seek','pauseTime','playing','channelLayout'])
 
 						} else if (newLayer.content === CasparCG.LayerContentType.TEMPLATE) {
 							let nl: CasparCG.ITemplateLayer = newLayer as CasparCG.ITemplateLayer
@@ -788,7 +789,7 @@ export class CasparCGState0 {
 
 							diff = this.compareAttrs(nl, ol ,['media'])
 
-							setDefaultValue([nl.input, ol.input], ['device','format'], '')
+							setDefaultValue([nl.input, ol.input], ['device','format','channelLayout'], '')
 
 							if (!diff) diff = this.compareAttrs(nl.input, ol.input,['device','format'])
 
@@ -798,7 +799,7 @@ export class CasparCGState0 {
 
 							setDefaultValue([nl.route, ol.route], ['channel','layer'], 0)
 
-							diff = this.compareAttrs(nl.route, ol.route,['channel','layer'])
+							diff = this.compareAttrs(nl.route, ol.route,['channel','layer','channelLayout'])
 
 						} else if (newLayer.content === CasparCG.LayerContentType.RECORD) {
 							let nl: CasparCG.IRecordLayer = newLayer as CasparCG.IRecordLayer
@@ -882,7 +883,8 @@ export class CasparCGState0 {
 										cmd = new AMCP.PlayCommand(_.extend(options,{
 											clip: (nl.media || '').toString(),
 											seek: seek,
-											loop: !!nl.looping
+											loop: !!nl.looping,
+											channelLayout: nl.channelLayout
 										}))
 									} else if (!diffMediaFromBg) {
 										cmd = new AMCP.PlayCommand({ ...options })
@@ -896,6 +898,11 @@ export class CasparCGState0 {
 										if (ol.looping !== nl.looping) {
 											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
 												loop: !!nl.looping
+											})))
+										}
+										if (ol.channelLayout !== nl.channelLayout) {
+											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
+												channelLayout: !!nl.channelLayout
 											})))
 										}
 									}
@@ -918,7 +925,8 @@ export class CasparCGState0 {
 										seek: seek,
 										loop: !!nl.looping,
 
-										pauseTime: nl.pauseTime
+										pauseTime: nl.pauseTime,
+										channelLayout: nl.channelLayout
 									}))
 
 								}
@@ -996,7 +1004,7 @@ export class CasparCGState0 {
 
 									// cmd = new AMCP.CustomCommand(options as any)
 
-									cmd = new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode }))
+									cmd = new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode, channelLayout: nl.route.channelLayout }))
 								} else {
 									cmd = new AMCP.PlayCommand({ ...options })
 								}
@@ -1129,7 +1137,7 @@ export class CasparCGState0 {
 							setDefaultValue([nl, ol], ['seek'], 0)
 							setDefaultValue([nl, ol], ['auto'], false)
 
-							bgDiff = this.compareAttrs(nl, ol ,['media','seek','auto'])
+							bgDiff = this.compareAttrs(nl, ol ,['media','seek','auto','channelLayout'])
 						}
 
 						if (!bgDiff && newLayer.nextUp && oldLayer.nextUp && (typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')) {
@@ -1172,7 +1180,8 @@ export class CasparCGState0 {
 									auto: layer.auto,
 									clip: (newLayer.nextUp.media || '').toString(),
 									loop: !!layer.looping,
-									seek: layer.seek
+									seek: layer.seek,
+									channelLayout: layer.channelLayout
 								})))
 							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) {
 								const layer = newLayer.nextUp as CasparCG.IHtmlPageLayer & CasparCG.NextUp
@@ -1192,7 +1201,8 @@ export class CasparCGState0 {
 								const layer = newLayer.nextUp as CasparCG.IRouteLayer & CasparCG.NextUp
 								additionalCmds.push(new AMCP.LoadRouteBgCommand(_.extend(options, {
 									route: layer.route,
-									mode: layer.mode
+									mode: layer.mode,
+									channelLayout: layer.route ? layer.route.channelLayout : undefined
 								})))
 							}
 						} else if (this.compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {

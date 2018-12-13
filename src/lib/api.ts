@@ -51,6 +51,8 @@ export namespace CasparCG { // for external use
 		seek?: number
 		pauseTime?: number | null
 
+		channelLayout?: string
+
 		nextUp?: NextUp | null
 	}
 	export interface ITemplateLayer extends ILayerBase {
@@ -91,6 +93,7 @@ export namespace CasparCG { // for external use
 		route?: {
 			channel: number,
 			layer?: number | null
+			channelLayout?: string
 		}
 		mode?: 'BACKGROUND' | 'NEXT'
 		playing: true

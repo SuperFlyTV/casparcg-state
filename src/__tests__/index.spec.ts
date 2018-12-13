@@ -233,6 +233,60 @@ test('Play a video, then stop it', () => {
 		layer: 10
 	})).serialize())
 })
+test('Play a video with the right channelLayout, then stop it', () => {
+	let c = getCasparCGState()
+	initState(c.ccgState)
+
+	let cc: any
+	// Play a video file:
+	let layer10: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		channelLayout: 'TEST_LAYOUT',
+		playing: true,
+		playTime: 1000,
+		seek: 0
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'AMB',
+		loop: false,
+		channelLayout: 'TEST_LAYOUT',
+		seek: 0
+	})).serialize())
+
+	// Play another file
+	layer10.media = 'AMB2'
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'AMB2',
+		loop: false,
+		channelLayout: 'TEST_LAYOUT',
+		seek: 0
+	})).serialize())
+
+	// Remove the layer from the state, this should generate a stop command:
+	delete channel1.layers['10']
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	})).serialize())
+})
 test('Play a video, pause & resume it', () => {
 	let c = getCasparCGState()
 	initStateMS(c.ccgState)
