@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.5.0"></a>
+# [1.5.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.4.3...1.5.0) (2018-12-13)
+
+
+### Features
+
+* channel_layout for ffmpeg and route producer ([2b1871f](https://github.com/SuperFlyTV/casparcg-state/commit/2b1871f))
+
+
+
 <a name="1.4.3"></a>
 ## [1.4.3](https://github.com/SuperFlyTV/casparcg-state/compare/1.4.2...1.4.3) (2018-12-13)
 
