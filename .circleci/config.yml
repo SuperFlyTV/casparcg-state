@@ -1,6 +1,6 @@
 defaults: &defaults
   docker:
-    - image: julusian/node-yarn
+    - image: circleci/node:8
   working_directory: ~/project
 
 version: 2
