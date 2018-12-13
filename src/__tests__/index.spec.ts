@@ -522,7 +522,7 @@ test('Loadbg a video, then loadbg another', () => {
 	})).serialize())
 
 	// Now load another
-	channel1.layers['10'].nextUp.media = 'go1080p25'
+	layer10.nextUp!.media = 'go1080p25'
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(2)
