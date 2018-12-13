@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.4.3"></a>
+## [1.4.3](https://github.com/SuperFlyTV/casparcg-state/compare/1.4.2...1.4.3) (2018-12-13)
+
+
+### Bug Fixes
+
+* lint error ([fb05381](https://github.com/SuperFlyTV/casparcg-state/commit/fb05381))
+* update dependencies, linting & switch from nsp to yarn audit ([f07ba70](https://github.com/SuperFlyTV/casparcg-state/commit/f07ba70))
+
+
+
 <a name="1.4.2"></a>
 ## [1.4.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.4.1...1.4.2) (2018-11-23)
 
