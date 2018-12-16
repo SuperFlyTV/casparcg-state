@@ -99,7 +99,7 @@
     "resolve"
   ],
   "dependencies": {
-    "casparcg-connection": "^4.5.3",
+    "casparcg-connection": "^4.6.0",
     "fast-clone": "^1.5.3",
     "underscore": "^1.9.1"
   },
