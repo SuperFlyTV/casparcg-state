@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.6.0"></a>
+# [1.6.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.5.1...1.6.0) (2019-02-06)
+
+
+### Features
+
+* remove currentTime function and replacing it with time parameter, to allow for processing at multiple concurrent points in time. ([60553e0](https://github.com/SuperFlyTV/casparcg-state/commit/60553e0))
+
+
+
 <a name="1.5.1"></a>
 ## [1.5.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.5.0...1.5.1) (2018-12-16)
 
