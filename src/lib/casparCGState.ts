@@ -34,31 +34,17 @@ export class CasparCGState0 {
 
 	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 
-	private _currentTimeFunction: () => number
 	// private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void
 	private _isInitialised: boolean
 	private _externalLog?: (...args: Array<any>) => void
 
 	/** */
 	constructor (config?: {
-		currentTime?: () 												=> number,
 		getMediaDurationCallback?: (clip: string, callback: (duration: number) 	=> void) => void
 		externalStorage?:	(action: string, data: Object | null) 			=> CF.State
 		externalLog?: (arg0?: any,arg1?: any,arg2?: any,arg3?: any) => void
 
 	}) {
-		// set the callback for handling time messurement
-		if (config && config.currentTime) {
-
-			this._currentTimeFunction = config.currentTime
-		} else {
-			this._currentTimeFunction = () => {
-				return Date.now() / 1000
-			}
-		}
-		// Verify this._currentTimeFunction
-		let time = this._currentTimeFunction()
-		if (!time || !_.isNumber(time) || !(time > 0)) throw Error('currentTime function should return a positive number! (got ' + time + ')')
 
 		// set the callback for handling media duration query
 		/* if (config && config.getMediaDurationCallback) {
@@ -94,7 +80,10 @@ export class CasparCGState0 {
 	 * Initializes the state by using channel info
 	 * @param {any} channels [description]
 	 */
-	initStateFromChannelInfo (channels: Array<CasparCG.ChannelInfo>) {
+	initStateFromChannelInfo (
+		channels: Array<CasparCG.ChannelInfo>,
+		currentTime: number
+	) {
 		let currentState = this._currentStateStorage.fetchState()
 		_.each(channels, (channel: CasparCG.ChannelInfo, i: number) => {
 			if (!channel.videoMode) throw Error('State: Missing channel.videoMode!')
@@ -118,7 +107,7 @@ export class CasparCGState0 {
 
 		// Save new state:
 		this._currentStateStorage.storeState(currentState)
-		this.isInitialised = true
+		this.setIsInitialised(true, currentTime)
 	}
 
 	/**
@@ -145,7 +134,7 @@ export class CasparCGState0 {
 	 */
 	clearState (): void {
 		this._currentStateStorage.clearState()
-		this.isInitialised = false
+		this.setIsInitialised(false, 0)
 	}
 	/**
 	 * A soft clear, ie clears any content, but keeps channel settings
@@ -163,7 +152,10 @@ export class CasparCGState0 {
 	 * Applies commands to current state
 	 * @param {CF.Layer}>} commands [description]
 	 */
-	applyCommands (commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}>): void {
+	applyCommands (
+		commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}>,
+		currentTime: number
+	): void {
 		// buffer commands until we are initialised
 		if (!this.isInitialised) {
 			this.bufferedCommands = this.bufferedCommands.concat(commands)
@@ -173,7 +165,7 @@ export class CasparCGState0 {
 		let currentState = this._currentStateStorage.fetchState()
 
 		// Applies commands to target state
-		this.applyCommandsToState(currentState,commands)
+		this.applyCommandsToState(currentState, commands, currentTime)
 
 		// Save new state:
 		this._currentStateStorage.storeState(currentState)
@@ -183,7 +175,11 @@ export class CasparCGState0 {
 	 * @param {any}     currentState
 	 * @param {CF.Layer}>} commands
 	 */
-	applyCommandsToState (currentState: any, commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}>): void {
+	applyCommandsToState (
+		currentState: any,
+		commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}>,
+		currentTime: number
+	): void {
 		let setMixerState = (
 			channel: CF.Channel,
 			command: IAMCPCommandVO,
@@ -262,7 +258,7 @@ export class CasparCGState0 {
 					if (i.additionalLayerState) {
 						layer.playTime = i.additionalLayerState.playTime || 0
 					} else {
-						layer.playTime = this._currentTimeFunction() - playDeltaTime
+						layer.playTime = currentTime - playDeltaTime
 					}
 
 					layer.pauseTime = Number(command._objectParams['pauseTime']) || 0
@@ -275,7 +271,7 @@ export class CasparCGState0 {
 						layer.playing = true
 
 						let playedTime = layer.playTime - layer.pauseTime
-						layer.playTime = this._currentTimeFunction() - playedTime // "move" the clip to new start time
+						layer.playTime = currentTime - playedTime // "move" the clip to new start time
 
 						layer.pauseTime = 0
 					}
@@ -291,7 +287,7 @@ export class CasparCGState0 {
 			} else if (cmdName === 'PauseCommand') {
 				let layer: CF.IMediaLayer = this.ensureLayer(channel, layerNo) as CF.IMediaLayer
 				layer.playing = false
-				layer.pauseTime = Number(command._objectParams['pauseTime']) || this._currentTimeFunction()
+				layer.pauseTime = Number(command._objectParams['pauseTime']) || currentTime
 
 			} else if (cmdName === 'ClearCommand') {
 				let layer: CF.IEmptyLayer
@@ -588,14 +584,15 @@ export class CasparCGState0 {
 		})
 	}
 	getDiff (
-		newState: CasparCG.State
+		newState: CasparCG.State,
+		currentTime: number
 	): Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> {
 		// needs to be initialised
 		if (!this.isInitialised) {
 			throw new Error('CasparCG State is not initialised')
 		}
 		let currentState = this._currentStateStorage.fetchState()
-		return this.diffStates(currentState, newState)
+		return this.diffStates(currentState, newState, currentTime)
 	}
 
 	/**
@@ -605,9 +602,10 @@ export class CasparCGState0 {
 	 */
 	public diffStatesOrderedCommands (
 		oldState: CF.State,
-		newState: CasparCG.State
+		newState: CasparCG.State,
+		currentTime: number
 	): Array<IAMCPCommandVO> {
-		const diff = this.diffStates(oldState, newState)
+		const diff = this.diffStates(oldState, newState, currentTime)
 		const fastCommands: Array<IAMCPCommandVO> = [] // fast to exec, and direct visual impact: PLAY 1-10
 		const slowCommands: Array<IAMCPCommandVO> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
 		const lowPrioCommands: Array<IAMCPCommandVO> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
@@ -663,7 +661,8 @@ export class CasparCGState0 {
 	/** */
 	public diffStates (
 		oldState: CF.State,
-		newState: CasparCG.State
+		newState: CasparCG.State,
+		currentTime: number
 	): Array<{
 		cmds: Array<IAMCPCommandVO>,
 		additionalLayerState?: CF.Layer
@@ -678,7 +677,6 @@ export class CasparCGState0 {
 		}
 
 		let commands: Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> = []
-		let time: number = this._currentTimeFunction()
 
 		let setTransition = (options: any | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any, isRemove: boolean, isBg?: boolean) => {
 			if (!options) options = {}
@@ -834,7 +832,7 @@ export class CasparCGState0 {
 							let ol: CF.IMediaLayer = oldLayer as CF.IMediaLayer
 
 							let getTimeSincePlay = (layer: CasparCG.IMediaLayer) => {
-								let timeSincePlay: number | null = (layer.pauseTime || time) - (layer.playTime || 0)
+								let timeSincePlay: number | null = (layer.pauseTime || currentTime) - (layer.playTime || 0)
 								if (timeSincePlay < this.minTimeSincePlay) {
 									timeSincePlay = 0
 								}
@@ -1536,11 +1534,14 @@ export class CasparCGState0 {
 	}
 
 	/** */
-	public set isInitialised (initialised: boolean) {
+	public setIsInitialised (
+		initialised: boolean,
+		currentTime: number
+	) {
 		if (this._isInitialised !== initialised) {
 			this._isInitialised = initialised
 			if (this._isInitialised) {
-				this.applyCommands(this.bufferedCommands)
+				this.applyCommands(this.bufferedCommands, currentTime)
 				this.bufferedCommands = []
 			}
 		}

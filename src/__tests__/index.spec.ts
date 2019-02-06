@@ -13,9 +13,6 @@ interface CGState {
 }
 function getCasparCGState (): CGState {
 	let time = 1000
-	let currentTime = jest.fn(() => {
-		return time
-	})
 	let logging: boolean = false
 	let externalLog = (...args: any[]) => {
 		if (logging) {
@@ -33,32 +30,37 @@ function getCasparCGState (): CGState {
 			logging = t
 		},
 		ccgState: new CasparCGState({
-			currentTime: currentTime,
 			externalLog: externalLog
 		})
 	}
 }
-function initState (s: CasparCGState) {
+function initState (c: CGState) {
+	c.ccgState.initStateFromChannelInfo([{
+		videoMode: 'PAL',
+		fps: 50
+	}], c.time)
+}
+function initState0 (s: CasparCGState, time: number) {
 	s.initStateFromChannelInfo([{
 		videoMode: 'PAL',
 		fps: 50
-	}])
+	}], time)
 }
-function initStateMS (s: CasparCGState) {
-	s.initStateFromChannelInfo([{
+function initStateMS (c: CGState) {
+	c.ccgState.initStateFromChannelInfo([{
 		videoMode: 'PAL',
 		fps: 50 / 1000
-	}])
+	}], c.time)
 }
 function getDiff (c: CGState, targetState: CasparCG.State, loggingAfter?: boolean) {
 
-	let cc = c.ccgState.getDiff(targetState)
+	let cc = c.ccgState.getDiff(targetState, c.time)
 
 	if (loggingAfter) c.log = true
-	applyCommands(c.ccgState, cc)
+	applyCommands(c, cc)
 
 	// after applying, test again vs same state, no new commands should be generated:
-	let cc2 = c.ccgState.getDiff(targetState)
+	let cc2 = c.ccgState.getDiff(targetState, c.time)
 	expect(cc2.length).toBeLessThanOrEqual(2)
 	if (cc2.length === 1) expect(cc2[0].cmds).toHaveLength(0)
 	if (cc2.length === 2) expect(cc2[1].cmds).toHaveLength(0)
@@ -66,7 +68,7 @@ function getDiff (c: CGState, targetState: CasparCG.State, loggingAfter?: boolea
 	if (loggingAfter) c.log = false
 	return cc
 }
-function applyCommands (s: CasparCGState, cc: any) {
+function applyCommands (c: CGState, cc: any) {
 
 	let commands: any = []
 
@@ -78,7 +80,7 @@ function applyCommands (s: CasparCGState, cc: any) {
 			})
 		})
 	})
-	s.applyCommands(commands)
+	c.ccgState.applyCommands(commands, c.time)
 }
 function fixCommand (c: any, options?: any) {
 	options = options || {}
@@ -102,13 +104,13 @@ function fixCommand (c: any, options?: any) {
 }
 test('get version', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	expect(c.ccgState.version).toMatch(/\d+-\d+-\d+ \d+:\d+\d/)
 })
 test('get & set state', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	// initialize:
 
@@ -120,15 +122,15 @@ test('get & set state', () => {
 	})
 	c.ccgState.applyCommands([{
 		cmd: myTestPlayCommand.serialize()
-	}])
+	}], c.time)
 
 	let myState0 = c.ccgState.getState()
 
 	let ccgState1 = new CasparCGState()
-	initState(ccgState1)
+	initState0(ccgState1, c.time)
 
 	let ccgStateInitialized = new CasparCGState()
-	initState(ccgStateInitialized)
+	initState0(ccgStateInitialized, c.time)
 
 	let unInitializedState = {}
 
@@ -153,38 +155,28 @@ test('get & set state', () => {
 test('bad initializations', () => {
 
 	expect(() => {
-		// @ts-ignore: Bad currentTime
-		let ccgState = new CasparCGState({
-			// @ts-ignore currentTime should return number
-			currentTime: () => {
-				// Nothing
-			}
-		})
-	}).toThrowError(/currentTime/i)
-
-	expect(() => {
 		let ccgState = new CasparCGState()
 		ccgState.initStateFromChannelInfo([{
 			videoMode: 'PAL'
-		}])
+		}], 1000)
 	}).toThrowError(/missing.*fps/i)
 	expect(() => {
 		let ccgState = new CasparCGState()
 		ccgState.initStateFromChannelInfo([{
 			fps: 50
-		}])
+		}], 1000)
 	}).toThrowError(/missing.*videoMode/i)
 	expect(() => {
 		let ccgState = new CasparCGState()
 		ccgState.initStateFromChannelInfo([{
 			videoMode: 'PAL',
 			fps: -1 // bad fps
-		}])
+		}], 1000)
 	}).toThrowError(/fps/i)
 })
 test('Play a video, then stop it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 	// Play a video file:
@@ -235,7 +227,7 @@ test('Play a video, then stop it', () => {
 })
 test('Play a video with the right channelLayout, then stop it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 	// Play a video file:
@@ -289,7 +281,7 @@ test('Play a video with the right channelLayout, then stop it', () => {
 })
 test('Play a video, pause & resume it', () => {
 	let c = getCasparCGState()
-	initStateMS(c.ccgState)
+	initStateMS(c)
 
 	let cc: any
 
@@ -348,7 +340,7 @@ test('Play a video, pause & resume it', () => {
 })
 test('Load a video, then play it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -402,7 +394,7 @@ test('Load a video, then play it', () => {
 })
 test('Loadbg a video, then play it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -467,7 +459,7 @@ test('Loadbg a video, then play it', () => {
 })
 test('Loadbg a video, then remove it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -540,7 +532,7 @@ test('Loadbg a video, then remove it', () => {
 })
 test('Loadbg a video, then loadbg another', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -610,7 +602,7 @@ test('Loadbg a video, then loadbg another', () => {
 })
 test('Loadbg a video with a transition, then play it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -683,7 +675,7 @@ test('Loadbg a video with a transition, then play it', () => {
 })
 test('Play a video, stop and loadbg another video', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 	// Play a video file:
@@ -772,7 +764,7 @@ test('Play a video, stop and loadbg another video', () => {
 })
 test('Loadbg a video, then play another video maintaining the bg', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -855,7 +847,7 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 })
 test('Loadbg a video and play another video. stop the foreground while maintaining the bg', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -930,7 +922,7 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 })
 test('Play a looping video, pause & resume it', () => {
 	let c = getCasparCGState()
-	initStateMS(c.ccgState)
+	initStateMS(c)
 
 	let cc: any
 
@@ -989,7 +981,7 @@ test('Play a looping video, pause & resume it', () => {
 })
 test('Play a template, update the data & cgstop', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1049,7 +1041,7 @@ test('Play a template, update the data & cgstop', () => {
 })
 test('Play an html-page', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1087,7 +1079,7 @@ test('Play an html-page', () => {
 })
 test('Loadbg a html-page, then play it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1153,7 +1145,7 @@ test('Loadbg a html-page, then play it', () => {
 })
 test('Play an input', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1199,7 +1191,7 @@ test('Play an input', () => {
 })
 test('Loadbg an input, then play it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1281,7 +1273,7 @@ test('Loadbg an input, then play it', () => {
 
 test('Play a Route', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1322,7 +1314,7 @@ test('Play a Route', () => {
 })
 test('Loadbg a Route, then play it', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1403,7 +1395,7 @@ test('Loadbg a Route, then play it', () => {
 })
 test('Play a BG Route', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1445,7 +1437,7 @@ test('Play a BG Route', () => {
 })
 test('Record to a file', () => {
 	let c = getCasparCGState()
-	initStateMS(c.ccgState)
+	initStateMS(c)
 
 	let cc: any
 
@@ -1487,7 +1479,7 @@ test('Record to a file', () => {
 })
 test('Run a function', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1524,7 +1516,7 @@ test('Run a function', () => {
 })
 test('Play a video, then add mixer attributes', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1738,7 +1730,7 @@ test('Play a video, then add mixer attributes', () => {
 })
 test('Play a video with transition, then stop it with transition', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1789,7 +1781,7 @@ test('Play a video with transition, then stop it with transition', () => {
 })
 test('Play a Route with transition, then stop it with transition', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1832,7 +1824,7 @@ test('Play a Route with transition, then stop it with transition', () => {
 })
 test('Play a Decklink-input with transition, then stop it with transition', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	let cc: any
 
@@ -1887,7 +1879,7 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 })
 test('Apply commands before init', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 	let cc: any
 
 	// Play a video file:
@@ -1904,14 +1896,14 @@ test('Apply commands before init', () => {
 	let targetState: CasparCG.State = { channels: { '1': channel1 } }
 	// cc = getDiff(c, targetState)
 
-	cc = c.ccgState.getDiff(targetState)
+	cc = c.ccgState.getDiff(targetState, c.time)
 
 	let c2 = getCasparCGState()
 
 	// Apply commands before init
-	applyCommands(c2.ccgState, cc)
+	applyCommands(c2, cc)
 
-	initState(c2.ccgState)
+	initState(c2)
 
 	// Then resolve state, it should generate no commands:
 	cc = getDiff(c2, targetState)
@@ -1927,7 +1919,7 @@ test('Bundle commands', () => {
 	},{
 		videoMode: 'PAL',
 		fps: 50
-	}])
+	}], c.time)
 
 	let cc: any
 
@@ -2029,7 +2021,7 @@ test('Bundle commands', () => {
 
 test('Prioritize commands', () => {
 	let c = getCasparCGState()
-	initState(c.ccgState)
+	initState(c)
 
 	// Load a video file (paused):
 	let layer10: CasparCG.IEmptyLayer = {
@@ -2048,7 +2040,7 @@ test('Prioritize commands', () => {
 	let channel1: CasparCG.Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
 	let targetState: CasparCG.State = { channels: { '1': channel1 } }
 
-	let cmds = c.ccgState.diffStatesOrderedCommands(c.ccgState.getState(), targetState)
+	let cmds = c.ccgState.diffStatesOrderedCommands(c.ccgState.getState(), targetState, c.time)
 
 	expect(cmds).toHaveLength(1)
 	expect(cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
@@ -2095,7 +2087,7 @@ test('Prioritize commands', () => {
 		playTime: 1000,
 		layerNo: 10
 	}
-	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState)
+	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	// Note that the order should be reversed: first play 1-10, then play 1-9 amb, then loadbg 1-8 amb
 	expect(cmds).toHaveLength(3)
 	expect(cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
@@ -2123,7 +2115,7 @@ test('Prioritize commands', () => {
 	oldState = JSON.parse(JSON.stringify(targetState))
 	delete channel1.layers['10']
 
-	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState)
+	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	expect(cmds).toHaveLength(1)
 	expect(cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
 		channel: 1,
@@ -2140,7 +2132,7 @@ describe('MixerCommands', () => {
 	let channel1: CasparCG.Channel
 	beforeAll(() => {
 		c = getCasparCGState()
-		initState(c.ccgState)
+		initState(c)
 
 		// Play a video file:
 
