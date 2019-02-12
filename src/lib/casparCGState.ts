@@ -816,7 +816,7 @@ export class CasparCGState0 {
 					}
 					if (diff) {
 						// Added things:
-						this.log('ADD: ' + newLayer.content + ' | ' + diff)
+						this.log('ADD: ' + newChannel.channelNo + '-' + newLayer.layerNo + ' ' + newLayer.content + ' | ' + diff)
 
 						let options: OptionsInterface = {
 							channel: newChannel.channelNo,
@@ -1107,7 +1107,7 @@ export class CasparCGState0 {
 
 							// Updated things:
 
-							this.log('UPDATE: ' + nl.content + ' ' + diff)
+							this.log('UPDATE: ' + newChannel.channelNo + '-' + nl.layerNo + ' ' + nl.content + ' ' + diff)
 
 							let options: any = {}
 							options.channel = newChannel.channelNo
@@ -1158,7 +1158,7 @@ export class CasparCGState0 {
 							noClear: !!newLayer.noClear
 						}
 						if (newLayer.nextUp) {
-							this.log('ADD BG', newLayer.nextUp.content)
+							this.log('ADD BG ' + newChannel.channelNo + '-' + newLayer.layerNo, newLayer.nextUp.content)
 
 							// make sure the layer is empty before trying to load something new
 							// this prevents weird behaviour when files don't load correctly
@@ -1273,11 +1273,13 @@ export class CasparCGState0 {
 							)
 						) {
 
-							this.log('pushMixerCommand change: ' + attr, subValue)
-							this.log('oldLayer.mixer',oldLayer.mixer)
-							this.log('newLayer.mixer',newLayer.mixer)
-							this.log('oldAttr',Mixer.getValue((oldLayer.mixer || {})[attr]))
-							this.log('newAttr', Mixer.getValue((newLayer.mixer || {})[attr]))
+							this.log('pushMixerCommand change: ' + attr, subValue, 'oldLayer.mixer', oldLayer.mixer, 'newLayer.mixer', newLayer.mixer, 'oldAttr', Mixer.getValue((oldLayer.mixer || {})[attr]), 'newAttr', Mixer.getValue((newLayer.mixer || {})[attr]))
+
+							// this.log('pushMixerCommand change: ' + attr, subValue)
+							// this.log('oldLayer.mixer',oldLayer.mixer)
+							// this.log('newLayer.mixer',newLayer.mixer)
+							// this.log('oldAttr',Mixer.getValue((oldLayer.mixer || {})[attr]))
+							// this.log('newAttr', Mixer.getValue((newLayer.mixer || {})[attr]))
 
 							let options: any = {}
 							options.channel = newChannel.channelNo
@@ -1291,7 +1293,7 @@ export class CasparCGState0 {
 								o = Mixer.getDefaultValues(attr)
 								options._defaultOptions = true	// this is used in ApplyCommands to set state to "default", and not use the mixer values
 							}
-							this.log('o', o)
+							// this.log('o', o)
 							if (_.isArray(subValue)) {
 								_.each(subValue,(sv) => {
 									options[sv] = o[sv]
