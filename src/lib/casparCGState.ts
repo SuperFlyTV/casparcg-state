@@ -191,11 +191,9 @@ export class CasparCGState0 {
 
 			if (!layer.mixer) layer.mixer = new Mixer()
 
-			/*
-			console.log('setMixerState '+attr);
-			console.log(subValue);
-			console.log(command)
-			*/
+			// console.log('setMixerState '+attr);
+			// console.log(subValue);
+			// console.log(command)
 
 			if ((command._objectParams || {})['_defaultOptions']) {
 				// the command sent, contains "default parameters"
@@ -252,6 +250,9 @@ export class CasparCGState0 {
 						}
 					}
 
+					layer.inPoint = command._objectParams['in'] !== undefined ? this.frames2Time(command._objectParams['in'], channel) : undefined
+					layer.length = command._objectParams['length'] !== undefined ? this.frames2Time(command._objectParams['length'], channel) : undefined
+
 					layer.looping = !!command._objectParams['loop']
 					layer.channelLayout = command._objectParams['channelLayout']
 
@@ -266,11 +267,17 @@ export class CasparCGState0 {
 					// this._getMediaDuration((layer.media || '').toString(), channel.channelNo, layer.layerNo)
 
 				} else {
-					if ((cmdName === 'PlayCommand' || cmdName === 'ResumeCommand') && layer.content === CasparCG.LayerContentType.MEDIA && layer.media && layer.pauseTime && layer.playTime) {
+					if (
+						(cmdName === 'PlayCommand' || cmdName === 'ResumeCommand') &&
+						layer.content === CasparCG.LayerContentType.MEDIA &&
+						layer.media &&
+						layer.pauseTime &&
+						layer.playTime
+					) {
 						// resuming a paused clip
 						layer.playing = true
 
-						let playedTime = layer.playTime - layer.pauseTime
+						let playedTime = layer.pauseTime - layer.playTime
 						layer.playTime = currentTime - playedTime // "move" the clip to new start time
 
 						layer.pauseTime = 0
@@ -326,6 +333,9 @@ export class CasparCGState0 {
 						if (command._objectParams['transition']) {
 							layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
 						}
+						layer.nextUp.inPoint = command._objectParams['in'] !== undefined ? this.frames2Time(command._objectParams['in'], channel) : undefined
+						layer.nextUp.length = command._objectParams['length'] !== undefined ? this.frames2Time(command._objectParams['length'], channel) : undefined
+
 						layer.nextUp.looping = !!command._objectParams['loop']
 					}
 
@@ -582,6 +592,10 @@ export class CasparCGState0 {
 
 			}
 		})
+
+		// console.log('after applyCommandsToState', currentState.channels['1'])
+		// console.log(commands)
+		// console.log(commands[0])
 	}
 	getDiff (
 		newState: CasparCG.State,
@@ -761,10 +775,9 @@ export class CasparCGState0 {
 							let nl: CasparCG.IMediaLayer = newLayer as CasparCG.IMediaLayer
 							let ol: CF.IMediaLayer = oldLayer as CF.IMediaLayer
 
-							setDefaultValue([nl, ol], ['seek', 'pauseTime'], 0)
+							setDefaultValue([nl, ol], ['seek', 'length', 'inPoint', 'pauseTime'], 0)
 							setDefaultValue([nl, ol], ['looping', 'playing'], false)
-
-							diff = this.compareAttrs(nl, ol ,['media','playTie','looping','seek','pauseTime','playing','channelLayout'])
+							diff = this.compareAttrs(nl, ol ,['media','playTime','looping','seek','length','inPoint','pauseTime','playing','channelLayout'])
 
 						} else if (newLayer.content === CasparCG.LayerContentType.TEMPLATE) {
 							let nl: CasparCG.ITemplateLayer = newLayer as CasparCG.ITemplateLayer
@@ -831,62 +844,87 @@ export class CasparCGState0 {
 							let nl: CasparCG.IMediaLayer = newLayer as CasparCG.IMediaLayer
 							let ol: CF.IMediaLayer = oldLayer as CF.IMediaLayer
 
-							let getTimeSincePlay = (layer: CasparCG.IMediaLayer) => {
-								let timeSincePlay: number | null = (layer.pauseTime || currentTime) - (layer.playTime || 0)
-								if (timeSincePlay < this.minTimeSincePlay) {
-									timeSincePlay = 0
-								}
-								// if (layer.looping) {
-								// 	// we don't support looping and seeking at the same time right now..
-								// 	timeSincePlay = 0
-								// }
+							let timeSincePlay = this.getTimeSincePlay(nl, currentTime)
 
-								if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
-									timeSincePlay = null
-								}
-								return timeSincePlay
-							}
-							let getSeek = function (layer: CF.IMediaLayer, timeSincePlay: number | null) {
-								return Math.max(0,Math.floor(
-									(
-										(timeSincePlay || 0)
-										+
-										(layer.seek || 0)
-									)
-									* (newChannel.fps || oldChannel.fps)
-								))
-							}
+							let diffMediaFromBg = this.compareAttrs(nl, ol.nextUp, ['media'])
 
-							let timeSincePlay = getTimeSincePlay(nl)
-							let seek = getSeek(nl, !nl.looping ? timeSincePlay : 0) // @todo: looping and seeking requires us to know the media duration
+							const oldUseLayer: CF.IMediaLayer | CasparCG.NextUp = (
+								ol.nextUp && !diffMediaFromBg ? // current media is the one in background
+								ol.nextUp :
+								ol
+							)
+
+							let oldTimeSincePlay = (
+								ol.nextUp && !diffMediaFromBg ?
+								0 :
+								this.getTimeSincePlay(ol, currentTime)
+							)
+
+							const {
+								inPoint,
+								length,
+								seek,
+								looping,
+								channelLayout
+							} = this.calculatePlayAttributes(timeSincePlay, nl, newChannel, oldChannel)
+
+							const oldAttrs = this.calculatePlayAttributes(oldTimeSincePlay, oldUseLayer, newChannel, oldChannel)
+
+							const oldInPoint 		= oldAttrs.inPoint
+							const oldLength 		= oldAttrs.length
+							const oldSeek 			= oldAttrs.seek
+							const oldLooping 		= oldAttrs.looping
+							const oldChannelLayout	= oldAttrs.channelLayout
 
 							if (nl.playing) {
 
 								nl.pauseTime = 0
 
-								let oldTimeSincePlay = getTimeSincePlay(ol)
-								let oldSeek = getSeek(ol, oldTimeSincePlay)
-								let newMedia = this.compareAttrs(nl, ol ,['media'])
-								let diffMediaFromBg = this.compareAttrs(nl, ol.nextUp, ['media'])
+								// let oldSeek = this.calculateSeek(newChannel, oldChannel, ol, oldTimeSincePlay)
+								const newMedia = this.compareAttrs(nl, ol, ['media'])
+
+								const seekIsSmall: boolean = this.frames2Time(Math.abs(oldSeek - seek), newChannel, oldChannel) < this.minTimeSincePlay
+
 								if (
 									!newMedia &&
 									ol.pauseTime &&
-									Math.abs(oldSeek - seek) < this.minTimeSincePlay
-
+									seekIsSmall
 								) {
-
 									cmd = new AMCP.ResumeCommand(options as any)
 								} else {
-									if (newMedia && diffMediaFromBg) {
-										cmd = new AMCP.PlayCommand(_.extend(options,{
+									if (
+										(newMedia && diffMediaFromBg) ||
+										(inPoint || 0) !== (oldInPoint || 0) || // temporary, until CALL IN command works satisfactory in CasparCG
+										(length || 0) !== (oldLength || 0) || // temporary, until CALL LENGTH command works satisfactory in CasparCG
+										!seekIsSmall ||
+										looping !== oldLooping || // temporary, until CALL LOOP works satisfactory in CasparCG
+										channelLayout !== oldChannelLayout // temporary, until CallCommand with channelLayout is implemented in ccg-conn (& casparcg?)
+									) {
+										// console.log('oldTimeSincePlay', oldTimeSincePlay)
+										// console.log('ol', ol)
+										// console.log('oldUseLayer', oldUseLayer)
+										// console.log('nl', nl)
+
+										// console.log('(newMedia && diffMediaFromBg)', (newMedia && diffMediaFromBg))
+										// console.log('inPoint !== oldInPoint', inPoint !== oldInPoint, inPoint, oldInPoint)
+										// console.log('length !== oldLength', length !== oldLength, length, oldLength)
+										// console.log('!seekIsSmall', !seekIsSmall, oldSeek, seek)
+										// console.log('looping !== oldLooping', looping !== oldLooping, looping ,oldLooping)
+										// console.log('channelLayout !== oldChannelLayout', channelLayout !== oldChannelLayout, channelLayout, oldChannelLayout)
+
+										cmd = new AMCP.PlayCommand(this.fixPlayCommandInput(_.extend(options, {
 											clip: (nl.media || '').toString(),
+											in: inPoint,
 											seek: seek,
+											length: length || undefined,
 											loop: !!nl.looping,
 											channelLayout: nl.channelLayout
-										}))
+										})))
+
 									} else if (!diffMediaFromBg) {
 										cmd = new AMCP.PlayCommand({ ...options })
 									} else {
+
 										cmd = new AMCP.ResumeCommand(options as any)
 										if (oldSeek !== seek && !nl.looping) {
 											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
@@ -921,6 +959,7 @@ export class CasparCGState0 {
 									cmd = new AMCP.LoadCommand(_.extend(options,{
 										clip: (nl.media || '').toString(),
 										seek: seek,
+										length: length || undefined,
 										loop: !!nl.looping,
 
 										pauseTime: nl.pauseTime,
@@ -1132,10 +1171,10 @@ export class CasparCGState0 {
 							let nl: CasparCG.IMediaLayer = newLayer.nextUp as CasparCG.IMediaLayer
 							let ol: CF.IMediaLayer = oldLayer.nextUp as CF.IMediaLayer
 
-							setDefaultValue([nl, ol], ['seek'], 0)
+							setDefaultValue([nl, ol], ['seek', 'length', 'inPoint'], 0)
 							setDefaultValue([nl, ol], ['auto'], false)
 
-							bgDiff = this.compareAttrs(nl, ol ,['media','seek','auto','channelLayout'])
+							bgDiff = this.compareAttrs(nl, ol ,['media','seek','length','inPoint','auto','channelLayout'])
 						}
 
 						if (!bgDiff && newLayer.nextUp && oldLayer.nextUp && (typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')) {
@@ -1174,13 +1213,25 @@ export class CasparCGState0 {
 
 							if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
 								const layer = newLayer.nextUp as CasparCG.IMediaLayer & CasparCG.NextUp
-								additionalCmds.push(new AMCP.LoadbgCommand(_.extend(options, {
+
+								const {
+									inPoint,
+									length,
+									seek,
+									looping,
+									channelLayout
+								} = this.calculatePlayAttributes(0, layer, newChannel, oldChannel)
+
+								additionalCmds.push(new AMCP.LoadbgCommand(_.extend(options, this.fixPlayCommandInput({
 									auto: layer.auto,
 									clip: (newLayer.nextUp.media || '').toString(),
-									loop: !!layer.looping,
-									seek: layer.seek,
-									channelLayout: layer.channelLayout
-								})))
+									in: inPoint,
+									seek: seek,
+									length: length || undefined,
+									loop: !!looping,
+									channelLayout: channelLayout
+								}))))
+
 							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) {
 								const layer = newLayer.nextUp as CasparCG.IHtmlPageLayer & CasparCG.NextUp
 								additionalCmds.push(new AMCP.LoadHtmlPageBgCommand(_.extend(options, {
@@ -1571,6 +1622,110 @@ export class CasparCGState0 {
 	// 		}
 	// 	}
 	// }
+	private frames2Time (
+		frames: number,
+		newChannel: CasparCG.Channel,
+		oldChannel?: CasparCG.Channel
+	): number {
+		return frames / ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 50)
+	}
+	private time2Frames (
+		frames: number,
+		newChannel: CasparCG.Channel,
+		oldChannel?: CasparCG.Channel
+	): number {
+		return Math.floor(frames * ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 0))
+	}
+	private calculateSeek (
+		newChannel: CasparCG.Channel,
+		oldChannel: CasparCG.Channel,
+		layer: CF.IMediaLayer | CasparCG.NextUp ,
+		timeSincePlay: number | null
+	) {
+		if (layer.looping && !layer.length) {
+			// if we don't know the length of the loop, we can't seek..
+			return 0
+		}
+		const seekStart: number = (
+			(
+				layer.seek !== undefined ?
+				layer.seek :
+				layer.inPoint
+			) || 0
+		)
+
+		let seek: number = Math.max(0, this.time2Frames(
+			seekStart + (timeSincePlay || 0),
+			newChannel, oldChannel
+		))
+		let inPoint: number | undefined = layer.inPoint !== undefined ? this.time2Frames(layer.inPoint, newChannel, oldChannel) : undefined
+		let length: number | undefined = layer.length !== undefined ? this.time2Frames(layer.length, newChannel, oldChannel) : undefined
+
+		if (layer.looping) {
+			let seekSinceInPoint = seek - (inPoint || 0)
+
+			if (seekSinceInPoint > 0 && length) {
+				seek = (inPoint || 0) + (seekSinceInPoint % length)
+			}
+		}
+		return seek
+	}
+	private calculatePlayAttributes (
+		timeSincePlay: number | null,
+		nl: CasparCG.IMediaLayer | CasparCG.NextUp,
+		newChannel: CasparCG.Channel,
+		oldChannel: CasparCG.Channel
+	): {
+		inPoint: number | undefined,
+		length: number | undefined,
+		seek: number,
+		looping: boolean,
+		channelLayout: string | undefined
+	} {
+		let inPoint: number | undefined = nl.inPoint !== undefined ? this.time2Frames(nl.inPoint, newChannel, oldChannel) : undefined
+		let length = nl.length !== undefined ? this.time2Frames(nl.length, newChannel, oldChannel) : undefined
+		let looping = !!nl.looping
+		let seek = this.calculateSeek(newChannel, oldChannel, nl, timeSincePlay)
+		let channelLayout = nl.channelLayout
+
+		if (looping) {
+			if (!seek) seek = 0
+			if (!inPoint) inPoint = 0
+		} else {
+			if (!inPoint && !seek) inPoint = undefined
+		}
+
+		return {
+			inPoint,
+			length,
+			seek,
+			looping,
+			channelLayout
+		}
+	}
+	private getTimeSincePlay (layer: CasparCG.IMediaLayer, currentTime: number) {
+		let timeSincePlay: number | null = (
+			layer.playTime === undefined ?
+			0 :
+			(layer.pauseTime || currentTime) - (layer.playTime || 0)
+		)
+		if (timeSincePlay < this.minTimeSincePlay) {
+			timeSincePlay = 0
+		}
+
+		if (_.isNull(layer.playTime)) { // null indicates the start time is not relevant, like for a LOGICAL object, or an image
+			timeSincePlay = null
+		}
+		return timeSincePlay
+	}
+	private fixPlayCommandInput <T extends any> (o: T): T {
+		const o2: any = {}
+		_.each(_.keys(o), (key: string) => {
+			const value: any = o[key]
+			if (value !== undefined) o2[key] = value
+		})
+		return o2
+	}
 	private log (...args: Array<any>): void {
 		if (this._externalLog) {
 			this._externalLog(...args)
