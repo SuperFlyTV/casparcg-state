@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [1.7.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.6.0...1.7.0) (2019-04-11)
+
+
+### Bug Fixes
+
+* update dependencies ([e133436](https://github.com/SuperFlyTV/casparcg-state/commit/e133436))
+* update dependencies + TS3 ([72b44da](https://github.com/SuperFlyTV/casparcg-state/commit/72b44da))
+
+
+### Features
+
+* add support for inPoint, seek, length & loop. ([3173c9e](https://github.com/SuperFlyTV/casparcg-state/commit/3173c9e))
+
+
+
 <a name="1.6.0"></a>
 # [1.6.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.5.1...1.6.0) (2019-02-06)
 
