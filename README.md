@@ -1,5 +1,6 @@
 # Casparcg-state
 [![CircleCI](https://circleci.com/gh/SuperFlyTV/casparcg-state.svg?style=svg)](https://circleci.com/gh/SuperFlyTV/casparcg-state)
+[![codecov](https://codecov.io/gh/SuperFlyTV/casparcg-state/branch/master/graph/badge.svg)](https://codecov.io/gh/SuperFlyTV/casparcg-state)
 
 This library tracks the state of CasparCG Servers and generates commands to be used in [casparcg-connection](https://github.com/SuperFlyTV/casparcg-connection). 
 

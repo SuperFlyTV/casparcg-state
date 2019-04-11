@@ -60,6 +60,7 @@ function getDiff (c: CGState, targetState: CasparCG.State, loggingAfter?: boolea
 	applyCommands(c, cc)
 
 	// after applying, test again vs same state, no new commands should be generated:
+	// console.log('second try')
 	let cc2 = c.ccgState.getDiff(targetState, c.time)
 	expect(cc2.length).toBeLessThanOrEqual(2)
 	if (cc2.length === 1) expect(cc2[0].cmds).toHaveLength(0)
@@ -309,8 +310,8 @@ test('Play a video, pause & resume it', () => {
 	})).serialize())
 
 	// Pause the video
-	c.time = 11000 // Advance the time
-	layer10.pauseTime = 11000
+	c.time = 11000 // Advance the time 10s, to 11s
+	layer10.pauseTime = c.time
 	layer10.playing = false
 
 	cc = getDiff(c, targetState)
@@ -321,9 +322,10 @@ test('Play a video, pause & resume it', () => {
 		layer: 10,
 		pauseTime: 11000
 	})).serialize())
+	// The video is now paused at 11s = 550
 
 	// Resume playing:
-	c.time = 22000 // Advance the time
+	c.time = 15000 // Advance the time 4s, to 15s
 	layer10.playing = true
 	// it was paused for 10 seconds:
 	layer10.playTime = c.time - (layer10.pauseTime - (layer10.playTime || 0))
@@ -426,7 +428,7 @@ test('Loadbg a video, then play it', () => {
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	// Start playing it:
@@ -491,7 +493,7 @@ test('Loadbg a video, then remove it', () => {
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	// Remove the nextup
@@ -564,7 +566,7 @@ test('Loadbg a video, then loadbg another', () => {
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	// Now load another
@@ -640,7 +642,7 @@ test('Loadbg a video with a transition, then play it', () => {
 		stingOverlayFilename: '',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	// Start playing it:
@@ -731,7 +733,7 @@ test('Play a video, stop and loadbg another video', () => {
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	// Start playing it:
@@ -796,7 +798,7 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	let newLayer10: CasparCG.IMediaLayer = {
@@ -886,7 +888,7 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	let newLayer10: CasparCG.IEmptyLayer = {
@@ -920,6 +922,108 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 	})).serialize())
 
 })
+test('Play a looping video', () => {
+	let c = getCasparCGState()
+	initStateMS(c)
+
+	let cc: any
+
+	// Play a video file:
+
+	let layer10: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: true,
+		playTime: -9000, // 10 s ago
+		length: 30 * 1000,
+		looping: true
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'AMB',
+		loop: true,
+		seek: 10 * 50,
+		in: 0,
+		length: 30 * 50
+	})).serialize())
+})
+test('Play a looping video, with inPoint', () => {
+	let c = getCasparCGState()
+	initStateMS(c)
+
+	let cc: any
+
+	// Play a video file:
+
+	let layer10: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: true,
+		playTime: 0, // 1 s ago
+		length: 10 * 1000,
+		inPoint: 4 * 1000, // 4 s into the clip
+		looping: true
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'AMB',
+		loop: true,
+		seek: 5 * 50,
+		in: 4 * 50,
+		length: 10 * 50
+	})).serialize())
+})
+test('Play a looping video, with inPoint & seek', () => {
+	let c = getCasparCGState()
+	initStateMS(c)
+
+	let cc: any
+
+	// Play a video file:
+
+	let layer10: CasparCG.IMediaLayer = {
+		content: CasparCG.LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: true,
+		playTime: 0, // 1 s ago
+		length: 2 * 1000,
+		inPoint: 10 * 1000, // 10 s into the clip
+		seek: 0, // beginning of clip
+		looping: true
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+		channel: 1,
+		layer: 10,
+		clip: 'AMB',
+		loop: true,
+		seek: 1 * 50,
+		in: 10 * 50,
+		length: 2 * 50
+	})).serialize())
+})
 test('Play a looping video, pause & resume it', () => {
 	let c = getCasparCGState()
 	initStateMS(c)
@@ -947,12 +1051,13 @@ test('Play a looping video, pause & resume it', () => {
 		layer: 10,
 		clip: 'AMB',
 		loop: true,
-		seek: 0 // no seeking, due to seeking not supported on looping video (this is by design)
+		seek: 0, // Because we only support accurate looping & seeking if length is provided
+		in: 0
 	})).serialize())
 
 	// Pause the video
 	c.time = 6000 // Advance the time
-	layer10.pauseTime = 6000
+	layer10.pauseTime = c.time
 	layer10.playing = false
 
 	cc = getDiff(c, targetState)
@@ -967,8 +1072,9 @@ test('Play a looping video, pause & resume it', () => {
 	// Resume playing:
 	c.time = 11000 // Advance the time
 	layer10.playing = true
-	layer10.pauseTime = 0
-	layer10.playTime = c.time
+	// it was paused for 15 seconds:
+	layer10.playTime = c.time - (layer10.pauseTime - (layer10.playTime || 0))
+	delete layer10.pauseTime
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -2050,7 +2156,7 @@ test('Prioritize commands', () => {
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	let oldState = JSON.parse(JSON.stringify(targetState))
@@ -2108,7 +2214,7 @@ test('Prioritize commands', () => {
 		clip: 'AMB',
 		noClear: false,
 		loop: false,
-		seek: undefined
+		seek: 0
 	})).serialize())
 
 	// Remove the video
