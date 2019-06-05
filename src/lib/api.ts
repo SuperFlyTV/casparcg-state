@@ -24,6 +24,8 @@ export namespace CasparCG { // for external use
 		layers: { [layer: string]: ILayerBase} = {}
 	}
 	export class ILayerBase {
+		/** id of the original timelineObject */
+		id: string
 		layerNo: number
 		content: LayerContentType // string | null 		// @todo: enum?
 		media?: string | TransitionObject0 | null // clip or templatename
