@@ -1,7 +1,6 @@
 import * as _ from 'underscore'
 const clone = require('fast-clone')
 import { Command as CommandNS, AMCP as AMCP } from 'casparcg-connection'
-import IAMCPCommandVO = CommandNS.IAMCPCommandVO
 
 import { CasparCG } from './api'
 import { CasparCGFull as CF } from './interfaces'
@@ -20,6 +19,26 @@ interface OptionsInterface {
 	transitionEasing?: any
 }
 
+export interface IAMCPCommandVOWithContext extends CommandNS.IAMCPCommandVO {
+	context: {
+		context: string
+		/** The id of the layer the command originates from */
+		layerId: string
+	}
+}
+export interface IAMCPCommandWithContext extends CommandNS.IAMCPCommand {
+	context: {
+		context: string
+		/** The id of the layer the command originates from */
+		layerId: string
+	}
+}
+export interface DiffCommands {
+	cmds: Array<IAMCPCommandVOWithContext>,
+	additionalLayerState?: CF.Layer
+}
+export type DiffCommandGroups = Array<DiffCommands>
+
 // config NS
 // import {Config as ConfigNS} from "casparcg-connection";
 // import CasparCGConfig207 = ConfigNS.v207.CasparCGConfigVO;
@@ -28,7 +47,7 @@ interface OptionsInterface {
 /** */
 export class CasparCGState0 {
 
-	public bufferedCommands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}> = []
+	public bufferedCommands: Array<{cmd: CommandNS.IAMCPCommandVO, additionalLayerState?: CF.Layer}> = []
 
 	public minTimeSincePlay: number = 150
 
@@ -153,7 +172,7 @@ export class CasparCGState0 {
 	 * @param {CF.Layer}>} commands [description]
 	 */
 	applyCommands (
-		commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}>,
+		commands: Array<{cmd: CommandNS.IAMCPCommandVO, additionalLayerState?: CF.Layer}>,
 		currentTime: number
 	): void {
 		// buffer commands until we are initialised
@@ -177,12 +196,12 @@ export class CasparCGState0 {
 	 */
 	applyCommandsToState (
 		currentState: any,
-		commands: Array<{cmd: IAMCPCommandVO, additionalLayerState?: CF.Layer}>,
+		commands: Array<{cmd: CommandNS.IAMCPCommandVO, additionalLayerState?: CF.Layer}>,
 		currentTime: number
 	): void {
 		let setMixerState = (
 			channel: CF.Channel,
-			command: IAMCPCommandVO,
+			command: CommandNS.IAMCPCommandVO,
 			/* TODO: attr should probably be an enum or something */
 			attr: string,
 			subValue: Array<string> | string
@@ -213,7 +232,7 @@ export class CasparCGState0 {
 			}
 		}
 		commands.forEach((i) => {
-			let command: IAMCPCommandVO | any = i.cmd
+			let command: CommandNS.IAMCPCommandVO = i.cmd
 
 			let channelNo: number = (command._objectParams || {})['channel'] as number || command.channel
 			let layerNo: number = (command._objectParams || {})['layer'] as number || command.layer
@@ -250,11 +269,11 @@ export class CasparCGState0 {
 						}
 					}
 
-					layer.inPoint = command._objectParams['in'] !== undefined ? this.frames2Time(command._objectParams['in'], channel) : undefined
-					layer.length = command._objectParams['length'] !== undefined ? this.frames2Time(command._objectParams['length'], channel) : undefined
+					layer.inPoint = command._objectParams['in'] !== undefined ? this.frames2Time(command._objectParams['in'] as number, channel) : undefined
+					layer.length = command._objectParams['length'] !== undefined ? this.frames2Time(command._objectParams['length'] as number, channel) : undefined
 
 					layer.looping = !!command._objectParams['loop']
-					layer.channelLayout = command._objectParams['channelLayout']
+					layer.channelLayout = command._objectParams['channelLayout'] as string
 
 					if (i.additionalLayerState) {
 						layer.playTime = i.additionalLayerState.playTime || 0
@@ -333,8 +352,8 @@ export class CasparCGState0 {
 						if (command._objectParams['transition']) {
 							layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
 						}
-						layer.nextUp.inPoint = command._objectParams['in'] !== undefined ? this.frames2Time(command._objectParams['in'], channel) : undefined
-						layer.nextUp.length = command._objectParams['length'] !== undefined ? this.frames2Time(command._objectParams['length'], channel) : undefined
+						layer.nextUp.inPoint = command._objectParams['in'] !== undefined ? this.frames2Time(command._objectParams['in'] as number, channel) : undefined
+						layer.nextUp.length = command._objectParams['length'] !== undefined ? this.frames2Time(command._objectParams['length'] as number, channel) : undefined
 
 						layer.nextUp.looping = !!command._objectParams['loop']
 					}
@@ -495,9 +514,13 @@ export class CasparCGState0 {
 					layer.nextUp.media.inTransition = new Transition().fromCommand(command, channel.fps)
 				}
 
-				let routeChannel: any 	= command._objectParams.route.channel
-
-				let routeLayer: any 		= command._objectParams.route.layer
+				let routeChannel: string = ''
+				let routeLayer: string = ''
+				if (command._objectParams.route) {
+					const route = command._objectParams.route as any
+					routeChannel = route.channel
+					routeLayer = route.layer
+				}
 
 				layer.route = {
 					channel: 	parseInt(routeChannel, 10),
@@ -584,9 +607,11 @@ export class CasparCGState0 {
 
 				let layer: CF.IFunctionLayer = this.ensureLayer(channel, layerNo) as CF.IFunctionLayer
 
+				// @ts-ignore special hack:
 				if (command.returnValue !== true) {
 					// save state:
 					layer.content = CasparCG.LayerContentType.FUNCTION
+					// @ts-ignore special: nl.media used for diffing
 					layer.media = command.media
 				}
 
@@ -600,7 +625,7 @@ export class CasparCGState0 {
 	getDiff (
 		newState: CasparCG.State,
 		currentTime: number
-	): Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> {
+	): DiffCommandGroups {
 		// needs to be initialised
 		if (!this.isInitialised) {
 			throw new Error('CasparCG State is not initialised')
@@ -618,11 +643,11 @@ export class CasparCGState0 {
 		oldState: CF.State,
 		newState: CasparCG.State,
 		currentTime: number
-	): Array<IAMCPCommandVO> {
+	): Array<IAMCPCommandVOWithContext> {
 		const diff = this.diffStates(oldState, newState, currentTime)
-		const fastCommands: Array<IAMCPCommandVO> = [] // fast to exec, and direct visual impact: PLAY 1-10
-		const slowCommands: Array<IAMCPCommandVO> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
-		const lowPrioCommands: Array<IAMCPCommandVO> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
+		const fastCommands: Array<IAMCPCommandVOWithContext> = [] // fast to exec, and direct visual impact: PLAY 1-10
+		const slowCommands: Array<IAMCPCommandVOWithContext> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
+		const lowPrioCommands: Array<IAMCPCommandVOWithContext> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
 
 		for (const layer of diff) {
 			let containsSlowCommand = false
@@ -677,10 +702,7 @@ export class CasparCGState0 {
 		oldState: CF.State,
 		newState: CasparCG.State,
 		currentTime: number
-	): Array<{
-		cmds: Array<IAMCPCommandVO>,
-		additionalLayerState?: CF.Layer
-	}> {
+	): DiffCommandGroups {
 
 		// console.log('diffStates')
 		// console.log('newState', newState)
@@ -690,7 +712,7 @@ export class CasparCGState0 {
 			throw new Error('CasparCG State is not initialised')
 		}
 
-		let commands: Array<{cmds: Array<IAMCPCommandVO>, additionalLayerState?: CF.Layer}> = []
+		let commands: DiffCommandGroups = []
 
 		let setTransition = (options: any | null, channel: CasparCG.Channel, oldLayer: CasparCG.ILayerBase, content: any, isRemove: boolean, isBg?: boolean) => {
 			if (!options) options = {}
@@ -746,7 +768,9 @@ export class CasparCGState0 {
 
 		}
 
-		let bundledCmds: {[bundleGroup: string]: any} = {}
+		let bundledCmds: {
+			[bundleGroup: string]: Array<IAMCPCommandWithContext>
+		} = {}
 
 		// Added/updated things:
 		_.each(newState.channels, (newChannel: CasparCG.Channel, channelKey) => {
@@ -764,8 +788,8 @@ export class CasparCGState0 {
 					// console.log('old layer')
 					// console.log(oldLayer)
 
-					let cmd
-					let additionalCmds: Array<any> = []
+					let cmd: IAMCPCommandWithContext | IAMCPCommandVOWithContext | undefined
+					let additionalCmds: Array<IAMCPCommandWithContext> = []
 
 					let diff = this.compareAttrs(newLayer,oldLayer,['content'])
 
@@ -882,24 +906,30 @@ export class CasparCGState0 {
 
 								// let oldSeek = this.calculateSeek(newChannel, oldChannel, ol, oldTimeSincePlay)
 								const newMedia = this.compareAttrs(nl, ol, ['media'])
-
-								const seekIsSmall: boolean = this.frames2Time(Math.abs(oldSeek - seek), newChannel, oldChannel) < this.minTimeSincePlay
+								const seekDiff = this.frames2Time(Math.abs(oldSeek - seek), newChannel, oldChannel)
+								const seekIsSmall: boolean = seekDiff < this.minTimeSincePlay
 
 								if (
 									!newMedia &&
 									ol.pauseTime &&
 									seekIsSmall
 								) {
-									cmd = new AMCP.ResumeCommand(options as any)
+									// cmd = new AMCP.ResumeCommand(options as any)
+									cmd = this.addContext(
+										new AMCP.ResumeCommand(options as any),
+										`Seek is small (${seekDiff})`,
+										nl
+									)
 								} else {
-									if (
-										(newMedia && diffMediaFromBg) ||
-										(inPoint || 0) !== (oldInPoint || 0) || // temporary, until CALL IN command works satisfactory in CasparCG
-										(length || 0) !== (oldLength || 0) || // temporary, until CALL LENGTH command works satisfactory in CasparCG
-										!seekIsSmall ||
-										looping !== oldLooping || // temporary, until CALL LOOP works satisfactory in CasparCG
-										channelLayout !== oldChannelLayout // temporary, until CallCommand with channelLayout is implemented in ccg-conn (& casparcg?)
-									) {
+									let context: string = ''
+									if ((newMedia && diffMediaFromBg))			context = `Media diff from bg: ${newMedia} (${diffMediaFromBg})`
+									if ((inPoint || 0) !== (oldInPoint || 0))	context = `Inpoints diff (${inPoint}, ${oldInPoint})` // temporary, until CALL IN command works satisfactory in CasparCG
+									if ((length || 0) !== (oldLength || 0))		context = `Length diff (${length}, ${length})` // temporary, until CALL LENGTH command works satisfactory in CasparCG
+									if (!seekIsSmall)							context = `Seek diff is large (${seekDiff})`
+									if (looping !== oldLooping)					context = `Looping diff (${looping}, ${oldLooping})` // temporary, until CALL LOOP works satisfactory in CasparCG
+									if (channelLayout !== oldChannelLayout)		context = `ChannelLayout diff (${channelLayout}, ${oldChannelLayout})` // temporary, until CallCommand with channelLayout is implemented in ccg-conn (& casparcg?)
+									if (context) {
+										context += ` (${diff})`
 										// console.log('oldTimeSincePlay', oldTimeSincePlay)
 										// console.log('ol', ol)
 										// console.log('oldUseLayer', oldUseLayer)
@@ -912,59 +942,91 @@ export class CasparCGState0 {
 										// console.log('looping !== oldLooping', looping !== oldLooping, looping ,oldLooping)
 										// console.log('channelLayout !== oldChannelLayout', channelLayout !== oldChannelLayout, channelLayout, oldChannelLayout)
 
-										cmd = new AMCP.PlayCommand(this.fixPlayCommandInput(_.extend(options, {
-											clip: (nl.media || '').toString(),
-											in: inPoint,
-											seek: seek,
-											length: length || undefined,
-											loop: !!nl.looping,
-											channelLayout: nl.channelLayout
-										})))
+										cmd = this.addContext(
+											new AMCP.PlayCommand(this.fixPlayCommandInput(_.extend(options, {
+												clip: (nl.media || '').toString(),
+												in: inPoint,
+												seek: seek,
+												length: length || undefined,
+												loop: !!nl.looping,
+												channelLayout: nl.channelLayout
+											}))),
+											context,
+											nl
+										)
 
 									} else if (!diffMediaFromBg) {
-										cmd = new AMCP.PlayCommand({ ...options })
+										cmd = this.addContext(
+											new AMCP.PlayCommand({ ...options }),
+											`No Media diff from bg (${nl.media})`,
+											nl
+										)
 									} else {
 
-										cmd = new AMCP.ResumeCommand(options as any)
+										cmd = this.addContext(
+											new AMCP.ResumeCommand(options as any),
+											`Resume otherwise (${diff})`,
+											nl
+										)
 										if (oldSeek !== seek && !nl.looping) {
-											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
-												seek: seek
-											})))
+											additionalCmds.push(this.addContext(
+												new AMCP.CallCommand(_.extend(options, {
+													seek: seek
+												})),
+												`Seek diff (${seek}, ${oldSeek})`,
+												nl
+											))
 										}
 										if (ol.looping !== nl.looping) {
-											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
-												loop: !!nl.looping
-											})))
+											additionalCmds.push(this.addContext(
+												new AMCP.CallCommand(_.extend(options, {
+													loop: !!nl.looping
+												})),
+												`Loop diff (${nl.looping}, ${ol.looping})`,
+												nl
+											))
 										}
 										if (ol.channelLayout !== nl.channelLayout) {
-											additionalCmds.push(new AMCP.CallCommand(_.extend(options, {
-												channelLayout: !!nl.channelLayout
-											})))
+											additionalCmds.push(this.addContext(
+												new AMCP.CallCommand(_.extend(options, {
+													channelLayout: !!nl.channelLayout
+												})),
+												`ChannelLayout diff (${nl.channelLayout}, ${ol.channelLayout})`,
+												nl
+											))
 										}
 									}
 								}
 
 							} else {
+								let context: string = ''
+								if (_.isNull(timeSincePlay)) context = `TimeSincePlay is null (${diff})`
+								if ((nl.pauseTime && timeSincePlay! > this.minTimeSincePlay)) context = `pauseTime is set (${diff})`
 								if (
-									(
-										_.isNull(timeSincePlay) ||
-										(nl.pauseTime && timeSincePlay! > this.minTimeSincePlay)
-									) &&
+									context &&
 									!this.compareAttrs(nl, ol ,['media'])
 								) {
-									cmd = new AMCP.PauseCommand(_.extend(options, {
-										pauseTime: nl.pauseTime
-									}))
+									cmd = this.addContext(
+										new AMCP.PauseCommand(_.extend(options, {
+											pauseTime: nl.pauseTime
+										})),
+										context,
+										nl
+									)
 								} else {
-									cmd = new AMCP.LoadCommand(_.extend(options,{
-										clip: (nl.media || '').toString(),
-										seek: seek,
-										length: length || undefined,
-										loop: !!nl.looping,
+									cmd = this.addContext(
+										new AMCP.LoadCommand(_.extend(options,{
+											clip: (nl.media || '').toString(),
+											seek: seek,
+											length: length || undefined,
+											loop: !!nl.looping,
 
-										pauseTime: nl.pauseTime,
-										channelLayout: nl.channelLayout
-									}))
+											pauseTime: nl.pauseTime,
+											channelLayout: nl.channelLayout
+										})),
+										`Load / Pause otherwise (${diff})`,
+										nl
+									)
 
 								}
 							}
@@ -973,23 +1035,31 @@ export class CasparCGState0 {
 							let nl: CasparCG.ITemplateLayer = newLayer as CasparCG.ITemplateLayer
 							// let ol: CF.ITemplateLayer = oldLayer as CF.ITemplateLayer
 
-							cmd = new AMCP.CGAddCommand(_.extend(options,{
-								templateName: 	(nl.media || '').toString(),
-								flashLayer: 	1,
-								playOnLoad:		nl.playing,
-								data: 			nl.templateData || undefined,
+							cmd = this.addContext(
+								new AMCP.CGAddCommand(_.extend(options,{
+									templateName: 	(nl.media || '').toString(),
+									flashLayer: 	1,
+									playOnLoad:		nl.playing,
+									data: 			nl.templateData || undefined,
 
-								cgStop: 		nl.cgStop,
-								templateType: 	nl.templateType
-							}))
+									cgStop: 		nl.cgStop,
+									templateType: 	nl.templateType
+								})),
+								`Add Template (${diff})`,
+								nl
+							)
 						} else if (newLayer.content === CasparCG.LayerContentType.HTMLPAGE && newLayer.media !== null) {
 
 							let nl: CasparCG.IHtmlPageLayer = newLayer as CasparCG.IHtmlPageLayer
 							// let ol: CF.ITemplateLayer = oldLayer as CF.ITemplateLayer
 
-							cmd = new AMCP.PlayHtmlPageCommand(_.extend(options,{
-								url: 	(nl.media || '').toString()
-							}))
+							cmd = this.addContext(
+								new AMCP.PlayHtmlPageCommand(_.extend(options,{
+									url: 	(nl.media || '').toString()
+								})),
+								`Add HTML page (${diff})`,
+								nl
+							)
 						} else if (newLayer.content === CasparCG.LayerContentType.INPUT && newLayer.media !== null) {
 							let nl: CasparCG.IInputLayer = newLayer as CasparCG.IInputLayer
 							// let ol: CF.IInputLayer = oldLayer as CF.IInputLayer
@@ -1007,7 +1077,11 @@ export class CasparCGState0 {
 									channelLayout: channelLayout || undefined
 								})
 
-								cmd = new AMCP.PlayDecklinkCommand(options as any)
+								cmd = this.addContext(
+									new AMCP.PlayDecklinkCommand(options as any),
+									`Add decklink (${diff})`,
+									nl
+								)
 							}
 						} else if (newLayer.content === CasparCG.LayerContentType.ROUTE) {
 							let nl: CasparCG.IRouteLayer = newLayer as CasparCG.IRouteLayer
@@ -1041,9 +1115,17 @@ export class CasparCGState0 {
 
 									// cmd = new AMCP.CustomCommand(options as any)
 
-									cmd = new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode, channelLayout: nl.route.channelLayout }))
+									cmd = this.addContext(
+										new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode, channelLayout: nl.route.channelLayout })),
+										`Route: diffMediaFromBg (${diff})`,
+										nl
+									)
 								} else {
-									cmd = new AMCP.PlayCommand({ ...options })
+									cmd = this.addContext(
+										new AMCP.PlayCommand({ ...options }),
+										`Route: no diffMediaFromBg (${diff})`,
+										nl
+									)
 								}
 							}
 						} else if (newLayer.content === CasparCG.LayerContentType.RECORD && newLayer.media !== null) {
@@ -1068,7 +1150,11 @@ export class CasparCGState0 {
 
 							})
 
-							cmd = new AMCP.CustomCommand(options as any)
+							cmd = this.addContext(
+								new AMCP.CustomCommand(options as any),
+								`Record (${diff})`,
+								nl
+							)
 
 						} else if (newLayer.content === CasparCG.LayerContentType.FUNCTION) {
 							let nl: CasparCG.IFunctionLayer = newLayer as CasparCG.IFunctionLayer
@@ -1078,7 +1164,8 @@ export class CasparCGState0 {
 									channel: options.channel,
 									layer: options.layer,
 									_commandName: 'executeFunction',
-									media: nl.media, // used for diffing
+									// @ts-ignore special: nl.media used for diffing
+									media: nl.media,
 									externalFunction: true
 
 								}
@@ -1097,42 +1184,69 @@ export class CasparCGState0 {
 										functionLayer: nl
 									})
 								}
+								cmd = this.addContext(
+									cmd as any,
+									`Function (${diff})`,
+									nl
+								)
 							}
 
 						} else {
 							// oldLayer had content, newLayer had no content, newLayer has a nextup
-							if (oldLayer.content === CasparCG.LayerContentType.MEDIA
-								|| oldLayer.content === CasparCG.LayerContentType.INPUT
-								|| oldLayer.content === CasparCG.LayerContentType.HTMLPAGE
-								|| oldLayer.content === CasparCG.LayerContentType.ROUTE) { // || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
-								cmd = new AMCP.StopCommand(options as any)
+							if (
+								oldLayer.content === CasparCG.LayerContentType.MEDIA ||
+								oldLayer.content === CasparCG.LayerContentType.INPUT ||
+								oldLayer.content === CasparCG.LayerContentType.HTMLPAGE ||
+								oldLayer.content === CasparCG.LayerContentType.ROUTE
+								// || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
+							) {
 								if (_.isObject(oldLayer.media) && (oldLayer.media as TransitionObject).outTransition) {
-									cmd = new AMCP.PlayCommand({
-										channel: oldChannel.channelNo,
-										layer: oldLayer.layerNo,
-										clip: 'empty',
-										...(new Transition((oldLayer.media as TransitionObject).outTransition).getOptions(oldChannel.fps))
-									})
+									cmd = this.addContext(
+										new AMCP.PlayCommand({
+											channel: oldChannel.channelNo,
+											layer: oldLayer.layerNo,
+											clip: 'empty',
+											...(new Transition((oldLayer.media as TransitionObject).outTransition).getOptions(oldChannel.fps))
+										}),
+										`No new content, but old outTransition (${newLayer.content})`,
+										oldLayer
+									)
+								} else {
+									cmd = this.addContext(
+										new AMCP.StopCommand(options as any),
+										`No new content (${newLayer.content})`,
+										oldLayer
+									)
 								}
 							} else if (oldLayer.content === CasparCG.LayerContentType.TEMPLATE) {
 								let ol = oldLayer as CasparCG.ITemplateLayer
 								if (ol.cgStop) {
-									cmd = new AMCP.CGStopCommand({ ...options as any, flashLayer: 1 })
+									cmd = this.addContext(
+										new AMCP.CGStopCommand({ ...options as any, flashLayer: 1 }),
+										`No new content, but old cgCgStop (${newLayer.content})`,
+										oldLayer
+									)
 								} else {
-									cmd = new AMCP.ClearCommand(options as any)
+									cmd = this.addContext(
+										new AMCP.ClearCommand(options as any),
+										`No new content (${newLayer.content})`,
+										oldLayer
+									)
 								}
 							} else if (oldLayer.content === CasparCG.LayerContentType.RECORD) {
-								cmd = new AMCP.CustomCommand({
-									layer: oldLayer.layerNo,
-									channel: oldChannel.channelNo,
+								cmd = this.addContext(
+									new AMCP.CustomCommand({
+										layer: oldLayer.layerNo,
+										channel: oldChannel.channelNo,
+										command: (
+											'REMOVE ' + oldChannel.channelNo + ' FILE'
+										),
+										customCommand: 'remove file'
+									}),
+									`No new content (${newLayer.content})`,
+									oldLayer
 
-									command: (
-										'REMOVE ' + oldChannel.channelNo + ' FILE'
-									),
-
-									customCommand: 'remove file'
-
-								})
+								)
 							}
 						}
 					} else if (newLayer.content === CasparCG.LayerContentType.TEMPLATE) {
@@ -1154,10 +1268,14 @@ export class CasparCGState0 {
 
 							if (nl.content === CasparCG.LayerContentType.TEMPLATE) {
 
-								cmd = new AMCP.CGUpdateCommand(_.extend(options,{
-									flashLayer: 1,
-									data: nl.templateData || undefined
-								}))
+								cmd = this.addContext(
+									new AMCP.CGUpdateCommand(_.extend(options,{
+										flashLayer: 1,
+										data: nl.templateData || undefined
+									})),
+									`Updated templateData`,
+									newLayer
+								)
 							}
 						}
 					}
@@ -1202,11 +1320,15 @@ export class CasparCGState0 {
 							// make sure the layer is empty before trying to load something new
 							// this prevents weird behaviour when files don't load correctly
 							if (oldLayer.nextUp) {
-								additionalCmds.push(new AMCP.LoadbgCommand({
-									channel: newChannel.channelNo,
-									layer: newLayer.layerNo,
-									clip: 'EMPTY'
-								}))
+								additionalCmds.push(this.addContext(
+									new AMCP.LoadbgCommand({
+										channel: newChannel.channelNo,
+										layer: newLayer.layerNo,
+										clip: 'EMPTY'
+									}),
+									`Old nextUp was set, clear it first (${oldLayer.nextUp.media})`,
+									newLayer
+								))
 							}
 
 							setTransition(options, newChannel, newLayer, newLayer.nextUp.media, false, true)
@@ -1222,37 +1344,53 @@ export class CasparCGState0 {
 									channelLayout
 								} = this.calculatePlayAttributes(0, layer, newChannel, oldChannel)
 
-								additionalCmds.push(new AMCP.LoadbgCommand(_.extend(options, this.fixPlayCommandInput({
-									auto: layer.auto,
-									clip: (newLayer.nextUp.media || '').toString(),
-									in: inPoint,
-									seek: seek,
-									length: length || undefined,
-									loop: !!looping,
-									channelLayout: channelLayout
-								}))))
+								additionalCmds.push(this.addContext(
+									new AMCP.LoadbgCommand(_.extend(options, this.fixPlayCommandInput({
+										auto: layer.auto,
+										clip: (newLayer.nextUp.media || '').toString(),
+										in: inPoint,
+										seek: seek,
+										length: length || undefined,
+										loop: !!looping,
+										channelLayout: channelLayout
+									}))),
+									`Nextup media (${newLayer.nextUp.media})`,
+									newLayer
+								))
 
 							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) {
 								const layer = newLayer.nextUp as CasparCG.IHtmlPageLayer & CasparCG.NextUp
-								additionalCmds.push(new AMCP.LoadHtmlPageBgCommand(_.extend(options, {
-									auto: layer.auto,
-									url: (newLayer.nextUp.media || '').toString()
-								})))
+								additionalCmds.push(this.addContext(
+									new AMCP.LoadHtmlPageBgCommand(_.extend(options, {
+										auto: layer.auto,
+										url: (newLayer.nextUp.media || '').toString()
+									})),
+									`Nextup HTML (${newLayer.nextUp.media})`,
+									newLayer
+								))
 							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.INPUT) {
 								const layer = newLayer.nextUp as CasparCG.IInputLayer & CasparCG.NextUp
-								additionalCmds.push(new AMCP.LoadDecklinkBgCommand(_.extend(options, {
-									auto: layer.auto,
-									device: layer.input.device,
-									format: layer.input.format,
-									channelLayout: layer.input.channelLayout
-								})))
+								additionalCmds.push(this.addContext(
+									new AMCP.LoadDecklinkBgCommand(_.extend(options, {
+										auto: layer.auto,
+										device: layer.input.device,
+										format: layer.input.format,
+										channelLayout: layer.input.channelLayout
+									})),
+									`Nextup Decklink (${layer.input.device})`,
+									newLayer
+								))
 							} else if (newLayer.nextUp.content === CasparCG.LayerContentType.ROUTE) {
 								const layer = newLayer.nextUp as CasparCG.IRouteLayer & CasparCG.NextUp
-								additionalCmds.push(new AMCP.LoadRouteBgCommand(_.extend(options, {
-									route: layer.route,
-									mode: layer.mode,
-									channelLayout: layer.route ? layer.route.channelLayout : undefined
-								})))
+								additionalCmds.push(this.addContext(
+									new AMCP.LoadRouteBgCommand(_.extend(options, {
+										route: layer.route,
+										mode: layer.mode,
+										channelLayout: layer.route ? layer.route.channelLayout : undefined
+									})),
+									`Nextup Route (${layer.route})`,
+									newLayer
+								))
 							}
 						} else if (this.compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {
 							// this.log('REMOVE BG')
@@ -1274,55 +1412,64 @@ export class CasparCGState0 {
 						oldLayer: CF.Layer,
 						attr: string,
 						attrs?: Array<string>
-					): boolean => {
+					): string | null => {
 						let val0: any = Mixer.getValue((layer.mixer || {})[attr])
 						let val1: any = Mixer.getValue((oldLayer.mixer || {})[attr])
 
 						if (attrs) {
-							let areSame = true
+							let diff: string | null = null
 
 							if (val0 && val1) {
 								_.each(attrs,function (a) {
-									if (val0[a] !== val1[a]) areSame = false
+									if (val0[a] !== val1[a]) {
+										diff = `${a}: ${val0[a]} != ${val1[a]}`
+									}
 								})
+								return diff
 							} else {
 								if (
 									(val0 && !val1)
 									||
 									(!val0 && val1)
 								) {
-									areSame = false
+									return `${attr}: ${val0} != ${val1}`
 								}
 							}
-							return areSame
 						} else if (_.isObject(val0) || _.isObject(val1)) {
 							// @todo is this used anymore?
-							if (_.isObject(val0) && _.isObject(val1)) {
+							if (!_.isObject(val0) && _.isObject(val1)) {
+								return `${attr}: val0 is object, but val1 is not`
+							} else if (_.isObject(val0) && !_.isObject(val1)) {
+								return `${attr}: val1 is object, but val0 is not`
+							} else {
 								let omitAttrs = ['inTransition','changeTransition','outTransition']
 
-								return _.isEqual(
-									_.omit(val0,omitAttrs),
-									_.omit(val1,omitAttrs)
-								)
-							} else return false
+								const omit0 = _.omit(val0,omitAttrs)
+								const omit1 = _.omit(val1,omitAttrs)
+								if (!_.isEqual(omit0, omit1)) {
+									return `${attr}: ${val0} != ${val1}`
+								}
+							}
 						} else {
-							return (val0 === val1)
+							if (val0 !== val1) {
+								return `${attr}: ${val0} !== ${val1}`
+							}
 						}
+						return null
 					}
 
 					let pushMixerCommand = (attr: string, Command: any, subValue?: Array<string> | string) => {
-
-						if (!compareMixerValues(
-								newLayer,
-								oldLayer,
-								attr,
-								(
-									_.isArray(subValue)
-									? subValue
-									: undefined
-								)
+						let diff = compareMixerValues(
+							newLayer,
+							oldLayer,
+							attr,
+							(
+								_.isArray(subValue)
+								? subValue
+								: undefined
 							)
-						) {
+						)
+						if (diff) {
 
 							this.log('pushMixerCommand change: ' + attr, subValue, 'oldLayer.mixer', oldLayer.mixer, 'newLayer.mixer', newLayer.mixer, 'oldAttr', Mixer.getValue((oldLayer.mixer || {})[attr]), 'newAttr', Mixer.getValue((newLayer.mixer || {})[attr]))
 
@@ -1371,10 +1518,18 @@ export class CasparCGState0 {
 
 								options['defer'] = true
 
-								bundledCmds[key].push(new Command(options))
+								bundledCmds[key].push(this.addContext(
+									new Command(options) as CommandNS.IAMCPCommand,
+									`Bundle: ${diff}`,
+									newLayer
+								))
 
 							} else {
-								additionalCmds.push(new Command(options))
+								additionalCmds.push(this.addContext(
+									new Command(options) as CommandNS.IAMCPCommand,
+									`Mixer: ${diff}`,
+									newLayer || oldLayer
+								))
 							}
 						}
 					}
@@ -1399,17 +1554,23 @@ export class CasparCGState0 {
 					if (newLayer.layerNo === -1) pushMixerCommand('straightAlpha',AMCP.MixerStraightAlphaOutputCommand,'straight_alpha_output')
 					pushMixerCommand('volume',AMCP.MixerVolumeCommand,'volume')
 
-					let cmds: Array<any> = []
+					let cmds: Array<IAMCPCommandVOWithContext> = []
 					if (cmd) {
-						if (cmd['serialize']) {
-							cmds.push(cmd['serialize']())
+						if (this.isIAMCPCommand(cmd)) {
+							cmds.push({
+								...cmd.serialize(),
+								context: cmd.context
+							})
 						} else {
 							cmds.push(cmd)
 						}
 					}
 
-					_.each(additionalCmds, (addCmd: any) => {
-						cmds.push(addCmd.serialize())
+					_.each(additionalCmds, (addCmd) => {
+						cmds.push({
+							...addCmd.serialize(),
+							context: addCmd.context
+						})
 					})
 
 					commands.push({ cmds: cmds, additionalLayerState: newLayer })
@@ -1430,7 +1591,7 @@ export class CasparCGState0 {
 
 					// console.log('oldLayer', oldLayer)
 					// console.log('newLayer', newLayer)
-					let cmds: CommandNS.IAMCPCommand[] = []
+					let cmds: IAMCPCommandWithContext[] = []
 					if (!newLayer.content && oldLayer.content && newLayer.content !== CasparCG.LayerContentType.NOTHING) {
 
 						this.log('REMOVE ' + channelKey + '-' + layerKey + ': ' + oldLayer.content + ' | ' + newLayer.content)
@@ -1441,29 +1602,35 @@ export class CasparCGState0 {
 							this.log('NOCLEAR is set!')
 						} else {
 							let noCommand = false
-							let cmd: CommandNS.IAMCPCommand | null = null
+							let cmd: IAMCPCommandWithContext | null = null
 
 							if (oldLayer.content === CasparCG.LayerContentType.RECORD) {
 
-								cmd = new AMCP.CustomCommand({
-									layer: oldLayer.layerNo,
-									channel: oldChannel.channelNo,
+								cmd = this.addContext(
 
-									command: (
-										'REMOVE ' + oldChannel.channelNo + ' FILE'
-									),
-
-									customCommand: 'remove file'
-
-								})
+									new AMCP.CustomCommand({
+										layer: oldLayer.layerNo,
+										channel: oldChannel.channelNo,
+										command: (
+											'REMOVE ' + oldChannel.channelNo + ' FILE'
+										),
+										customCommand: 'remove file'
+									}),
+									`Old was recording`,
+									oldLayer
+								)
 							} else if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
 								if (oldLayer.media.outTransition) {
-									cmd = new AMCP.PlayCommand({
-										channel: oldChannel.channelNo,
-										layer: oldLayer.layerNo,
-										clip: 'empty',
-										...(new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps))
-									})
+									cmd = this.addContext(
+										new AMCP.PlayCommand({
+											channel: oldChannel.channelNo,
+											layer: oldLayer.layerNo,
+											clip: 'empty',
+											...(new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps))
+										}),
+										`Old was media and has outTransition`,
+										oldLayer
+									)
 								}
 							}
 
@@ -1472,11 +1639,15 @@ export class CasparCGState0 {
 									let ol: CF.ITemplateLayer = oldLayer as CF.ITemplateLayer
 
 									if (ol.cgStop) {
-										cmd = new AMCP.CGStopCommand({
-											channel: oldChannel.channelNo,
-											layer: oldLayer.layerNo,
-											flashLayer: 1
-										})
+										cmd = this.addContext(
+											new AMCP.CGStopCommand({
+												channel: oldChannel.channelNo,
+												layer: oldLayer.layerNo,
+												flashLayer: 1
+											}),
+											`Old was template and had cgStop`,
+											oldLayer
+										)
 
 									}
 								}
@@ -1500,10 +1671,14 @@ export class CasparCGState0 {
 								if (!cmd) {
 
 									// ClearCommand:
-									cmd = new AMCP.ClearCommand({
-										channel: oldChannel.channelNo,
-										layer: oldLayer.layerNo
-									})
+									cmd = this.addContext(
+										new AMCP.ClearCommand({
+											channel: oldChannel.channelNo,
+											layer: oldLayer.layerNo
+										}),
+										`Clear old stuff`,
+										oldLayer
+									)
 
 								}
 
@@ -1527,20 +1702,24 @@ export class CasparCGState0 {
 							// console.log('oldLayer', oldLayer)
 							// console.log('newLayer', newLayer)
 
-							let cmd = new AMCP.LoadbgCommand({
-								channel: oldChannel.channelNo,
-								layer: oldLayer.layerNo,
-								clip: 'EMPTY'
-							})
-							if (cmd) {
-								cmds.push(cmd)
-							}
+							cmds.push(this.addContext(
+								new AMCP.LoadbgCommand({
+									channel: oldChannel.channelNo,
+									layer: oldLayer.layerNo,
+									clip: 'EMPTY'
+								}),
+								`Clear only old nextUp`,
+								oldLayer
+							))
 						}
 					}
 					if (cmds.length) {
 						commands.push({
 							cmds: _.map(cmds, (cmd) => {
-								return cmd.serialize()
+								return {
+									...cmd.serialize(),
+									context: cmd.context
+								}
 							})
 						})
 					}
@@ -1549,21 +1728,28 @@ export class CasparCGState0 {
 		})
 
 		// bundled commands:
-		_.each(bundledCmds, (bundle: any) => {
+		_.each(bundledCmds, (bundle) => {
 
 			let channels = _.uniq(_.pluck(bundle,'channel'))
 
-			_.each(channels,(channel) => {
+			_.each(channels, (channel) => {
 
-				bundle.push(new AMCP.MixerCommitCommand({
-					channel: Number(channel)
-				}))
+				bundle.push(this.addContext(
+					new AMCP.MixerCommitCommand({
+						channel: Number(channel)
+					}),
+					`Bundle commit`,
+					null
+				))
 			})
 
-			let cmds: any = []
+			let cmds: IAMCPCommandVOWithContext[] = []
 
-			_.each(bundle, (cmd: any) => {
-				cmds.push(cmd.serialize())
+			_.each(bundle, (cmd) => {
+				cmds.push({
+					...cmd.serialize(),
+					context: cmd.context
+				})
 			})
 
 			commands.push({ cmds: cmds })
@@ -1802,6 +1988,22 @@ export class CasparCGState0 {
 			) difference = '' + (!!obj0) + ' t/f ' + (!!obj1)
 		}
 		return difference
+	}
+	private addContext<T extends CommandNS.IAMCPCommandVO> (cmd: T, context: string, layer: CasparCG.ILayerBase | null): IAMCPCommandVOWithContext
+	private addContext<T extends CommandNS.IAMCPCommand> (cmd: T, context: string, layer: CasparCG.ILayerBase | null): IAMCPCommandWithContext
+	private addContext<T extends CommandNS.IAMCPCommandVO & CommandNS.IAMCPCommand> (cmd: T, context: string, layer: CasparCG.ILayerBase | null): IAMCPCommandVOWithContext & IAMCPCommandWithContext {
+		// @ts-ignore
+		cmd.context = {
+			context,
+			layerId: layer ? layer.id : ''
+		}
+		return cmd as any
+	}
+	private isIAMCPCommand (cmd: any): cmd is CommandNS.IAMCPCommand {
+		return (
+			cmd &&
+			typeof cmd.serialize === 'function'
+		)
 	}
 }
 export class CasparCGState extends CasparCGState0 {
