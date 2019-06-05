@@ -15,6 +15,7 @@ test('test StateObjectStorage', () => {
 				fps: 50,
 				layers: {
 					'10': {
+						id: 'abc',
 						layerNo: 1,
 						content: CasparCG.LayerContentType.NOTHING
 
@@ -43,6 +44,7 @@ test('test externalStorage', () => {
 				fps: 50,
 				layers: {
 					'55': {
+						id: 'abc',
 						layerNo: 1,
 						content: CasparCG.LayerContentType.NOTHING
 
