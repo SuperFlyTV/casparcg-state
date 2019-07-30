@@ -871,6 +871,7 @@ export class CasparCGState0 {
 							let timeSincePlay = this.getTimeSincePlay(nl, currentTime)
 
 							let diffMediaFromBg = this.compareAttrs(nl, ol.nextUp, ['media'])
+							if (options.transition) diffMediaFromBg = 'transition' // transition changed, so we need to reset
 
 							const oldUseLayer: CF.IMediaLayer | CasparCG.NextUp = (
 								ol.nextUp && !diffMediaFromBg ? // current media is the one in background
