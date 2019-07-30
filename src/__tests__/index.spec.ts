@@ -723,7 +723,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 		layerNo: 10
 	}
 	cc = getDiff(c, targetState)
-	expect(cc).toHaveLength(2)
+	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
 		channel: 1,
