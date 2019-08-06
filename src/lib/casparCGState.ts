@@ -1951,12 +1951,12 @@ export class CasparCGState0 {
 			if (name === 'playTime') {
 				return Math.abs(a - b) > this.minTimeSincePlay
 			} else {
-				return a !== b
+				return !_.isEqual(a, b)
 			}
 		}
 		if (obj0 && obj1) {
 			if (strict) {
-				_.each(attrs,(a: string) => {
+				_.each(attrs, (a: string) => {
 					if (obj0[a].valueOf() !== obj1[a].valueOf()) {
 						diff0 = obj0[a].valueOf() + ''
 						diff1 = obj1[a].valueOf() + ''
