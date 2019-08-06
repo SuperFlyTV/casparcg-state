@@ -1124,7 +1124,7 @@ test('Play a looping video, pause & resume it', () => {
 		noClear: false
 	})).serialize())
 })
-test.only('Play a template, update the data & cgstop', () => {
+test('Play a template, update the data & cgstop', () => {
 	let c = getCasparCGState()
 	initState(c)
 
