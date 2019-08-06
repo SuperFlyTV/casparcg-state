@@ -709,12 +709,14 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	// Load a video file (paused):
 
 	let layer10: CasparCG.IEmptyLayer = {
+		id: 'e0',
 		content: CasparCG.LayerContentType.NOTHING,
 		media: '',
 		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
+			id: 'n0',
 			content: CasparCG.LayerContentType.MEDIA,
 			layerNo: 10,
 			media: 'AMB',
@@ -727,7 +729,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.LoadbgCommand({
+	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
 		channel: 1,
 		layer: 10,
 		auto: false,
@@ -739,6 +741,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 
 	// Start playing it:
 	channel1.layers['10'] = {
+		id: 'v0',
 		content: CasparCG.LayerContentType.MEDIA,
 		media: new CasparCG.TransitionObject('AMB', {
 			inTransition: new CasparCG.Transition('sting', 'mask_file')
@@ -750,7 +753,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.PlayCommand({
+	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
 		channel: 1,
 		layer: 10,
 		clip: 'AMB',
@@ -769,7 +772,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toEqual(fixCommand(new AMCP.ClearCommand({
+	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
 		channel: 1,
 		layer: 10
 	})).serialize())
