@@ -1124,7 +1124,7 @@ test('Play a looping video, pause & resume it', () => {
 		noClear: false
 	})).serialize())
 })
-test('Play a template, update the data & cgstop', () => {
+test.only('Play a template, update the data & cgstop', () => {
 	let c = getCasparCGState()
 	initState(c)
 
@@ -1139,7 +1139,7 @@ test('Play a template, update the data & cgstop', () => {
 		media: 'myTemplate',
 		playing: true,
 		templateType: 'html',
-		templateData: 'myData',
+		templateData: { var0: 'one' },
 		cgStop: true,
 		playTime: 990 // 10s ago
 	}
@@ -1155,13 +1155,22 @@ test('Play a template, update the data & cgstop', () => {
 		templateName: 'myTemplate',
 		templateType: 'html',
 		cgStop: true,
-		data: 'myData',
+		data: { var0: 'one' },
 		flashLayer: 1,
 		playOnLoad: true
 	})).serialize())
 
+	// update, with the same data
+	layer10.templateData = { var0: 'one' },
+	// try again, to ensure no new commands are sent:
+	console.log('---------------------------------')
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(0)
+	console.log('==================================')
+
 	// Update the data:
-	layer10.templateData = 'new data'
+	layer10.templateData = { var0: 'two' },
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1169,7 +1178,7 @@ test('Play a template, update the data & cgstop', () => {
 	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.CGUpdateCommand({
 		channel: 1,
 		layer: 10,
-		data: 'new data',
+		data: { var0: 'two' },
 		flashLayer: 1
 	})).serialize())
 
