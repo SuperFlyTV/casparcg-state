@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.8.0...1.8.1) (2019-08-07)
+
+
+### Bug Fixes
+
+* add support for deep object comparison ([b0b2138](https://github.com/SuperFlyTV/casparcg-state/commit/b0b2138))
+* changing clip transition after load ([d7fefcc](https://github.com/SuperFlyTV/casparcg-state/commit/d7fefcc))
+* downgrade gh-pages due to bug in 2.1.0 ([22260b1](https://github.com/SuperFlyTV/casparcg-state/commit/22260b1))
+
 ## [1.8.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.7.0...1.8.0) (2019-06-05)
 
 
