@@ -107,10 +107,10 @@ export class Transition implements CasparCG.ITransition {
 					transition: 'sting',
 					stingTransitionProperties: {
 						maskFile: this.maskFile,
-						delay: this.delay,
+						delay: Math.round(this.delay * (fps || 50)),
 						overlayFile: this.overlayFile,
-						audioFadeStart: this.audioFadeStart,
-						audioFadeDuration: this.audioFadeDuration
+						audioFadeStart: this.audioFadeStart ? Math.round(this.audioFadeStart * (fps || 50)) : undefined,
+						audioFadeDuration: this.audioFadeDuration ? Math.round(this.audioFadeDuration * (fps || 50)) : undefined
 					}
 				}
 			}
@@ -137,9 +137,9 @@ export class Transition implements CasparCG.ITransition {
 
 				if (this.maskFile) str += `MASK="${this.maskFile}" `
 				if (this.overlayFile) str += `OVERLAY="${this.overlayFile}" `
-				if (this.delay) str += `TRIGGER_POINT="${this.delay}" `
-				if (this.audioFadeStart) str += `AUDIO_FADE_START="${this.audioFadeStart}" `
-				if (this.audioFadeDuration) str += `AUDIO_FADE_DURATION="${this.audioFadeDuration}" `
+				if (this.delay) str += `TRIGGER_POINT="${Math.round(this.delay * (fps || 50))}" `
+				if (this.audioFadeStart) str += `AUDIO_FADE_START="${Math.round(this.audioFadeStart * (fps || 50))}" `
+				if (this.audioFadeDuration) str += `AUDIO_FADE_DURATION="${Math.round(this.audioFadeDuration * (fps || 50))}" `
 
 				str = str.substr(0, str.length - 1) + ')'
 
@@ -175,10 +175,10 @@ export class Transition implements CasparCG.ITransition {
 					this.overlayFile = command._objectParams.stingOverlayFilename
 				}
 				if (command._objectParams.audioFadeStart) {
-					this.audioFadeStart = command._objectParams.audioFadeStart
+					this.audioFadeStart = command._objectParams.audioFadeStart / (fps || 50)
 				}
 				if (command._objectParams.audioFadeDuration) {
-					this.audioFadeDuration = command._objectParams.audioFadeDuration
+					this.audioFadeDuration = command._objectParams.audioFadeDuration / (fps || 50)
 				}
 			} else {
 				if (command._objectParams.transition) {
