@@ -49,7 +49,7 @@ export class Transition implements CasparCG.ITransition {
 	audioFadeStart?: number = 0
 	audioFadeDuration?: number = 0
 
-	constructor (typeOrTransition?: string | object, durationOrMaskFile?: number | string, easingOrDelay?: string | number, directionOrOverlayFile?: string, audioFadeStart?: number, audioFadeDuration? : number) {
+	constructor (typeOrTransition?: string | object, durationOrMaskFile?: number | string, easingOrDelay?: string | number, directionOrOverlayFile?: string, audioFadeStart?: number, audioFadeDuration?: number) {
 		let type: string
 
 		if (_.isObject(typeOrTransition)) {
