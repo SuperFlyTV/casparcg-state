@@ -9,16 +9,16 @@
     "unlink": "npm unlink casparcg-connection",
     "info": "npm-scripts-info",
     "build": "trash dist && yarn build:main",
-    "build:main": "tsc -p tsconfig.json",
-    "lint": "tslint --project tsconfig.jest.json --config tslint.json",
+    "build:main": "tsc -p tsconfig.build.json",
+    "lint": "tslint --project tsconfig.json --config tslint.json",
     "unit": "jest",
     "test": "yarn lint && yarn unit",
     "test:integration": "yarn lint && jest --config=jest-integration.config.js",
     "watch": "jest --watch",
-    "cov": "jest --coverage; opn coverage/lcov-report/index.html",
-    "cov-open": "opn coverage/lcov-report/index.html",
-    "send-coverage": "jest && codecov",
-    "docs": "yarn docs:html && opn docs/index.html",
+    "cov": "jest --coverage; open-cli coverage/lcov-report/index.html",
+    "cov-open": "open-cli coverage/lcov-report/index.html",
+    "send-coverage": "codecov",
+    "docs": "yarn docs:html && open-cli docs/index.html",
     "docs:test": "yarn docs:html",
     "docs:html": "typedoc src/index.ts --excludePrivate --mode file --theme minimal --out docs",
     "docs:json": "typedoc --mode file --json docs/typedoc.json src/index.ts",
@@ -26,7 +26,6 @@
     "changelog": "standard-version",
     "release": "yarn reset && yarn test && yarn docs:publish && yarn changelog",
     "reset": "git clean -dfx && git reset --hard && yarn",
-    "ci": "yarn test && yarn docs:test",
     "validate:dependencies": "yarn audit && yarn license-validate",
     "license-validate": "node-license-validator -p -d --allow-licenses MIT BSD BSD-3-Clause ISC Apache"
   },
@@ -52,7 +51,6 @@
     "changelog": "Bump package.json version, update CHANGELOG.md, tag a release",
     "release": "Clean, build, test, publish docs, and prepare release (a one-step publish process). Updates versions and creates git commits.",
     "reset": "Delete all untracked files and reset the repo to the last commit",
-    "ci": "Test script for running by the CI (CircleCI)",
     "validate:dependencies": "Scan dependencies for vulnerabilities and check licenses",
     "license-validate": "Validate licenses for dependencies."
   },
@@ -67,6 +65,12 @@
   "directories": {
     "lib": "src/"
   },
+  "files": [
+    "/dist",
+    "/CHANGELOG.md",
+    "/README.md",
+    "/LICENSE"
+  ],
   "contributors": [
     {
       "name": "Johan Nyman",
@@ -105,11 +109,11 @@
   },
   "devDependencies": {
     "@types/jest": "^24.0.13",
-    "@types/node": "^8.0.10",
+    "@types/node": "^12.12.5",
     "@types/underscore": "^1.9.2",
-    "codecov": "3.5.0",
+    "codecov": "^3.5.0",
     "cryptiles": "^4.1.3",
-    "gh-pages": "2.0.1",
+    "gh-pages": "^2.1.1",
     "jest": "^24.8.0",
     "merge": "^1.2.1",
     "mkdirp": "^0.5.1",
