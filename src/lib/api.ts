@@ -160,7 +160,8 @@ export namespace CasparCG { // for external use
 		maskFile?: string
 		delay?: number
 		overlayFile?: string
-
+		audioFadeStart?: number
+		audioFadeDuration?: number
 	}
 	export class TransitionObject extends TransitionObject0 {}
 	export class Transition extends Transition0 {}

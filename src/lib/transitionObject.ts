@@ -46,8 +46,10 @@ export class Transition implements CasparCG.ITransition {
 	maskFile: string = ''
 	delay: number = 0
 	overlayFile: string = ''
+	audioFadeStart?: number = 0
+	audioFadeDuration?: number = 0
 
-	constructor (typeOrTransition?: string | object, durationOrMaskFile?: number | string, easingOrDelay?: string | number, directionOrOverlayFile?: string) {
+	constructor (typeOrTransition?: string | object, durationOrMaskFile?: number | string, easingOrDelay?: string | number, directionOrOverlayFile?: string, audioFadeStart?: number, audioFadeDuration?: number) {
 		let type: string
 
 		if (_.isObject(typeOrTransition)) {
@@ -59,6 +61,8 @@ export class Transition implements CasparCG.ITransition {
 			durationOrMaskFile = isSting ? t.maskFile : t.duration
 			easingOrDelay = isSting ? t.delay : t.easing
 			directionOrOverlayFile = isSting ? t.overlayFile : t.direction
+			audioFadeStart = isSting ? t.audioFadeStart : undefined
+			audioFadeDuration = isSting ? t.audioFadeDuration : undefined
 		} else {
 			type = typeOrTransition as string
 		}
@@ -77,6 +81,12 @@ export class Transition implements CasparCG.ITransition {
 			if (directionOrOverlayFile) {
 				this.overlayFile = directionOrOverlayFile
 			}
+			if (audioFadeStart) {
+				this.audioFadeStart = audioFadeStart
+			}
+			if (audioFadeDuration) {
+				this.audioFadeDuration = audioFadeDuration
+			}
 		} else {
 			if (durationOrMaskFile) {
 				this.duration = durationOrMaskFile as number
@@ -92,6 +102,18 @@ export class Transition implements CasparCG.ITransition {
 
 	getOptions (fps?: number) {
 		if ((this.type + '').match(/sting/i)) {
+			if (this.audioFadeStart || this.audioFadeDuration) {
+				return {
+					transition: 'sting',
+					stingTransitionProperties: {
+						maskFile: this.maskFile,
+						delay: Math.round(this.delay * (fps || 50)),
+						overlayFile: this.overlayFile,
+						audioFadeStart: this.audioFadeStart ? Math.round(this.audioFadeStart * (fps || 50)) : undefined,
+						audioFadeDuration: this.audioFadeDuration ? Math.round(this.audioFadeDuration * (fps || 50)) : undefined
+					}
+				}
+			}
 			return {
 				transition: 'sting',
 				stingMaskFilename: this.maskFile,
@@ -110,6 +132,19 @@ export class Transition implements CasparCG.ITransition {
 
 	getString (fps?: number): string {
 		if ((this.type + '').match(/sting/i)) {
+			if (this.audioFadeStart || this.audioFadeDuration) {
+				let str = 'STING ('
+
+				if (this.maskFile) str += `MASK="${this.maskFile}" `
+				if (this.overlayFile) str += `OVERLAY="${this.overlayFile}" `
+				if (this.delay) str += `TRIGGER_POINT="${Math.round(this.delay * (fps || 50))}" `
+				if (this.audioFadeStart) str += `AUDIO_FADE_START="${Math.round(this.audioFadeStart * (fps || 50))}" `
+				if (this.audioFadeDuration) str += `AUDIO_FADE_DURATION="${Math.round(this.audioFadeDuration * (fps || 50))}" `
+
+				str = str.substr(0, str.length - 1) + ')'
+
+				return str
+			}
 			return [
 				'STING',
 				this.maskFile,
@@ -138,6 +173,12 @@ export class Transition implements CasparCG.ITransition {
 				}
 				if (command._objectParams.stingOverlayFilename) {
 					this.overlayFile = command._objectParams.stingOverlayFilename
+				}
+				if (command._objectParams.audioFadeStart) {
+					this.audioFadeStart = command._objectParams.audioFadeStart / (fps || 50)
+				}
+				if (command._objectParams.audioFadeDuration) {
+					this.audioFadeDuration = command._objectParams.audioFadeDuration / (fps || 50)
 				}
 			} else {
 				if (command._objectParams.transition) {
