@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.8.1...1.9.0) (2019-11-07)
+
+
+### Features
+
+* sting transition fade parameters ([00a0713](https://github.com/SuperFlyTV/casparcg-state/commit/00a0713d9d56b95b6b0553189182a00ee55ebcae))
+* update ci to run for node 8,10,12 ([51b7047](https://github.com/SuperFlyTV/casparcg-state/commit/51b7047eb3bcf860c4ed58d225d87b4ab41ac58a))
+
+
+### Bug Fixes
+
+* sting transition fade parameters are in ms ([a2ded80](https://github.com/SuperFlyTV/casparcg-state/commit/a2ded808b768524db9a402789302325737c7a218))
+
 ### [1.8.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.8.0...1.8.1) (2019-08-07)
 
 
