@@ -63,6 +63,7 @@ export namespace CasparCG { // for external use
 		pauseTime?: number | null
 
 		channelLayout?: string
+		clearOn404?: boolean
 
 		nextUp?: NextUp | null
 	}
