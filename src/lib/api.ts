@@ -105,6 +105,7 @@ export namespace CasparCG { // for external use
 			channel: number,
 			layer?: number | null
 			channelLayout?: string
+			framesDelay?: number
 		}
 		mode?: 'BACKGROUND' | 'NEXT'
 		playing: true

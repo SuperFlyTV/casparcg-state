@@ -1529,7 +1529,8 @@ test('Play a Route', () => {
 
 		route: {
 			channel: 2,
-			layer: 15
+			layer: 15,
+			framesDelay: 5
 		},
 		playTime: null // playtime is null because it is irrelevant
 	}
@@ -1540,7 +1541,7 @@ test('Play a Route', () => {
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15')
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15 FRAMES_DELAY 5')
 
 	// Remove the layer
 	delete channel1.layers['10']

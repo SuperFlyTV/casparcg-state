@@ -1092,6 +1092,7 @@ export class CasparCGState0 {
 								let routeChannel: number 		= nl.route.channel
 								let routeLayer: number | null	= nl.route.layer || null
 								let mode = nl.mode
+								let framesDelay: number | null = nl.route.framesDelay || null
 								let diffMediaFromBg = !olNext || !olNext.route ? true : !(nl.route.channel === olNext.route.channel && nl.route.layer === olNext.route.layer)
 
 								if (diffMediaFromBg) {
@@ -1105,6 +1106,7 @@ export class CasparCGState0 {
 												routeChannel +
 												(routeLayer ? '-' + routeLayer : '') +
 											(mode ? ' ' + mode : '') +
+											(framesDelay ? ' FRAMES_DELAY ' + framesDelay : '') +
 											(
 												options.transition
 												? (' ' + new Transition().fromCommand({ _objectParams: options }, oldChannel.fps).getString(oldChannel.fps))
@@ -1117,7 +1119,7 @@ export class CasparCGState0 {
 									// cmd = new AMCP.CustomCommand(options as any)
 
 									cmd = this.addContext(
-										new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode, channelLayout: nl.route.channelLayout })),
+										new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode, channelLayout: nl.route.channelLayout, framesDelay })),
 										`Route: diffMediaFromBg (${diff})`,
 										nl
 									)
@@ -1387,7 +1389,8 @@ export class CasparCGState0 {
 									new AMCP.LoadRouteBgCommand(_.extend(options, {
 										route: layer.route,
 										mode: layer.mode,
-										channelLayout: layer.route ? layer.route.channelLayout : undefined
+										channelLayout: layer.route ? layer.route.channelLayout : undefined,
+										framesDelay: layer.route ? layer.route.framesDelay : undefined
 									})),
 									`Nextup Route (${layer.route})`,
 									newLayer
