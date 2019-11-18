@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.10.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.9.1...1.10.0) (2019-11-18)
+
+
+### Features
+
+* clear_on_404 parameter for PLAY/LOAD/LOADBG ([8ef80e7](https://github.com/SuperFlyTV/casparcg-state/commit/8ef80e78f8b4539f504ba676a70d558f5783157a))
+
 ### [1.9.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.9.0...1.9.1) (2019-11-07)
 
 ## [1.9.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.8.1...1.9.0) (2019-11-07)
