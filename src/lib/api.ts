@@ -48,6 +48,7 @@ export namespace CasparCG { // for external use
 		length?: number	// The duration the video will be playing until freezing (or looping)
 		seek?: number // If set, the time in the video the video starts playing at
 		channelLayout?: string
+		delay?: number
 	}
 	export interface IMediaLayer extends ILayerBase {
 		content: LayerContentType.MEDIA
@@ -105,8 +106,8 @@ export namespace CasparCG { // for external use
 			channel: number,
 			layer?: number | null
 			channelLayout?: string
-			framesDelay?: number
 		}
+		delay?: number
 		mode?: 'BACKGROUND' | 'NEXT'
 		playing: true
 		playTime: null

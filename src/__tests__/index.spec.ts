@@ -1529,9 +1529,9 @@ test('Play a Route', () => {
 
 		route: {
 			channel: 2,
-			layer: 15,
-			framesDelay: 5
+			layer: 15
 		},
+		delay: 20,
 		playTime: null // playtime is null because it is irrelevant
 	}
 	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
@@ -1541,7 +1541,7 @@ test('Play a Route', () => {
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15 FRAMES_DELAY 5')
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15 FRAMES_DELAY 1')
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -1581,6 +1581,7 @@ test('Loadbg a Route, then play it', () => {
 				channel: 2,
 				layer: 15
 			},
+			delay: 100,
 			auto: false
 		},
 		playTime: null // playtime is null because it is irrelevant
@@ -1598,6 +1599,8 @@ test('Loadbg a Route, then play it', () => {
 			channel: 2,
 			layer: 15
 		},
+		channelLayout: undefined,
+		framesDelay: 5,
 		mode: undefined,
 		noClear: false
 	})).serialize())
@@ -1613,8 +1616,9 @@ test('Loadbg a Route, then play it', () => {
 		route: {
 			channel: 2,
 			layer: 15
-		}
-	}
+		},
+		delay: 100
+	} as any
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -1624,7 +1628,8 @@ test('Loadbg a Route, then play it', () => {
 		route: {
 			channel: 2,
 			layer: 15
-		}
+		},
+		framesDelay: 5
 	})).serialize())
 
 	// Remove the layer

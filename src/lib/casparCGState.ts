@@ -501,6 +501,9 @@ export class CasparCGState0 {
 					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
 				}
 
+				layer.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
+				layer.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) : undefined
+
 				layer.playing = true
 				layer.playTime = null // playtime is irrelevant
 			} else if (cmdName === 'LoadRouteBgCommand') {
@@ -526,6 +529,9 @@ export class CasparCGState0 {
 					channel: 	parseInt(routeChannel, 10),
 					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
 				}
+
+				layer.nextUp.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) : undefined
+				layer.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
 			} else if (cmdName === 'MixerAnchorCommand') {
 				setMixerState(channel, command,'anchor',['x','y'])
 			} else if (cmdName === 'MixerBlendCommand') {
@@ -1092,8 +1098,8 @@ export class CasparCGState0 {
 								let routeChannel: number 		= nl.route.channel
 								let routeLayer: number | null	= nl.route.layer || null
 								let mode = nl.mode
-								let framesDelay: number | null = nl.route.framesDelay || null
-								let diffMediaFromBg = !olNext || !olNext.route ? true : !(nl.route.channel === olNext.route.channel && nl.route.layer === olNext.route.layer)
+								let framesDelay: number | undefined = nl.delay ? Math.floor(this.time2Frames(nl.delay, newChannel, oldChannel) / 1000) : undefined
+								let diffMediaFromBg = !olNext || !olNext.route ? true : !(nl.route.channel === olNext.route.channel && nl.route.layer === olNext.route.layer && nl.delay === olNext.delay)
 
 								if (diffMediaFromBg) {
 									_.extend(options,{
@@ -1390,7 +1396,7 @@ export class CasparCGState0 {
 										route: layer.route,
 										mode: layer.mode,
 										channelLayout: layer.route ? layer.route.channelLayout : undefined,
-										framesDelay: layer.route ? layer.route.framesDelay : undefined
+										framesDelay: layer.delay ? Math.floor(this.time2Frames(layer.delay, newChannel, oldChannel) / 1000) : undefined
 									})),
 									`Nextup Route (${layer.route})`,
 									newLayer
