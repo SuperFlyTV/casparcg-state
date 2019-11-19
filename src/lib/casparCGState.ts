@@ -501,6 +501,9 @@ export class CasparCGState0 {
 					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
 				}
 
+				layer.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
+				layer.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) * 1000 : undefined
+
 				layer.playing = true
 				layer.playTime = null // playtime is irrelevant
 			} else if (cmdName === 'LoadRouteBgCommand') {
@@ -526,6 +529,9 @@ export class CasparCGState0 {
 					channel: 	parseInt(routeChannel, 10),
 					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
 				}
+
+				layer.nextUp.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) : undefined
+				layer.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
 			} else if (cmdName === 'MixerAnchorCommand') {
 				setMixerState(channel, command,'anchor',['x','y'])
 			} else if (cmdName === 'MixerBlendCommand') {
@@ -835,6 +841,7 @@ export class CasparCGState0 {
 							setDefaultValue([nl.route, ol.route], ['channel','layer'], 0)
 
 							diff = this.compareAttrs(nl.route, ol.route,['channel','layer','channelLayout'])
+							if (!diff) diff = this.compareAttrs(nl, ol, ['delay'])
 
 						} else if (newLayer.content === CasparCG.LayerContentType.RECORD) {
 							let nl: CasparCG.IRecordLayer = newLayer as CasparCG.IRecordLayer
@@ -1103,7 +1110,8 @@ export class CasparCGState0 {
 								let routeChannel: number 		= nl.route.channel
 								let routeLayer: number | null	= nl.route.layer || null
 								let mode = nl.mode
-								let diffMediaFromBg = !olNext || !olNext.route ? true : !(nl.route.channel === olNext.route.channel && nl.route.layer === olNext.route.layer)
+								let framesDelay: number | undefined = nl.delay ? Math.floor(this.time2Frames(nl.delay, newChannel, oldChannel) / 1000) : undefined
+								let diffMediaFromBg = !olNext || !olNext.route ? true : !(nl.route.channel === olNext.route.channel && nl.route.layer === olNext.route.layer && nl.delay === olNext.delay)
 
 								if (diffMediaFromBg) {
 									_.extend(options,{
@@ -1116,6 +1124,7 @@ export class CasparCGState0 {
 												routeChannel +
 												(routeLayer ? '-' + routeLayer : '') +
 											(mode ? ' ' + mode : '') +
+											(framesDelay ? ' FRAMES_DELAY ' + framesDelay : '') +
 											(
 												options.transition
 												? (' ' + new Transition().fromCommand({ _objectParams: options }, oldChannel.fps).getString(oldChannel.fps))
@@ -1128,7 +1137,7 @@ export class CasparCGState0 {
 									// cmd = new AMCP.CustomCommand(options as any)
 
 									cmd = this.addContext(
-										new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode, channelLayout: nl.route.channelLayout })),
+										new AMCP.PlayRouteCommand(_.extend(options, { route: nl.route, mode, channelLayout: nl.route.channelLayout, framesDelay })),
 										`Route: diffMediaFromBg (${diff})`,
 										nl
 									)
@@ -1399,7 +1408,8 @@ export class CasparCGState0 {
 									new AMCP.LoadRouteBgCommand(_.extend(options, {
 										route: layer.route,
 										mode: layer.mode,
-										channelLayout: layer.route ? layer.route.channelLayout : undefined
+										channelLayout: layer.route ? layer.route.channelLayout : undefined,
+										framesDelay: layer.delay ? Math.floor(this.time2Frames(layer.delay, newChannel, oldChannel) / 1000) : undefined
 									})),
 									`Nextup Route (${layer.route})`,
 									newLayer
