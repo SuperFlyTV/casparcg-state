@@ -502,7 +502,7 @@ export class CasparCGState0 {
 				}
 
 				layer.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
-				layer.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) : undefined
+				layer.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) * 1000 : undefined
 
 				layer.playing = true
 				layer.playTime = null // playtime is irrelevant
@@ -841,6 +841,7 @@ export class CasparCGState0 {
 							setDefaultValue([nl.route, ol.route], ['channel','layer'], 0)
 
 							diff = this.compareAttrs(nl.route, ol.route,['channel','layer','channelLayout'])
+							if (!diff) diff = this.compareAttrs(nl, ol, ['delay'])
 
 						} else if (newLayer.content === CasparCG.LayerContentType.RECORD) {
 							let nl: CasparCG.IRecordLayer = newLayer as CasparCG.IRecordLayer

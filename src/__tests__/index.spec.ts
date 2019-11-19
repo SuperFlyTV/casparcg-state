@@ -1543,6 +1543,15 @@ test('Play a Route', () => {
 
 	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15 FRAMES_DELAY 1')
 
+	// Change the delay
+	layer10.delay = 40
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://2-15 FRAMES_DELAY 2')
+
 	// Remove the layer
 	delete channel1.layers['10']
 
