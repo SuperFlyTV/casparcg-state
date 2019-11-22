@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.11.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.10.0...1.11.0) (2019-11-22)
+
+
+### Features
+
+* add support for FRAMES_DELAY on route ([f1904af](https://github.com/SuperFlyTV/casparcg-state/commit/f1904afb4796861c5a230b4993e576240ecf285f))
+
+
+### Bug Fixes
+
+* change framesDelay to delay and use miliseconds instead of frames ([97b69b0](https://github.com/SuperFlyTV/casparcg-state/commit/97b69b037fc89f8d91283f9978bfc10a6c561b47))
+* changed routing delay triggers new command ([343b170](https://github.com/SuperFlyTV/casparcg-state/commit/343b170912ef57f13032a2af6af5f3ae220b583b))
+
 ## [1.10.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.9.1...1.10.0) (2019-11-18)
 
 
