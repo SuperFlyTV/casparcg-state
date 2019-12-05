@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.0...1.11.1) (2019-12-05)
+
+
+### Bug Fixes
+
+* do not send empty LOAD command ([7e66cd1](https://github.com/SuperFlyTV/casparcg-state/commit/7e66cd1387b1c58c1c26a38b46e3a47bd05ab89f))
+
 ## [1.11.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.10.0...1.11.0) (2019-11-22)
 
 
