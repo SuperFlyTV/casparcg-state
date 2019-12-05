@@ -1023,29 +1023,20 @@ export class CasparCGState0 {
 										nl
 									)
 								} else {
+									cmd = this.addContext(
+										new AMCP.LoadCommand(_.extend(options,{
+											clip: (nl.media || '').toString(),
+											seek: seek,
+											length: length || undefined,
+											loop: !!nl.looping,
 
-									if (diffMediaFromBg) {
-										cmd = this.addContext(
-											new AMCP.LoadCommand(_.extend(options,{
-												clip: (nl.media || '').toString(),
-												seek: seek,
-												length: length || undefined,
-												loop: !!nl.looping,
-
-												pauseTime: nl.pauseTime,
-												channelLayout: nl.channelLayout,
-												clearOn404: nl.clearOn404
-											})),
-											`Load / Pause otherwise (${diff})`,
-											nl
-										)
-									} else {
-										cmd = this.addContext(
-											new AMCP.LoadCommand({ ...options }),
-											`No Media diff from bg (${nl.media})`,
-											nl
-										)
-									}
+											pauseTime: nl.pauseTime,
+											channelLayout: nl.channelLayout,
+											clearOn404: nl.clearOn404
+										})),
+										`Load / Pause otherwise (${diff})`,
+										nl
+									)
 
 								}
 							}
