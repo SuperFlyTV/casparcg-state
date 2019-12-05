@@ -1,5 +1,5 @@
 import * as _ from 'underscore'
-import { CasparCG } from './api'
+import { ITransition } from './api'
 
 export class TransitionObject {
 	_transition: true
@@ -36,7 +36,7 @@ export class TransitionObject {
 		return ''
 	}
 }
-export class Transition implements CasparCG.ITransition {
+export class Transition implements ITransition {
 
 	type: string = 'mix'
 	duration: number = 0
@@ -53,7 +53,7 @@ export class Transition implements CasparCG.ITransition {
 		let type: string
 
 		if (_.isObject(typeOrTransition)) {
-			let t: CasparCG.ITransition = typeOrTransition as CasparCG.ITransition
+			let t: ITransition = typeOrTransition as ITransition
 			type = t.type as string
 
 			const isSting = (type + '').match(/sting/i)
