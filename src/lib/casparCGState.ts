@@ -1318,17 +1318,17 @@ export class CasparCGState0 {
 						}
 
 						if (!bgDiff && newLayer.nextUp && oldLayer.nextUp && (typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')) {
-							let nl = newLayer.nextUp.media
-							let ol = oldLayer.nextUp.media
+							let nMedia = newLayer.nextUp.media
+							let oMedia = oldLayer.nextUp.media
 
-							bgDiff = this.compareAttrs(nl, ol ,['inTransition','outTransition','changeTransition'])
+							bgDiff = this.compareAttrs(nMedia, oMedia ,['inTransition','outTransition','changeTransition'])
 						}
 
 						if (!bgDiff && newLayer.nextUp && newLayer.nextUp.route && oldLayer.nextUp && oldLayer.nextUp.route) {
-							let nl = newLayer.nextUp.route
-							let ol = oldLayer.nextUp.route
+							let nRoute = newLayer.nextUp.route
+							let oRoute = oldLayer.nextUp.route
 
-							bgDiff = this.compareAttrs(nl, ol, ['channel', 'layer'])
+							bgDiff = this.compareAttrs(nRoute, oRoute, ['channel', 'layer'])
 
 							if (!bgDiff) {
 								setDefaultValue([newLayer.nextUp, oldLayer.nextUp], ['auto'], false)
