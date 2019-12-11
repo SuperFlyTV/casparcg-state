@@ -1307,14 +1307,23 @@ export class CasparCGState0 {
 					let bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['content'])
 					let noClear = false
 					if (!bgDiff && newLayer.nextUp) {
-						if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
+						if ((newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) ||
+							(newLayer.nextUp.content === CasparCG.LayerContentType.INPUT) ||
+							(newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) ||
+							(newLayer.nextUp.content === CasparCG.LayerContentType.ROUTE)) {
+							let nl: CasparCG.IMediaLayer = newLayer.nextUp as any
+							let ol: CF.IMediaLayer = oldLayer.nextUp as any
+							setDefaultValue([nl, ol], ['auto'], false)
+							bgDiff = this.compareAttrs(nl, ol ,['auto','channelLayout'])
+						}
+
+						if (!bgDiff && newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
 							let nl: CasparCG.IMediaLayer = newLayer.nextUp as CasparCG.IMediaLayer
 							let ol: CF.IMediaLayer = oldLayer.nextUp as CF.IMediaLayer
 
 							setDefaultValue([nl, ol], ['seek', 'length', 'inPoint'], 0)
-							setDefaultValue([nl, ol], ['auto'], false)
 
-							bgDiff = this.compareAttrs(nl, ol ,['media','seek','length','inPoint','auto','channelLayout'])
+							bgDiff = this.compareAttrs(nl, ol ,['media','seek','length','inPoint'])
 						}
 
 						if (!bgDiff && newLayer.nextUp && oldLayer.nextUp && (typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')) {
@@ -1329,11 +1338,6 @@ export class CasparCGState0 {
 							let oRoute = oldLayer.nextUp.route
 
 							bgDiff = this.compareAttrs(nRoute, oRoute, ['channel', 'layer'])
-
-							if (!bgDiff) {
-								setDefaultValue([newLayer.nextUp, oldLayer.nextUp], ['auto'], false)
-								bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['auto'])
-							}
 
 							if (bgDiff) noClear = true
 						}
