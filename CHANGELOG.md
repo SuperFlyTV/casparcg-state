@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.11.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.1...1.11.2) (2019-12-11)
+
+
+### Bug Fixes
+
+* state mutations when nextUp routes change ([#41](https://github.com/SuperFlyTV/casparcg-state/issues/41)) ([7c6b605](https://github.com/SuperFlyTV/casparcg-state/commit/7c6b605bd8590b378dd3078f273b9f002b6f191b))
+
 ### [1.11.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.0...1.11.1) (2019-12-05)
 
 
