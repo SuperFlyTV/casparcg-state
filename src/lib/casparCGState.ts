@@ -525,7 +525,7 @@ export class CasparCGState0 {
 					routeLayer = route.layer
 				}
 
-				layer.route = {
+				layer.nextUp.route = {
 					channel: 	parseInt(routeChannel, 10),
 					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
 				}
@@ -1305,6 +1305,7 @@ export class CasparCGState0 {
 					// console.log('oldLayer', oldLayer.nextUp)
 					// console.log('newLayer', newLayer.nextUp)
 					let bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['content'])
+					let noClear = false
 					if (!bgDiff && newLayer.nextUp) {
 						if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
 							let nl: CasparCG.IMediaLayer = newLayer.nextUp as CasparCG.IMediaLayer
@@ -1321,6 +1322,20 @@ export class CasparCGState0 {
 							let ol = oldLayer.nextUp.media
 
 							bgDiff = this.compareAttrs(nl, ol ,['inTransition','outTransition','changeTransition'])
+						}
+
+						if (!bgDiff && newLayer.nextUp && newLayer.nextUp.route && oldLayer.nextUp && oldLayer.nextUp.route) {
+							let nl = newLayer.nextUp.route
+							let ol = oldLayer.nextUp.route
+
+							bgDiff = this.compareAttrs(nl, ol, ['channel', 'layer'])
+
+							if (!bgDiff) {
+								setDefaultValue([newLayer.nextUp, oldLayer.nextUp], ['auto'], false)
+								bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['auto'])
+							}
+
+							if (bgDiff) noClear = true
 						}
 
 						// @todo: should this be a flag set during the generation of the commands for the foreground layer? /Balte
@@ -1340,7 +1355,7 @@ export class CasparCGState0 {
 
 							// make sure the layer is empty before trying to load something new
 							// this prevents weird behaviour when files don't load correctly
-							if (oldLayer.nextUp && !(oldLayer.nextUp as CasparCG.IMediaLayer).clearOn404) {
+							if (oldLayer.nextUp && !(oldLayer.nextUp as CasparCG.IMediaLayer).clearOn404 && !noClear) {
 								additionalCmds.push(this.addContext(
 									new AMCP.LoadbgCommand({
 										channel: newChannel.channelNo,
