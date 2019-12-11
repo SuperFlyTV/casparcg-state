@@ -525,7 +525,7 @@ export class CasparCGState0 {
 					routeLayer = route.layer
 				}
 
-				layer.route = {
+				layer.nextUp.route = {
 					channel: 	parseInt(routeChannel, 10),
 					layer: 		(routeLayer ? parseInt(routeLayer, 10) : null)
 				}
@@ -1023,20 +1023,29 @@ export class CasparCGState0 {
 										nl
 									)
 								} else {
-									cmd = this.addContext(
-										new AMCP.LoadCommand(_.extend(options,{
-											clip: (nl.media || '').toString(),
-											seek: seek,
-											length: length || undefined,
-											loop: !!nl.looping,
 
-											pauseTime: nl.pauseTime,
-											channelLayout: nl.channelLayout,
-											clearOn404: nl.clearOn404
-										})),
-										`Load / Pause otherwise (${diff})`,
-										nl
-									)
+									if (diffMediaFromBg) {
+										cmd = this.addContext(
+											new AMCP.LoadCommand(_.extend(options,{
+												clip: (nl.media || '').toString(),
+												seek: seek,
+												length: length || undefined,
+												loop: !!nl.looping,
+
+												pauseTime: nl.pauseTime,
+												channelLayout: nl.channelLayout,
+												clearOn404: nl.clearOn404
+											})),
+											`Load / Pause otherwise (${diff})`,
+											nl
+										)
+									} else {
+										cmd = this.addContext(
+											new AMCP.LoadCommand({ ...options }),
+											`No Media diff from bg (${nl.media})`,
+											nl
+										)
+									}
 
 								}
 							}
@@ -1296,22 +1305,41 @@ export class CasparCGState0 {
 					// console.log('oldLayer', oldLayer.nextUp)
 					// console.log('newLayer', newLayer.nextUp)
 					let bgDiff = this.compareAttrs(newLayer.nextUp, oldLayer.nextUp, ['content'])
+					let noClear = false
 					if (!bgDiff && newLayer.nextUp) {
-						if (newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
+						if ((newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) ||
+							(newLayer.nextUp.content === CasparCG.LayerContentType.INPUT) ||
+							(newLayer.nextUp.content === CasparCG.LayerContentType.HTMLPAGE) ||
+							(newLayer.nextUp.content === CasparCG.LayerContentType.ROUTE)) {
+							let nl: CasparCG.IMediaLayer = newLayer.nextUp as any
+							let ol: CF.IMediaLayer = oldLayer.nextUp as any
+							setDefaultValue([nl, ol], ['auto'], false)
+							bgDiff = this.compareAttrs(nl, ol ,['auto','channelLayout'])
+						}
+
+						if (!bgDiff && newLayer.nextUp.content === CasparCG.LayerContentType.MEDIA) {
 							let nl: CasparCG.IMediaLayer = newLayer.nextUp as CasparCG.IMediaLayer
 							let ol: CF.IMediaLayer = oldLayer.nextUp as CF.IMediaLayer
 
 							setDefaultValue([nl, ol], ['seek', 'length', 'inPoint'], 0)
-							setDefaultValue([nl, ol], ['auto'], false)
 
-							bgDiff = this.compareAttrs(nl, ol ,['media','seek','length','inPoint','auto','channelLayout'])
+							bgDiff = this.compareAttrs(nl, ol ,['media','seek','length','inPoint'])
 						}
 
 						if (!bgDiff && newLayer.nextUp && oldLayer.nextUp && (typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')) {
-							let nl = newLayer.nextUp.media
-							let ol = oldLayer.nextUp.media
+							let nMedia = newLayer.nextUp.media
+							let oMedia = oldLayer.nextUp.media
 
-							bgDiff = this.compareAttrs(nl, ol ,['inTransition','outTransition','changeTransition'])
+							bgDiff = this.compareAttrs(nMedia, oMedia ,['inTransition','outTransition','changeTransition'])
+						}
+
+						if (!bgDiff && newLayer.nextUp && newLayer.nextUp.route && oldLayer.nextUp && oldLayer.nextUp.route) {
+							let nRoute = newLayer.nextUp.route
+							let oRoute = oldLayer.nextUp.route
+
+							bgDiff = this.compareAttrs(nRoute, oRoute, ['channel', 'layer'])
+
+							if (bgDiff) noClear = true
 						}
 
 						// @todo: should this be a flag set during the generation of the commands for the foreground layer? /Balte
@@ -1331,7 +1359,7 @@ export class CasparCGState0 {
 
 							// make sure the layer is empty before trying to load something new
 							// this prevents weird behaviour when files don't load correctly
-							if (oldLayer.nextUp && !(oldLayer.nextUp as CasparCG.IMediaLayer).clearOn404) {
+							if (oldLayer.nextUp && !(oldLayer.nextUp as CasparCG.IMediaLayer).clearOn404 && !noClear) {
 								additionalCmds.push(this.addContext(
 									new AMCP.LoadbgCommand({
 										channel: newChannel.channelNo,

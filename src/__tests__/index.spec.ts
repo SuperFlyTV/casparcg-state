@@ -1564,6 +1564,76 @@ test('Play a Route', () => {
 	})).serialize())
 
 })
+test('Loadbg a Route, then change it', () => {
+	let c = getCasparCGState()
+	initState(c)
+
+	let cc: any
+
+	// Play a template file:
+
+	let layer10: CasparCG.IEmptyLayer = {
+		id: 'e0',
+		content: CasparCG.LayerContentType.NOTHING,
+		media: '',
+		pauseTime: 0,
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			id: 'n0',
+			content: CasparCG.LayerContentType.ROUTE,
+			layerNo: 10,
+			media: 'route',
+
+			route: {
+				channel: 2,
+				layer: 15
+			},
+			auto: false
+		},
+		playTime: null // playtime is null because it is irrelevant
+	}
+	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
+		channel: 1,
+		layer: 10,
+		route: {
+			channel: 2,
+			layer: 15
+		},
+		channelLayout: undefined,
+		mode: undefined,
+		noClear: false
+	})).serialize())
+
+	expect(c.ccgState.getState().channels['1'].layers['10'].nextUp).toBeTruthy()
+	expect(c.ccgState.getState().channels['1'].layers['10'].nextUp!.route).toMatchObject({
+		channel: 2,
+		layer: 15
+	});
+
+	(layer10.nextUp!.route as any).layer = 20
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
+		channel: 1,
+		layer: 10,
+		route: {
+			channel: 2,
+			layer: 20
+		},
+		channelLayout: undefined,
+		mode: undefined,
+		noClear: false
+	})).serialize())
+})
 test('Loadbg a Route, then play it', () => {
 	let c = getCasparCGState()
 	initState(c)
