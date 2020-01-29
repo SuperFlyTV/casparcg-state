@@ -107,23 +107,23 @@ export class Transition implements CasparCG.ITransition {
 					transition: 'sting',
 					stingTransitionProperties: {
 						maskFile: this.maskFile,
-						delay: Math.round(this.delay * (fps || 50)),
+						delay: this.time2Frames(this.delay, fps),
 						overlayFile: this.overlayFile,
-						audioFadeStart: this.audioFadeStart ? Math.round(this.audioFadeStart * (fps || 50)) : undefined,
-						audioFadeDuration: this.audioFadeDuration ? Math.round(this.audioFadeDuration * (fps || 50)) : undefined
+						audioFadeStart: this.audioFadeStart ? this.time2Frames(this.audioFadeStart, fps) : undefined,
+						audioFadeDuration: this.audioFadeDuration ? this.time2Frames(this.audioFadeDuration, fps) : undefined
 					}
 				}
 			}
 			return {
 				transition: 'sting',
 				stingMaskFilename: this.maskFile,
-				stingDelay: Math.round(this.delay * (fps || 50)),
+				stingDelay: this.time2Frames(this.delay, fps),
 				stingOverlayFilename: this.overlayFile
 			}
 		} else {
 			return {
 				transition: this.type,
-				transitionDuration: Math.round(this.duration * (fps || 50)),
+				transitionDuration: this.time2Frames(this.duration, fps),
 				transitionEasing: this.easing,
 				transitionDirection: this.direction
 			}
@@ -137,9 +137,9 @@ export class Transition implements CasparCG.ITransition {
 
 				if (this.maskFile) str += `MASK="${this.maskFile}" `
 				if (this.overlayFile) str += `OVERLAY="${this.overlayFile}" `
-				if (this.delay) str += `TRIGGER_POINT="${Math.round(this.delay * (fps || 50))}" `
-				if (this.audioFadeStart) str += `AUDIO_FADE_START="${Math.round(this.audioFadeStart * (fps || 50))}" `
-				if (this.audioFadeDuration) str += `AUDIO_FADE_DURATION="${Math.round(this.audioFadeDuration * (fps || 50))}" `
+				if (this.delay) str += `TRIGGER_POINT="${this.time2Frames(this.delay, fps || 50)}" `
+				if (this.audioFadeStart) str += `AUDIO_FADE_START="${this.time2Frames(this.audioFadeStart, fps || 50)}" `
+				if (this.audioFadeDuration) str += `AUDIO_FADE_DURATION="${this.time2Frames(this.audioFadeDuration, fps || 50)}" `
 
 				str = str.substr(0, str.length - 1) + ')'
 
@@ -148,13 +148,13 @@ export class Transition implements CasparCG.ITransition {
 			return [
 				'STING',
 				this.maskFile,
-				Math.round(this.delay * (fps || 50)),
+				this.time2Frames(this.delay, fps || 50),
 				this.overlayFile
 			].join(' ')
 		} else {
 			return [
 				this.type,
-				Math.round(this.duration * (fps || 50)),
+				this.time2Frames(this.duration, fps || 50),
 				this.easing,
 				this.direction
 			].join(' ')
@@ -169,23 +169,23 @@ export class Transition implements CasparCG.ITransition {
 					this.maskFile = command._objectParams.stingMaskFilename
 				}
 				if (command._objectParams.stingDelay) {
-					this.delay = command._objectParams.stingDelay / (fps || 50)
+					this.delay = this.frames2Time(command._objectParams.stingDelay, fps || 50)
 				}
 				if (command._objectParams.stingOverlayFilename) {
 					this.overlayFile = command._objectParams.stingOverlayFilename
 				}
 				if (command._objectParams.audioFadeStart) {
-					this.audioFadeStart = command._objectParams.audioFadeStart / (fps || 50)
+					this.audioFadeStart = this.frames2Time(command._objectParams.audioFadeStart, fps || 50)
 				}
 				if (command._objectParams.audioFadeDuration) {
-					this.audioFadeDuration = command._objectParams.audioFadeDuration / (fps || 50)
+					this.audioFadeDuration = this.frames2Time(command._objectParams.audioFadeDuration, fps || 50)
 				}
 			} else {
 				if (command._objectParams.transition) {
 					this.type = command._objectParams.transition
 				}
 				if (command._objectParams.transitionDuration) {
-					this.duration = command._objectParams.transitionDuration / (fps || 50)
+					this.duration = this.frames2Time(command._objectParams.transitionDuration, fps || 50)
 				}
 				if (command._objectParams.transitionEasing) {
 					this.easing = command._objectParams.transitionEasing
@@ -196,5 +196,24 @@ export class Transition implements CasparCG.ITransition {
 			}
 		}
 		return this
+	}
+
+	private frames2Time (
+		frames: number,
+		fps?: number
+	): number {
+		// ms = frames * (1000 / fps)
+		fps = fps ? (fps < 1 ? 1 / fps : fps) : 25
+		return frames * (1000 / fps)
+	}
+	private time2Frames (
+		time: number,
+		fps?: number
+	): number {
+		// frames = ms / (1000 / fps)
+		fps = fps ? (fps < 1 ? 1 / fps : fps) : 25
+		time = time < 15 ? time * 1000 : time // less than 1 frame
+		console.log(`${time}ms is ${Math.floor(time / (1000 / fps))} frames`)
+		return Math.floor(time / (1000 / fps))
 	}
 }

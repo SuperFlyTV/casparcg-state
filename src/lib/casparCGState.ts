@@ -254,14 +254,19 @@ export class CasparCGState0 {
 
 				let seek: number = command._objectParams['seek'] as number
 
-				let playDeltaTime = (seek || 0) / channel.fps
+				let playDeltaTime = this.frames2Time(seek || 0, channel)
 
 				if (command._objectParams['clip'] || (cmdName === 'PlayCommand' && layer.nextUp)) {
-					layer.content = CasparCG.LayerContentType.MEDIA
+					layer.content = layer.nextUp ? layer.nextUp.content as any : CasparCG.LayerContentType.MEDIA
 					layer.playing = (cmdName === 'PlayCommand' || cmdName === 'ResumeCommand')
 
 					if (!command._objectParams['clip'] && layer.nextUp && layer.nextUp.media) {
 						layer.media = layer.nextUp.media
+
+						if ((layer.content as CasparCG.LayerContentType) === CasparCG.LayerContentType.ROUTE) {
+							layer.route = layer.nextUp.route
+							;(layer as any).delay = layer.nextUp.delay
+						}
 					} else {
 						layer.media = new TransitionObject(command._objectParams['clip'] as string)
 						if (command._objectParams.transition) {
@@ -502,7 +507,7 @@ export class CasparCGState0 {
 				}
 
 				layer.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
-				layer.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) * 1000 : undefined
+				layer.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) : undefined
 
 				layer.playing = true
 				layer.playTime = null // playtime is irrelevant
@@ -531,7 +536,7 @@ export class CasparCGState0 {
 				}
 
 				layer.nextUp.delay = command._objectParams.framesDelay ? this.frames2Time(command._objectParams.framesDelay as number, channel) : undefined
-				layer.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
+				layer.nextUp.mode = command._objectParams.mode as ('BACKGROUND' | 'NEXT' | undefined)
 			} else if (cmdName === 'MixerAnchorCommand') {
 				setMixerState(channel, command,'anchor',['x','y'])
 			} else if (cmdName === 'MixerBlendCommand') {
@@ -1110,7 +1115,7 @@ export class CasparCGState0 {
 								let routeChannel: number 		= nl.route.channel
 								let routeLayer: number | null	= nl.route.layer || null
 								let mode = nl.mode
-								let framesDelay: number | undefined = nl.delay ? Math.floor(this.time2Frames(nl.delay, newChannel, oldChannel) / 1000) : undefined
+								let framesDelay: number | undefined = nl.delay ? Math.floor(this.time2Frames(nl.delay, newChannel, oldChannel)) : undefined
 								let diffMediaFromBg = !olNext || !olNext.route ? true : !(nl.route.channel === olNext.route.channel && nl.route.layer === olNext.route.layer && nl.delay === olNext.delay)
 
 								if (diffMediaFromBg) {
@@ -1428,7 +1433,7 @@ export class CasparCGState0 {
 										route: layer.route,
 										mode: layer.mode,
 										channelLayout: layer.route ? layer.route.channelLayout : undefined,
-										framesDelay: layer.delay ? Math.floor(this.time2Frames(layer.delay, newChannel, oldChannel) / 1000) : undefined
+										framesDelay: layer.delay ? Math.floor(this.time2Frames(layer.delay, newChannel, oldChannel)) : undefined
 									})),
 									`Nextup Route (${layer.route})`,
 									newLayer
@@ -1855,14 +1860,20 @@ export class CasparCGState0 {
 		newChannel: CasparCG.Channel,
 		oldChannel?: CasparCG.Channel
 	): number {
-		return frames / ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 50)
+		// ms = frames * (1000 / fps)
+		let fps = ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 25)
+		fps = fps < 1 ? 1 / fps : fps
+		return frames * (1000 / fps)
 	}
 	private time2Frames (
-		frames: number,
+		time: number,
 		newChannel: CasparCG.Channel,
 		oldChannel?: CasparCG.Channel
 	): number {
-		return Math.floor(frames * ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 0))
+		// frames = ms / (1000 / fps)
+		let fps = ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 25)
+		fps = fps < 1 ? 1 / fps : fps
+		return Math.floor(time / (1000 / fps))
 	}
 	private calculateSeek (
 		newChannel: CasparCG.Channel,
