@@ -1990,6 +1990,7 @@ export class CasparCGState0 {
 		let cmp = (a: any, b: any, name: any) => {
 
 			if (name === 'playTime') {
+				if (!a) return false
 				return Math.abs(a - b) > this.minTimeSincePlay
 			} else {
 				return !_.isEqual(a, b)
