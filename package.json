@@ -126,7 +126,7 @@
     "typescript": "3.6.x"
   },
   "resolutions": {
-	  "**/trash": "~6.0.0"
+    "**/trash": "~6.0.0"
   },
   "standard-version": {
     "message": "chore(release): %s [skip ci]",
