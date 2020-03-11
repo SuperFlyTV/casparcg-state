@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.12.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.2...1.12.0) (2020-03-11)
+
+
+### Features
+
+* decklink filter parameter ([4e970f4](https://github.com/SuperFlyTV/casparcg-state/commit/4e970f425c5643c8357bd359340935f683323d6f))
+
 ### [1.11.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.1...1.11.2) (2019-12-11)
 
 
