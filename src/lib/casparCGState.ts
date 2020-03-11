@@ -1093,6 +1093,7 @@ export class CasparCGState0 {
 								_.extend(options,{
 									device: 		device,
 									format: 		format || undefined,
+									filter:			nl.filter,
 									channelLayout: channelLayout || undefined
 								})
 
@@ -1416,6 +1417,7 @@ export class CasparCGState0 {
 										auto: layer.auto,
 										device: layer.input.device,
 										format: layer.input.format,
+										filter: layer.filter,
 										channelLayout: layer.input.channelLayout
 									})),
 									`Nextup Decklink (${layer.input.device})`,

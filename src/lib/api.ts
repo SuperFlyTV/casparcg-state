@@ -97,6 +97,7 @@ export namespace CasparCG { // for external use
 			format?: string,
 			channelLayout?: string
 		}
+		filter?: string, // should this be separate for af/vf?
 		playing: true,
 		playTime: null
 	}
