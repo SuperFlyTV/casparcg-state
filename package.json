@@ -26,7 +26,8 @@
     "changelog": "standard-version",
     "release": "yarn reset && yarn test && yarn docs:publish && yarn changelog",
     "reset": "git clean -dfx && git reset --hard && yarn",
-    "validate:dependencies": "yarn audit && yarn license-validate",
+    "validate:dependencies": "yarn audit --groups dependencies && yarn license-validate",
+    "validate:dev-dependencies": "yarn audit --groups devDependencies",
     "license-validate": "node-license-validator -p -d --allow-licenses MIT BSD BSD-3-Clause ISC Apache"
   },
   "scripts-info": {
@@ -52,6 +53,7 @@
     "release": "Clean, build, test, publish docs, and prepare release (a one-step publish process). Updates versions and creates git commits.",
     "reset": "Delete all untracked files and reset the repo to the last commit",
     "validate:dependencies": "Scan dependencies for vulnerabilities and check licenses",
+    "validate:dev-dependencies": "Scan dependencies for vulnerabilities",
     "license-validate": "Validate licenses for dependencies."
   },
   "repository": {
