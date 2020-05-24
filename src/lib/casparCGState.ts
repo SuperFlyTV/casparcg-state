@@ -568,6 +568,9 @@ export class CasparCGState0 {
 				setMixerState(channel, command,'straightAlpha','straight_alpha_output')
 			} else if (cmdName === 'MixerVolumeCommand') {
 				setMixerState(channel, command,'volume','volume')
+			} else if (cmdName === 'MixerClearCommand') {
+				let layer = this.ensureLayer(channel, layerNo)
+				layer.mixer = new Mixer()
 			/*
 				ResumeCommand
 
@@ -1712,6 +1715,7 @@ export class CasparCGState0 {
 							}
 
 							if (!noCommand) {
+								let mixerClr: IAMCPCommandWithContext | undefined = undefined
 								if (!cmd) {
 
 									// ClearCommand:
@@ -1723,11 +1727,25 @@ export class CasparCGState0 {
 										`Clear old stuff`,
 										oldLayer
 									)
+									console.log(oldLayer.mixer)
 
+									if (oldLayer.mixer && Object.values(oldLayer.mixer).length) {
+										mixerClr = this.addContext(
+											new AMCP.MixerClearCommand({
+												channel: oldChannel.channelNo,
+												layer: oldLayer.layerNo
+											}),
+											`Clear old stuff`,
+											oldLayer
+										)
+									}
 								}
 
 								if (cmd) {
 									cmds.push(cmd)
+									if (mixerClr) {
+										cmds.push(mixerClr)
+									}
 								}
 							}
 						}
