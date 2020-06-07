@@ -842,6 +842,7 @@ export class CasparCGState0 {
 
 							diff = this.compareAttrs(nl.route, ol.route,['channel','layer','channelLayout'])
 							if (!diff) diff = this.compareAttrs(nl, ol, ['delay'])
+							if (!diff) diff = this.compareAttrs(nl, ol, ['mode'])
 
 						} else if (newLayer.content === CasparCG.LayerContentType.RECORD) {
 							let nl: CasparCG.IRecordLayer = newLayer as CasparCG.IRecordLayer
@@ -1852,6 +1853,9 @@ export class CasparCGState0 {
 	// 		}
 	// 	}
 	// }
+	/**
+	 * Convert frames into time in seconds
+	 */
 	private frames2Time (
 		frames: number,
 		newChannel: CasparCG.Channel,
@@ -1859,12 +1863,15 @@ export class CasparCGState0 {
 	): number {
 		return frames / ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 50)
 	}
+	/**
+	 * Convert time in seconds into frames
+	 */
 	private time2Frames (
-		frames: number,
+		time: number,
 		newChannel: CasparCG.Channel,
 		oldChannel?: CasparCG.Channel
 	): number {
-		return Math.floor(frames * ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 0))
+		return Math.floor(time * ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 0))
 	}
 	private calculateSeek (
 		newChannel: CasparCG.Channel,
