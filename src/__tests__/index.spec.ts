@@ -20,7 +20,8 @@ import {
 	Mixer,
 	ILayerBase,
 	TransitionObject,
-	Transition
+	Transition,
+	IRouteLayerBase
 } from '../'
 import { InternalLayer } from '..//lib/stateObjectStorage'
 
@@ -1573,18 +1574,19 @@ test('Loadbg a Route, then change it', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
+		// pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.ROUTE,
-			layerNo: 10,
+			content: LayerContentType.ROUTE,
+			// layerNo: 10,
 			media: 'route',
+			playing: true,
 
 			route: {
 				channel: 2,
@@ -1594,8 +1596,8 @@ test('Loadbg a Route, then change it', () => {
 		},
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1613,12 +1615,12 @@ test('Loadbg a Route, then change it', () => {
 	})).serialize())
 
 	expect(c.ccgState.getState().channels['1'].layers['10'].nextUp).toBeTruthy()
-	expect(c.ccgState.getState().channels['1'].layers['10'].nextUp!.route).toMatchObject({
+	expect((c.ccgState.getState().channels['1'].layers['10'].nextUp! as IRouteLayerBase).route).toMatchObject({
 		channel: 2,
 		layer: 15
 	});
 
-	(layer10.nextUp!.route as any).layer = 20
+	((layer10.nextUp! as IRouteLayerBase).route!).layer = 20
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
