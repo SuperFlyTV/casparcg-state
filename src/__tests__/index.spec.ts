@@ -2,13 +2,27 @@ import * as _ from 'underscore'
 import { AMCP, Enum as CCG_Enum, Command as CommandNS } from 'casparcg-connection'
 
 import {
-	CasparCG,
 	CasparCGState,
 	DiffCommands,
 	DiffCommandGroups,
-	IAMCPCommandVOWithContext
-} from '../index'
-import { CasparCGFull as CF } from '../lib/interfaces'
+	IAMCPCommandVOWithContext,
+	State,
+	IMediaLayer,
+	LayerContentType,
+	Channel,
+	IEmptyLayer,
+	ITemplateLayer,
+	IHtmlPageLayer,
+	IInputLayer,
+	IRouteLayer,
+	IRecordLayer,
+	IFunctionLayer,
+	Mixer,
+	ILayerBase,
+	TransitionObject,
+	Transition
+} from '../'
+import { InternalLayer } from '..//lib/stateObjectStorage'
 
 interface CGState {
 	time: number
@@ -56,7 +70,7 @@ function initStateMS (c: CGState) {
 		fps: 50 / 1000
 	}], c.time)
 }
-function getDiff (c: CGState, targetState: CasparCG.State, loggingAfter?: boolean) {
+function getDiff (c: CGState, targetState: State, loggingAfter?: boolean) {
 
 	let cc = c.ccgState.getDiff(targetState, c.time)
 
@@ -64,7 +78,7 @@ function getDiff (c: CGState, targetState: CasparCG.State, loggingAfter?: boolea
 	applyCommands(c, cc)
 
 	// after applying, test again vs same state, no new commands should be generated:
-	// console.log('second try')
+	console.log('second try')
 	let cc2 = c.ccgState.getDiff(targetState, c.time)
 	expect(cc2.length).toBeLessThanOrEqual(2)
 	if (cc2.length === 1) expect(cc2[0].cmds).toHaveLength(0)
@@ -77,7 +91,7 @@ function applyCommands (c: CGState, cc: DiffCommandGroups) {
 
 	let commands: Array<{
 		cmd: CommandNS.IAMCPCommandVO,
-		additionalLayerState?: CF.Layer
+		additionalLayerState?: InternalLayer
 	}> = []
 
 	_.each(cc, (c: DiffCommands) => {
@@ -191,17 +205,17 @@ test('Play a video, then stop it', () => {
 
 	let cc: any
 	// Play a video file:
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -229,6 +243,7 @@ test('Play a video, then stop it', () => {
 	// Remove the layer from the state, this should generate a stop command:
 	delete channel1.layers['10']
 
+	// console.log('--------------')
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -243,9 +258,9 @@ test('Play a video with the right channelLayout, then stop it', () => {
 
 	let cc: any
 	// Play a video file:
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		channelLayout: 'TEST_LAYOUT',
@@ -253,8 +268,8 @@ test('Play a video with the right channelLayout, then stop it', () => {
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -300,16 +315,16 @@ test('Play a video, pause & resume it', () => {
 
 	// Play a video file:
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
 		playTime: -4000 // 5 s ago
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -362,17 +377,17 @@ test('Load a video, then play it', () => {
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: false,
 		playTime: 1000,
 		pauseTime: 1000
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -417,23 +432,21 @@ test('Loadbg a video, then play it', () => {
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -451,7 +464,7 @@ test('Loadbg a video, then play it', () => {
 	// Start playing it:
 	channel1.layers['10'] = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
@@ -485,23 +498,21 @@ test('Loadbg a video, then remove it', () => {
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -560,23 +571,21 @@ test('Loadbg a video, then loadbg another', () => {
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -632,25 +641,23 @@ test('Loadbg a video with a transition, then play it', () => {
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
-			media: new CasparCG.TransitionObject('AMB', {
-				inTransition: new CasparCG.Transition('sting', 'mask_file')
+			content: LayerContentType.MEDIA,
+			media: new TransitionObject('AMB', {
+				inTransition: new Transition('sting', 'mask_file')
 			}),
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -672,9 +679,9 @@ test('Loadbg a video with a transition, then play it', () => {
 	// Start playing it:
 	channel1.layers['10'] = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.MEDIA,
-		media: new CasparCG.TransitionObject('AMB', {
-			inTransition: new CasparCG.Transition('sting', 'mask_file')
+		content: LayerContentType.MEDIA,
+		media: new TransitionObject('AMB', {
+			inTransition: new Transition('sting', 'mask_file')
 		}),
 		playing: true,
 		playTime: 1000,
@@ -708,23 +715,21 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -742,9 +747,9 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	// Start playing it:
 	channel1.layers['10'] = {
 		id: 'v0',
-		content: CasparCG.LayerContentType.MEDIA,
-		media: new CasparCG.TransitionObject('AMB', {
-			inTransition: new CasparCG.Transition('sting', 'mask_file')
+		content: LayerContentType.MEDIA,
+		media: new TransitionObject('AMB', {
+			inTransition: new Transition('sting', 'mask_file')
 		}),
 		playing: true,
 		playTime: 1000,
@@ -778,23 +783,23 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	})).serialize())
 
 })
-test('Play a video, stop and loadbg another video', () => {
+test.only('Play a video, stop and loadbg another video', () => {
 	let c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 	// Play a video file:
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -808,22 +813,23 @@ test('Play a video, stop and loadbg another video', () => {
 
 	// Load a video file (paused):
 
-	channel1.layers['10'] = {
+	let newLayer10: IEmptyLayer = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
-	} as CasparCG.IEmptyLayer
+	}
 
+	channel1.layers['10'] = newLayer10
+	console.log('-----------')
+	c.log = true
 	cc = getDiff(c, targetState, true)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(2)
@@ -845,7 +851,7 @@ test('Play a video, stop and loadbg another video', () => {
 	// Start playing it:
 	channel1.layers['10'] = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
@@ -879,23 +885,21 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -910,9 +914,9 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 		seek: 0
 	})).serialize())
 
-	let newLayer10: CasparCG.IMediaLayer = {
+	let newLayer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		media: 'CG1080i50',
 		playTime: null,
 		playing: true,
@@ -965,23 +969,22 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 
 	// Load a video file (paused):
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		media: 'CG1080i50',
 		playTime: null,
 		playing: true,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1003,11 +1006,10 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 		seek: 0
 	})).serialize())
 
-	let newLayer10: CasparCG.IEmptyLayer = {
+	let newLayer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: layer10.nextUp
@@ -1043,9 +1045,9 @@ test('Play a looping video', () => {
 
 	// Play a video file:
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
@@ -1053,8 +1055,8 @@ test('Play a looping video', () => {
 		length: 30 * 1000,
 		looping: true
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1077,9 +1079,9 @@ test('Play a looping video, with inPoint', () => {
 
 	// Play a video file:
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
@@ -1088,8 +1090,8 @@ test('Play a looping video, with inPoint', () => {
 		inPoint: 4 * 1000, // 4 s into the clip
 		looping: true
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1112,9 +1114,9 @@ test('Play a looping video, with inPoint & seek', () => {
 
 	// Play a video file:
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
@@ -1124,8 +1126,8 @@ test('Play a looping video, with inPoint & seek', () => {
 		seek: 0, // beginning of clip
 		looping: true
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1148,17 +1150,17 @@ test('Play a looping video, pause & resume it', () => {
 
 	// Play a video file:
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
 		playTime: -9000, // 10 s ago
 		looping: true
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1210,9 +1212,9 @@ test('Play a template, update the data & cgstop', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.ITemplateLayer = {
+	let layer10: ITemplateLayer = {
 		id: 't0',
-		content: CasparCG.LayerContentType.TEMPLATE,
+		content: LayerContentType.TEMPLATE,
 		layerNo: 10,
 		media: 'myTemplate',
 		playing: true,
@@ -1221,8 +1223,8 @@ test('Play a template, update the data & cgstop', () => {
 		cgStop: true,
 		playTime: 990 // 10s ago
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1280,16 +1282,16 @@ test('Play an html-page', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IHtmlPageLayer = {
+	let layer10: IHtmlPageLayer = {
 		id: 'h0',
-		content: CasparCG.LayerContentType.HTMLPAGE,
+		content: LayerContentType.HTMLPAGE,
 		layerNo: 10,
 		media: 'http://superfly.tv',
 		playing: true,
 		playTime: 990 // 10s ago
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1319,26 +1321,24 @@ test('Loadbg a html-page, then play it', () => {
 
 	// put a html-template on onNext:
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
 			auto: false,
-			content: CasparCG.LayerContentType.HTMLPAGE,
-			layerNo: 10,
-			media: 'http://superfly.tv'
-			// playing: true,
+			content: LayerContentType.HTMLPAGE,
+			media: 'http://superfly.tv',
+			playing: true
 			// playTime: 990 // 10s ago
 		}
 	}
 
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1354,7 +1354,7 @@ test('Loadbg a html-page, then play it', () => {
 	// Start playing the template:
 	channel1.layers['10'] = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.HTMLPAGE,
+		content: LayerContentType.HTMLPAGE,
 		layerNo: 10,
 		media: 'http://superfly.tv',
 		playTime: 1000
@@ -1388,9 +1388,9 @@ test('Play an input', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IInputLayer = {
+	let layer10: IInputLayer = {
 		id: 'i0',
-		content: CasparCG.LayerContentType.INPUT,
+		content: LayerContentType.INPUT,
 		layerNo: 10,
 		playing: true,
 		media: 'decklink',
@@ -1402,8 +1402,8 @@ test('Play an input', () => {
 
 		playTime: null
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1435,17 +1435,15 @@ test('Loadbg an input, then play it', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.INPUT,
-			layerNo: 10,
+			content: LayerContentType.INPUT,
 			playing: true,
 			media: 'decklink',
 			input: {
@@ -1458,8 +1456,8 @@ test('Loadbg an input, then play it', () => {
 
 		playTime: null
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1476,11 +1474,12 @@ test('Loadbg an input, then play it', () => {
 
 	// Start playing the input:
 
-	channel1.layers['10'] = {
+	let newLayer10: IInputLayer = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.INPUT,
+		content: LayerContentType.INPUT,
 		layerNo: 10,
 		playing: true,
+		playTime: null,
 		media: 'decklink',
 		input: {
 			device: 1,
@@ -1488,6 +1487,8 @@ test('Loadbg an input, then play it', () => {
 			channelLayout: 'stereo'
 		}
 	}
+
+	channel1.layers['10'] = newLayer10
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -1520,9 +1521,9 @@ test('Play a Route', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IRouteLayer = {
+	let layer10: IRouteLayer = {
 		id: 'r0',
-		content: CasparCG.LayerContentType.ROUTE,
+		content: LayerContentType.ROUTE,
 		layerNo: 10,
 		media: 'route',
 		playing: true,
@@ -1534,8 +1535,8 @@ test('Play a Route', () => {
 		delay: 20,
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1642,17 +1643,15 @@ test('Loadbg a Route, then play it', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.ROUTE,
-			layerNo: 10,
+			content: LayerContentType.ROUTE,
 			media: 'route',
 			playing: true,
 
@@ -1665,8 +1664,8 @@ test('Loadbg a Route, then play it', () => {
 		},
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1685,9 +1684,10 @@ test('Loadbg a Route, then play it', () => {
 	})).serialize())
 
 	// Start playing it:
-	channel1.layers['10'] = {
+
+	let playLayer10: IRouteLayer = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.ROUTE,
+		content: LayerContentType.ROUTE,
 		layerNo: 10,
 		media: 'route',
 		playing: true,
@@ -1696,8 +1696,10 @@ test('Loadbg a Route, then play it', () => {
 			channel: 2,
 			layer: 15
 		},
-		delay: 100
-	} as any
+		delay: 100,
+		playTime: null
+	}
+	channel1.layers['10'] = playLayer10
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -1731,9 +1733,9 @@ test('Play a BG Route', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IRouteLayer = {
+	let layer10: IRouteLayer = {
 		id: 'r0',
-		content: CasparCG.LayerContentType.ROUTE,
+		content: LayerContentType.ROUTE,
 		layerNo: 10,
 		media: 'route',
 		playing: true,
@@ -1745,8 +1747,8 @@ test('Play a BG Route', () => {
 		mode: 'BACKGROUND',
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1774,17 +1776,17 @@ test('Record to a file', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IRecordLayer = {
+	let layer10: IRecordLayer = {
 		id: 'rec0',
-		content: CasparCG.LayerContentType.RECORD,
+		content: LayerContentType.RECORD,
 		layerNo: 10,
 		media: 'OUTPUT.mp4',
 		playing: true,
 		encoderOptions: '--fastdecode',
 		playTime: -4000
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1817,17 +1819,17 @@ test('Run a function', () => {
 
 	// Play a template file:
 
-	let layer10: CasparCG.IFunctionLayer = {
+	let layer10: IFunctionLayer = {
 		id: 'fcn0',
-		content: CasparCG.LayerContentType.FUNCTION,
+		content: LayerContentType.FUNCTION,
 		layerNo: 10,
 		media: 'myFunction',
 		executeFcn: 'myFunction', // name of function to execute
 		executeData: 'my cool data',
 		playTime: 995
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1855,17 +1857,17 @@ test('Play a video, then add mixer attributes', () => {
 
 	// Play a video file:
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState, true)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -1878,7 +1880,7 @@ test('Play a video, then add mixer attributes', () => {
 	})).serialize())
 
 	// Rotate the video:
-	let mixer0: CasparCG.Mixer = {
+	let mixer0: Mixer = {
 		rotation: 90
 	}
 	layer10.mixer = mixer0
@@ -1892,9 +1894,9 @@ test('Play a video, then add mixer attributes', () => {
 	})).serialize())
 
 	// set master volume:
-	let layerMinus1: CasparCG.ILayerBase = {
+	let layerMinus1: ILayerBase = {
 		id: 'b1',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		layerNo: -1
 	}
 	channel1.layers['-1'] = layerMinus1
@@ -2036,7 +2038,7 @@ test('Play a video, then add mixer attributes', () => {
 
 	layer10 = {
 		id: 'l2',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
@@ -2071,20 +2073,20 @@ test('Play a video with transition, then stop it with transition', () => {
 	let cc: any
 
 	// Play a video file:
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
-		media: new CasparCG.TransitionObject('AMB', {
-			inTransition: new CasparCG.Transition('mix', 1),
-			outTransition: new CasparCG.Transition({ type: 'sting', maskFile: 'mask_transition' })
+		media: new TransitionObject('AMB', {
+			inTransition: new Transition('mix', 1),
+			outTransition: new Transition({ type: 'sting', maskFile: 'mask_transition' })
 
 		}),
 		playing: true,
 		playTime: 1000
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -2123,13 +2125,13 @@ test('Play a Route with transition, then stop it with transition', () => {
 	let cc: any
 
 	// Play a Route:
-	let layer10: CasparCG.IRouteLayer = {
+	let layer10: IRouteLayer = {
 		id: 'r0',
-		content: CasparCG.LayerContentType.ROUTE,
+		content: LayerContentType.ROUTE,
 		layerNo: 10,
-		media: new CasparCG.TransitionObject('route', {
-			inTransition: new CasparCG.Transition('mix', 0.5),
-			outTransition: new CasparCG.Transition('mix', 1)
+		media: new TransitionObject('route', {
+			inTransition: new Transition('mix', 0.5),
+			outTransition: new Transition('mix', 1)
 		}),
 		route: {
 			channel: 3
@@ -2137,8 +2139,8 @@ test('Play a Route with transition, then stop it with transition', () => {
 		playing: true,
 		playTime: null
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -2167,13 +2169,13 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 	let cc: any
 
 	// Play a video file:
-	let layer10: CasparCG.IInputLayer = {
+	let layer10: IInputLayer = {
 		id: 'i0',
-		content: CasparCG.LayerContentType.INPUT,
+		content: LayerContentType.INPUT,
 		layerNo: 10,
-		media: new CasparCG.TransitionObject('decklink', {
-			inTransition: new CasparCG.Transition('mix', 0.5),
-			outTransition: new CasparCG.Transition('mix', 1)
+		media: new TransitionObject('decklink', {
+			inTransition: new Transition('mix', 0.5),
+			outTransition: new Transition('mix', 1)
 		}),
 		input: {
 			device: 1,
@@ -2183,8 +2185,8 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 		playing: true,
 		playTime: null
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -2223,17 +2225,17 @@ test('Apply commands before init', () => {
 
 	// Play a video file:
 
-	let layer10: CasparCG.IMediaLayer = {
+	let layer10: IMediaLayer = {
 		id: 'l0',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 	// cc = getDiff(c, targetState)
 
 	cc = c.ccgState.getDiff(targetState, c.time)
@@ -2265,27 +2267,27 @@ test('Bundle commands', () => {
 
 	// Play two a video files
 
-	let layer110: CasparCG.IMediaLayer = {
+	let layer110: IMediaLayer = {
 		id: 'l110',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, layers: { '10': layer110 } }
-	let layer210: CasparCG.IMediaLayer = {
+	let channel1: Channel = { channelNo: 1, layers: { '10': layer110 } }
+	let layer210: IMediaLayer = {
 		id: 'l210',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: 'AMB2',
 		playing: true,
 		playTime: 1000,
 		seek: 0
 	}
-	let channel2: CasparCG.Channel = { channelNo: 2, layers: { '10': layer210 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1, '2': channel2 } }
+	let channel2: Channel = { channelNo: 2, layers: { '10': layer210 } }
+	let targetState: State = { channels: { '1': channel1, '2': channel2 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
@@ -2307,7 +2309,7 @@ test('Bundle commands', () => {
 	})).serialize())
 
 	// change the perspective of video1, and the saturation of video 2 at the same time
-	let mixer110: CasparCG.Mixer = {
+	let mixer110: Mixer = {
 		perspective: {
 			topLeftX: 0.3,
 			topLeftY: 0.3,
@@ -2322,7 +2324,7 @@ test('Bundle commands', () => {
 	}
 	layer110.mixer = mixer110
 
-	let mixer210: CasparCG.Mixer = {
+	let mixer210: Mixer = {
 		saturation: 0.5,
 		bundleWithCommands: 1234
 	}
@@ -2366,23 +2368,21 @@ test('Prioritize commands', () => {
 	initState(c)
 
 	// Load a video file (paused):
-	let layer10: CasparCG.IEmptyLayer = {
+	let layer10: IEmptyLayer = {
 		id: 'e0',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 10,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 10,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
-	let channel1: CasparCG.Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
-	let targetState: CasparCG.State = { channels: { '1': channel1 } }
+	let channel1: Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
+	let targetState: State = { channels: { '1': channel1 } }
 
 	let cmds = c.ccgState.diffStatesOrderedCommands(c.ccgState.getState(), targetState, c.time)
 
@@ -2399,26 +2399,24 @@ test('Prioritize commands', () => {
 
 	let oldState = JSON.parse(JSON.stringify(targetState))
 	// First loadbg another video:
-	let layer8: CasparCG.IEmptyLayer = {
+	let layer8: IEmptyLayer = {
 		id: 'l8',
-		content: CasparCG.LayerContentType.NOTHING,
+		content: LayerContentType.NOTHING,
 		media: '',
-		pauseTime: 0,
 		playing: false,
 		layerNo: 8,
 		nextUp: {
 			id: 'n0',
-			content: CasparCG.LayerContentType.MEDIA,
-			layerNo: 8,
+			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false
 		}
 	}
 	channel1.layers['8'] = layer8
 	// Then play a new video:
-	let layer9: CasparCG.IMediaLayer = {
+	let layer9: IMediaLayer = {
 		id: 'l9',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		layerNo: 9,
 		media: 'AMB',
 		playing: true,
@@ -2429,7 +2427,7 @@ test('Prioritize commands', () => {
 	// Start playing the preloaded video:
 	channel1.layers['10'] = {
 		id: 'l1',
-		content: CasparCG.LayerContentType.MEDIA,
+		content: LayerContentType.MEDIA,
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
@@ -2475,12 +2473,12 @@ describe('MixerCommands', () => {
 	let c: CGState
 	let cc: {
 		cmds: IAMCPCommandVOWithContext[];
-		additionalLayerState?: CF.Layer;
+		additionalLayerState?: InternalLayer;
 	}[]
-	let targetState: CasparCG.State
-	let layer10: CasparCG.IMediaLayer
-	let layerMinus1: CasparCG.IEmptyLayer
-	let channel1: CasparCG.Channel
+	let targetState: State
+	let layer10: IMediaLayer
+	let layerMinus1: IEmptyLayer
+	let channel1: Channel
 	beforeAll(() => {
 		c = getCasparCGState()
 		initState(c)
@@ -2489,7 +2487,7 @@ describe('MixerCommands', () => {
 
 		layer10 = {
 			id: 'l0',
-			content: CasparCG.LayerContentType.MEDIA,
+			content: LayerContentType.MEDIA,
 			layerNo: 10,
 			media: 'AMB',
 			playing: true,
@@ -2498,9 +2496,8 @@ describe('MixerCommands', () => {
 		}
 		layerMinus1 = {
 			id: 'l1',
-			content: CasparCG.LayerContentType.NOTHING,
+			content: LayerContentType.NOTHING,
 			playing: false,
-			pauseTime: 0,
 			layerNo: -1
 		}
 		channel1 = { channelNo: 1, layers: { '10': layer10, '-1': layerMinus1 } }
@@ -2873,9 +2870,9 @@ describe('MixerCommands', () => {
 
 function testMixerEffect (
 	c: CGState,
-	targetState: CasparCG.State,
-	layer: CasparCG.ILayerBase,
-	mixer: CasparCG.Mixer,
+	targetState: State,
+	layer: ILayerBase,
+	mixer: Mixer,
 	cmd0: CommandNS.IAMCPCommand,
 	cmd1: CommandNS.IAMCPCommand
 ) {

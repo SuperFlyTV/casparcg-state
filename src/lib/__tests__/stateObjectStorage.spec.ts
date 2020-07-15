@@ -1,13 +1,13 @@
 import {
-	StateObjectStorage
+	StateObjectStorage,
+	InternalState
 } from '../stateObjectStorage'
-import { CasparCG } from '../api'
-import { CasparCGFull as CF } from '../interfaces'
+import { LayerContentType } from '../api'
 
 test('test StateObjectStorage', () => {
 	let sos = new StateObjectStorage()
 
-	let state0: CF.State = {
+	let state0: InternalState = {
 		channels: {
 			'1': {
 				channelNo: 1,
@@ -17,7 +17,7 @@ test('test StateObjectStorage', () => {
 					'10': {
 						id: 'abc',
 						layerNo: 1,
-						content: CasparCG.LayerContentType.NOTHING
+						content: LayerContentType.NOTHING
 
 					}
 				}
@@ -30,13 +30,15 @@ test('test StateObjectStorage', () => {
 	expect(sos.fetchState()).toEqual(state0)
 
 	sos.clearState()
-	let empty = new CF.State()
+	let empty: InternalState = {
+		channels: {}
+	}
 
 	expect(sos.fetchState()).toMatchObject(empty)
 })
 
 test('test externalStorage', () => {
-	let state0: CF.State = {
+	let state0: InternalState = {
 		channels: {
 			'2': {
 				channelNo: 1,
@@ -46,7 +48,7 @@ test('test externalStorage', () => {
 					'55': {
 						id: 'abc',
 						layerNo: 1,
-						content: CasparCG.LayerContentType.NOTHING
+						content: LayerContentType.NOTHING
 
 					}
 				}

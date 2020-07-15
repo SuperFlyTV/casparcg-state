@@ -1,12 +1,12 @@
 import * as _ from 'underscore'
 import { Enum as CCG_Enum } from 'casparcg-connection'
 import { TransitionObject } from './transitionObject'
-import { CasparCG } from './api'
+import { ITransition } from './api'
 export class Mixer {
 	[key: string]: any
-	inTransition?: CasparCG.ITransition
-	changeTransition?: CasparCG.ITransition
-	outTransition?: CasparCG.ITransition
+	inTransition?: ITransition
+	changeTransition?: ITransition
+	outTransition?: ITransition
 
 	anchor?: {x: number, y: number } | TransitionObject
 	blendmode?: CCG_Enum.BlendMode | TransitionObject
