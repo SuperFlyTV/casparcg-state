@@ -68,7 +68,7 @@ function initState0 (s: CasparCGState, time: number) {
 function initStateMS (c: CGState) {
 	c.ccgState.initStateFromChannelInfo([{
 		videoMode: 'PAL',
-		fps: 50 / 1000
+		fps: 1 / 50
 	}], c.time)
 }
 function getDiff (c: CGState, targetState: State, loggingAfter?: boolean) {
@@ -1705,14 +1705,9 @@ test('Loadbg a Route, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toMatchObject(fixCommand(new AMCP.PlayRouteCommand({
+	expect(cc[0].cmds[0]).toMatchObject(fixCommand(new AMCP.PlayCommand({
 		channel: 1,
-		layer: 10,
-		route: {
-			channel: 2,
-			layer: 15
-		},
-		framesDelay: 5
+		layer: 10
 	})).serialize())
 
 	// Remove the layer
@@ -1971,7 +1966,7 @@ test('Play a video, then add mixer attributes', () => {
 		layer: 10,
 		opacity: 0.62,
 		transition: 'mix',
-		transitionDuration: 50,
+		transitionDuration: 25,
 		transitionDirection: 'right',
 		transitionEasing: 'linear'
 	})).serialize())
@@ -1980,7 +1975,7 @@ test('Play a video, then add mixer attributes', () => {
 		layer: 10,
 		brightness: 2,
 		transition: 'mix',
-		transitionDuration: 50,
+		transitionDuration: 25,
 		transitionDirection: 'right',
 		transitionEasing: 'linear'
 	})).serialize())
@@ -1995,7 +1990,7 @@ test('Play a video, then add mixer attributes', () => {
 		layer: 10,
 		opacity: 0,
 		transition: 'mix',
-		transitionDuration: 50,
+		transitionDuration: 25,
 		transitionDirection: 'right',
 		transitionEasing: 'linear'
 	})).serialize())
@@ -2012,7 +2007,7 @@ test('Play a video, then add mixer attributes', () => {
 		layer: 10,
 		opacity: 1,
 		transition: 'mix',
-		transitionDuration: 25,
+		transitionDuration: 12,
 		transitionDirection: 'right',
 		transitionEasing: 'linear'
 	}),{ _defaultOptions: true }).serialize())
@@ -2021,7 +2016,7 @@ test('Play a video, then add mixer attributes', () => {
 		layer: 10,
 		brightness: 1,
 		transition: 'mix',
-		transitionDuration: 25,
+		transitionDuration: 12,
 		transitionDirection: 'right',
 		transitionEasing: 'linear'
 	}),{ _defaultOptions: true }).serialize())
@@ -2100,7 +2095,7 @@ test('Play a video with transition, then stop it with transition', () => {
 		seek: 0,
 		transition: 'mix',
 		transitionDirection: 'right',
-		transitionDuration: 50,
+		transitionDuration: 25,
 		transitionEasing: 'linear'
 	})).serialize())
 
@@ -2146,7 +2141,7 @@ test('Play a Route with transition, then stop it with transition', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://3 mix 25 linear right')
+	expect(cc[0].cmds[0]._objectParams.command).toEqual('PLAY 1-10 route://3 mix 12 linear right')
 
 	// Remove the layer from the state
 	delete channel1.layers['10']
@@ -2200,7 +2195,7 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 		format: '720p5000',
 		transition: 'mix',
 		transitionDirection: 'right',
-		transitionDuration: 25,
+		transitionDuration: 12, // .5 seconds in 50i
 		transitionEasing: 'linear'
 	})).serialize())
 

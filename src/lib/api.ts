@@ -202,6 +202,7 @@ export interface NextUpBase {
 		| LayerContentType.INPUT
 		| LayerContentType.ROUTE
 	id: string
+	mode?: 'BACKGROUND' | 'NEXT'
 }
 export interface NextUpMedia
 	extends NextUpBase,
