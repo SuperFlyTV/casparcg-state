@@ -1,137 +1,157 @@
 {
-  "name": "casparcg-state",
-  "version": "1.12.0",
-  "engines": {
-    "node": ">= 10.10"
-  },
-  "description": "Node.js Javascript/Typescript library for keeping and resolving a given state of CasparCG into commands for casparcg-connection.",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "scripts": {
-    "link": "npm link casparcg-connection",
-    "unlink": "npm unlink casparcg-connection",
-    "info": "npm-scripts-info",
-    "build": "trash dist && yarn build:main",
-    "build:main": "tsc -p tsconfig.build.json",
-    "lint": "tslint --project tsconfig.json --config tslint.json",
-    "unit": "jest",
-    "test": "yarn lint && yarn unit",
-    "test:integration": "yarn lint && jest --config=jest-integration.config.js",
-    "watch": "jest --watch",
-    "cov": "jest --coverage; open-cli coverage/lcov-report/index.html",
-    "cov-open": "open-cli coverage/lcov-report/index.html",
-    "send-coverage": "codecov",
-    "docs": "yarn docs:html && open-cli docs/index.html",
-    "docs:test": "yarn docs:html",
-    "docs:html": "typedoc src/index.ts --excludePrivate --mode file --theme minimal --out docs",
-    "docs:json": "typedoc --mode file --json docs/typedoc.json src/index.ts",
-    "docs:publish": "yarn docs:html && gh-pages -d docs",
-    "changelog": "standard-version",
-    "release": "yarn reset && yarn test && yarn docs:publish && yarn changelog",
-    "reset": "git clean -dfx && git reset --hard && yarn",
-    "validate:dependencies": "yarn audit --groups dependencies && yarn license-validate",
-    "validate:dev-dependencies": "yarn audit --groups devDependencies",
-    "license-validate": "node-license-validator -p -d --allow-licenses MIT BSD BSD-3-Clause ISC Apache"
-  },
-  "scripts-info": {
-    "info": "Display information about the scripts",
-    "link": "Link casparcg",
-    "unlink": "Unlink casparcg",
-    "build": "(Trash and re)build the library",
-    "build:main": "Builds main build command without trash.",
-    "lint": "Lint all typescript source files",
-    "unit": "Build the library and run unit tests",
-    "test": "Lint, build, and test the library",
-    "test:integration": "Integration tests. Work in progress",
-    "watch": "Watch source files, rebuild library on changes, rerun relevant tests",
-    "cov": "Run tests, generate the HTML coverage report, and open it in a browser",
-    "cov-open": "Open current test coverage",
-    "send-coverage": "send coverage to codecov",
-    "docs": "Generate HTML API documentation and open it in a browser",
-    "docs:test": "Running the docs generation for testing.",
-    "docs:html": "Generate HTML documentation",
-    "docs:json": "Generate API documentation in typedoc JSON format",
-    "docs:publish": "Generate HTML API documentation and push it to GitHub Pages",
-    "changelog": "Bump package.json version, update CHANGELOG.md, tag a release",
-    "release": "Clean, build, test, publish docs, and prepare release (a one-step publish process). Updates versions and creates git commits.",
-    "reset": "Delete all untracked files and reset the repo to the last commit",
-    "validate:dependencies": "Scan dependencies for vulnerabilities and check licenses",
-    "validate:dev-dependencies": "Scan dependencies for vulnerabilities",
-    "license-validate": "Validate licenses for dependencies."
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/SuperFlyTV/casparcg-state"
-  },
-  "bugs": {
-    "url": "https://github.com/SuperFlyTV/casparcg-state/issues"
-  },
-  "license": "MIT",
-  "directories": {
-    "lib": "src/"
-  },
-  "files": [
-    "/dist",
-    "/CHANGELOG.md",
-    "/README.md",
-    "/LICENSE"
-  ],
-  "contributors": [
-    {
-      "name": "Johan Nyman",
-      "email": "johan@superfly.tv",
-      "url": "http://superfly.tv"
-    },
-    {
-      "name": "Jesper Stærkær",
-      "email": "jesper@superfly.tv",
-      "url": "http://superfly.tv"
-    },
-    {
-      "name": "Stephan Nordnes Eriksen",
-      "email": "Stephanruler@gmail.com"
-    }
-  ],
-  "homepage": "http://superfly.tv",
-  "keywords": [
-    "casparcg",
-    "caspar",
-    "caspercg",
-    "amcp",
-    "broadcast",
-    "graphics",
-    "superfly",
-    "connection",
-    "middleware",
-    "osc",
-    "state",
-    "resolve"
-  ],
-  "dependencies": {
-    "casparcg-connection": "^4.9.0",
-    "fast-clone": "^1.5.13",
-    "underscore": "^1.9.1"
-  },
-  "devDependencies": {
-    "@types/jest": "^24.0.13",
-    "@types/node": "^12.12.5",
-    "@types/underscore": "^1.9.2",
-    "codecov": "^3.7.0",
-    "gh-pages": "^2.1.1",
-    "jest": "^24.8.0",
-    "node-license-validator": "^1.3.0",
-    "npm-scripts-info": "^0.3.9",
-    "open-cli": "^6.0.1",
-    "standard-version": "^8.0.0",
-    "trash-cli": "^3.0.0",
-    "ts-jest": "^24.0.2",
-    "tslint": "^5.18.0",
-    "tslint-config-standard": "^8.0.1",
-    "typedoc": "^0.16.0",
-    "typescript": "3.6.x"
-  },
-  "standard-version": {
-    "message": "chore(release): %s [skip ci]",
-    "tagPrefix": ""
-  }
+	"name": "casparcg-state",
+	"version": "1.12.0",
+	"engines": {
+		"node": ">= 10.10"
+	},
+	"description": "Node.js Javascript/Typescript library for keeping and resolving a given state of CasparCG into commands for casparcg-connection.",
+	"main": "dist/index.js",
+	"typings": "dist/index.d.ts",
+	"scripts": {
+		"link": "npm link casparcg-connection",
+		"unlink": "npm unlink casparcg-connection",
+		"info": "npm-scripts-info",
+		"build": "trash dist && yarn build:main",
+		"build:main": "tsc -p tsconfig.build.json",
+		"lint": "eslint .",
+		"lint:fix": "yarn lint --fix",
+		"unit": "jest",
+		"test": "yarn lint && yarn unit",
+		"test:integration": "yarn lint && jest --config=jest-integration.config.js",
+		"watch": "jest --watch",
+		"cov": "jest --coverage; open-cli coverage/lcov-report/index.html",
+		"cov-open": "open-cli coverage/lcov-report/index.html",
+		"send-coverage": "codecov",
+		"docs": "yarn docs:html && open-cli docs/index.html",
+		"docs:test": "yarn docs:html",
+		"docs:html": "typedoc src/index.ts --excludePrivate --mode file --theme minimal --out docs",
+		"docs:json": "typedoc --mode file --json docs/typedoc.json src/index.ts",
+		"docs:publish": "yarn docs:html && gh-pages -d docs",
+		"changelog": "standard-version",
+		"release": "yarn reset && yarn test && yarn docs:publish && yarn changelog",
+		"reset": "git clean -dfx && git reset --hard && yarn",
+		"validate:dependencies": "yarn audit --groups dependencies && yarn license-validate",
+		"validate:dev-dependencies": "yarn audit --groups devDependencies",
+		"license-validate": "node-license-validator -p -d --allow-licenses MIT BSD BSD-3-Clause ISC Apache"
+	},
+	"scripts-info": {
+		"info": "Display information about the scripts",
+		"link": "Link casparcg",
+		"unlink": "Unlink casparcg",
+		"build": "(Trash and re)build the library",
+		"build:main": "Builds main build command without trash.",
+		"lint": "Lint all typescript source files",
+		"unit": "Build the library and run unit tests",
+		"test": "Lint, build, and test the library",
+		"test:integration": "Integration tests. Work in progress",
+		"watch": "Watch source files, rebuild library on changes, rerun relevant tests",
+		"cov": "Run tests, generate the HTML coverage report, and open it in a browser",
+		"cov-open": "Open current test coverage",
+		"send-coverage": "send coverage to codecov",
+		"docs": "Generate HTML API documentation and open it in a browser",
+		"docs:test": "Running the docs generation for testing.",
+		"docs:html": "Generate HTML documentation",
+		"docs:json": "Generate API documentation in typedoc JSON format",
+		"docs:publish": "Generate HTML API documentation and push it to GitHub Pages",
+		"changelog": "Bump package.json version, update CHANGELOG.md, tag a release",
+		"release": "Clean, build, test, publish docs, and prepare release (a one-step publish process). Updates versions and creates git commits.",
+		"reset": "Delete all untracked files and reset the repo to the last commit",
+		"validate:dependencies": "Scan dependencies for vulnerabilities and check licenses",
+		"validate:dev-dependencies": "Scan dependencies for vulnerabilities",
+		"license-validate": "Validate licenses for dependencies."
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/SuperFlyTV/casparcg-state"
+	},
+	"bugs": {
+		"url": "https://github.com/SuperFlyTV/casparcg-state/issues"
+	},
+	"license": "MIT",
+	"directories": {
+		"lib": "src/"
+	},
+	"files": [
+		"/dist",
+		"/CHANGELOG.md",
+		"/README.md",
+		"/LICENSE"
+	],
+	"contributors": [
+		{
+			"name": "Johan Nyman",
+			"email": "johan@superfly.tv",
+			"url": "http://superfly.tv"
+		},
+		{
+			"name": "Jesper Stærkær",
+			"email": "jesper@superfly.tv",
+			"url": "http://superfly.tv"
+		},
+		{
+			"name": "Stephan Nordnes Eriksen",
+			"email": "Stephanruler@gmail.com"
+		}
+	],
+	"homepage": "http://superfly.tv",
+	"keywords": [
+		"casparcg",
+		"caspar",
+		"caspercg",
+		"amcp",
+		"broadcast",
+		"graphics",
+		"superfly",
+		"connection",
+		"middleware",
+		"osc",
+		"state",
+		"resolve"
+	],
+	"dependencies": {
+		"casparcg-connection": "^4.9.0",
+		"fast-clone": "^1.5.13",
+		"underscore": "^1.9.1"
+	},
+	"devDependencies": {
+		"@types/jest": "^24.0.13",
+		"@types/node": "^12.12.5",
+		"@types/underscore": "^1.9.2",
+		"@typescript-eslint/eslint-plugin": "^2.28.0",
+		"@typescript-eslint/parser": "^2.28.0",
+		"codecov": "^3.7.0",
+		"gh-pages": "^2.1.1",
+		"jest": "^24.8.0",
+		"node-license-validator": "^1.3.0",
+		"npm-scripts-info": "^0.3.9",
+		"open-cli": "^6.0.1",
+		"standard-version": "^8.0.0",
+		"trash-cli": "^3.0.0",
+		"ts-jest": "^24.0.2",
+		"eslint": "7",
+		"eslint-config-prettier": "^6.10.1",
+		"eslint-plugin-prettier": "^3.1.3",
+		"husky": "^4.2.5",
+		"lint-staged": "^10.1.3",
+		"prettier": "^2.0.4",
+		"typedoc": "^0.16.0",
+		"typescript": "3.6.x"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged"
+		}
+	},
+	"lint-staged": {
+		"*.{js,json,md}": [
+			"prettier --write"
+		],
+		"*.ts": [
+			"eslint --fix"
+		]
+	},
+	"standard-version": {
+		"message": "chore(release): %s [skip ci]",
+		"tagPrefix": ""
+	}
 }

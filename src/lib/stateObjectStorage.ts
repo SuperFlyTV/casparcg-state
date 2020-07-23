@@ -1,8 +1,4 @@
-import {
-	State,
-	Channel,
-	ILayerBase
-} from './api'
+import { State, Channel, LayerBase } from './api'
 
 /**
  * StateObjectStorage is used for exposing the internal state variable
@@ -13,27 +9,31 @@ export class StateObjectStorage {
 	private _internalState: InternalState = {
 		channels: {}
 	}
-	private _externalStorage: ((action: string, data?: Object | null) => InternalState) | null
+	private _externalStorage:
+		| ((action: string, data?: Record<string, any> | null) => InternalState)
+		| null
 
-	assignExternalStorage (fcn: (action: string, data: Object | null) => InternalState): void {
+	assignExternalStorage(
+		fcn: (action: string, data: Record<string, any> | null) => InternalState
+	): void {
 		this._externalStorage = fcn
 	}
 
-	fetchState (): InternalState {
+	fetchState(): InternalState {
 		if (this._externalStorage) {
 			return this._externalStorage('fetch', null)
 		} else {
 			return this._internalState
 		}
 	}
-	storeState (data: InternalState): void {
+	storeState(data: InternalState): void {
 		if (this._externalStorage) {
 			this._externalStorage('store', data)
 		} else {
 			this._internalState = data
 		}
 	}
-	clearState (): void {
+	clearState(): void {
 		if (this._externalStorage) {
 			this._externalStorage('clear')
 		} else {
@@ -45,14 +45,12 @@ export class StateObjectStorage {
 }
 
 export interface InternalState extends State {
-	channels: { [channel: string]: InternalChannel}
+	channels: { [channel: string]: InternalChannel }
 }
 export interface InternalChannel extends Channel {
 	channelNo: number
 	videoMode: string | null
 	fps: number
-	layers: { [layer: string]: InternalLayer}
+	layers: { [layer: string]: InternalLayer }
 }
-export interface InternalLayer extends ILayerBase {
-
-}
+export type InternalLayer = LayerBase

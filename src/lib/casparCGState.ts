@@ -1,6 +1,7 @@
 import * as _ from 'underscore'
-const clone = require('fast-clone')
 import { Command as CommandNS, AMCP } from 'casparcg-connection'
+// eslint-disable-next-line
+const clone = require('fast-clone')
 
 import {
 	StateObjectStorage,
@@ -8,17 +9,14 @@ import {
 	InternalState,
 	InternalChannel
 } from './stateObjectStorage'
-import {
-	ChannelInfo,
-	State,
-} from './api'
+import { ChannelInfo, State } from './api'
 import { addContext, addCommands } from './util'
 import { resolveEmptyState } from './resolvers/empty'
 import { resolveForegroundState } from './resolvers/foreground'
 import { resolveBackgroundState } from './resolvers/background'
 import { resolveMixerState } from './resolvers/mixer'
 
-const MIN_TIME_SINCE_PLAY = .15 // [s]
+const MIN_TIME_SINCE_PLAY = 0.15 // [s]
 const CasparCGStateVersion = '2017-11-06 19:15'
 
 export interface OptionsInterface {
@@ -30,22 +28,22 @@ export interface OptionsInterface {
 	transitionEasing?: any
 }
 
-export interface IAMCPCommandVOWithContext extends CommandNS.IAMCPCommandVO {
+export interface AMCPCommandVOWithContext extends CommandNS.IAMCPCommandVO {
 	context: {
-		context: string;
+		context: string
 		/** The id of the layer the command originates from */
-		layerId: string;
+		layerId: string
 	}
 }
-export interface IAMCPCommandWithContext extends CommandNS.IAMCPCommand {
+export interface AMCPCommandWithContext extends CommandNS.IAMCPCommand {
 	context: {
-		context: string;
+		context: string
 		/** The id of the layer the command originates from */
-		layerId: string;
+		layerId: string
 	}
 }
 export interface DiffCommands {
-	cmds: Array<IAMCPCommandVOWithContext>
+	cmds: Array<AMCPCommandVOWithContext>
 	additionalLayerState?: InternalLayer
 }
 export type DiffCommandGroups = Array<DiffCommands>
@@ -58,8 +56,8 @@ export type DiffCommandGroups = Array<DiffCommands>
 /** */
 export class CasparCGState0 {
 	public bufferedCommands: Array<{
-		cmd: CommandNS.IAMCPCommandVO;
-		additionalLayerState?: InternalLayer;
+		cmd: CommandNS.IAMCPCommandVO
+		additionalLayerState?: InternalLayer
 	}> = []
 
 	public minTimeSincePlay: number = MIN_TIME_SINCE_PLAY // [s]
@@ -71,15 +69,9 @@ export class CasparCGState0 {
 	// private _externalLog?: (...args: Array<any>) => void
 
 	/** */
-	constructor (config?: {
-		getMediaDurationCallback?: (
-			clip: string,
-			callback: (duration: number) => void
-		) => void;
-		externalStorage?: (
-			action: string,
-			data: Object | null
-		) => InternalState;
+	constructor(config?: {
+		getMediaDurationCallback?: (clip: string, callback: (duration: number) => void) => void
+		externalStorage?: (action: string, data: Record<string, any> | null) => InternalState
 		// externalLog?: (arg0?: any, arg1?: any, arg2?: any, arg3?: any) => void;
 	}) {
 		// set the callback for handling media duration query
@@ -100,16 +92,14 @@ export class CasparCGState0 {
 
 		// set the callback for handling externalStorage
 		if (config && config.externalStorage) {
-			this._currentStateStorage.assignExternalStorage(
-				config.externalStorage
-			)
+			this._currentStateStorage.assignExternalStorage(config.externalStorage)
 		}
 
 		// if (config && config.externalLog) {
 		// 	this._externalLog = config.externalLog
 		// }
 	}
-	get version (): string {
+	get version(): string {
 		return CasparCGStateVersion
 	}
 
@@ -117,11 +107,8 @@ export class CasparCGState0 {
 	 * Initializes the state by using channel info
 	 * @param {any} channels [description]
 	 */
-	initStateFromChannelInfo (
-		channels: Array<ChannelInfo>,
-		currentTime: number
-	) {
-		let currentState = this._currentStateStorage.fetchState()
+	initStateFromChannelInfo(channels: Array<ChannelInfo>, currentTime: number) {
+		const currentState = this._currentStateStorage.fetchState()
 		_.each(channels, (channel: ChannelInfo, i: number) => {
 			if (!channel.videoMode) {
 				throw Error('State: Missing channel.videoMode!')
@@ -129,15 +116,10 @@ export class CasparCGState0 {
 			if (!channel.fps) throw Error('State: Missing channel.fps!')
 
 			if (!(_.isNumber(channel.fps) && channel.fps > 0)) {
-				throw Error(
-					'State:Bad channel.fps, it should be a number > 0 (got ' +
-						channel.fps +
-						')!'
-				)
+				throw Error('State:Bad channel.fps, it should be a number > 0 (got ' + channel.fps + ')!')
 			}
 
-			let existingChannel: InternalChannel =
-				currentState.channels[i + 1 + '']
+			let existingChannel: InternalChannel = currentState.channels[i + 1 + '']
 
 			if (!existingChannel) {
 				existingChannel = {
@@ -146,9 +128,7 @@ export class CasparCGState0 {
 					fps: channel.fps,
 					layers: {}
 				}
-				currentState.channels[
-					existingChannel.channelNo
-				] = existingChannel
+				currentState.channels[existingChannel.channelNo] = existingChannel
 			}
 
 			existingChannel.videoMode = channel.videoMode
@@ -165,7 +145,7 @@ export class CasparCGState0 {
 	 * Set the current statue to a provided state
 	 * @param {State} state The new state
 	 */
-	setState (state: InternalState): void {
+	setState(state: InternalState): void {
 		this._currentStateStorage.storeState(state)
 	}
 	/**
@@ -173,7 +153,7 @@ export class CasparCGState0 {
 	 * @param  {true}}   options [description]
 	 * @return {InternalState} The current state
 	 */
-	getState (): InternalState {
+	getState(): InternalState {
 		if (!this.isInitialised) {
 			throw new Error('CasparCG State is not initialised')
 		}
@@ -183,15 +163,15 @@ export class CasparCGState0 {
 	/**
 	 * Resets / clears the current state
 	 */
-	clearState (): void {
+	clearState(): void {
 		this._currentStateStorage.clearState()
 		this.setIsInitialised(false, 0)
 	}
 	/**
 	 * A soft clear, ie clears any content, but keeps channel settings
 	 */
-	softClearState (): void {
-		let currentState = this._currentStateStorage.fetchState()
+	softClearState(): void {
+		const currentState = this._currentStateStorage.fetchState()
 		_.each(currentState.channels, (channel) => {
 			channel.layers = {}
 		})
@@ -199,12 +179,12 @@ export class CasparCGState0 {
 		this._currentStateStorage.storeState(currentState)
 	}
 
-	getDiff (newState: State, currentTime: number): DiffCommandGroups {
+	getDiff(newState: State, currentTime: number): DiffCommandGroups {
 		// needs to be initialised
 		if (!this.isInitialised) {
 			throw new Error('CasparCG State is not initialised')
 		}
-		let currentState = this._currentStateStorage.fetchState()
+		const currentState = this._currentStateStorage.fetchState()
 		return CasparCGState0.diffStates(currentState, newState, currentTime, this.minTimeSincePlay)
 	}
 
@@ -213,16 +193,16 @@ export class CasparCGState0 {
 	 * @param oldState
 	 * @param newState
 	 */
-	static diffStatesOrderedCommands (
+	static diffStatesOrderedCommands(
 		oldState: InternalState,
 		newState: State,
 		currentTime: number,
 		minTimeSincePlay = MIN_TIME_SINCE_PLAY
-	): Array<IAMCPCommandVOWithContext> {
+	): Array<AMCPCommandVOWithContext> {
 		const diff = CasparCGState0.diffStates(oldState, newState, currentTime, minTimeSincePlay)
-		const fastCommands: Array<IAMCPCommandVOWithContext> = [] // fast to exec, and direct visual impact: PLAY 1-10
-		const slowCommands: Array<IAMCPCommandVOWithContext> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
-		const lowPrioCommands: Array<IAMCPCommandVOWithContext> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
+		const fastCommands: Array<AMCPCommandVOWithContext> = [] // fast to exec, and direct visual impact: PLAY 1-10
+		const slowCommands: Array<AMCPCommandVOWithContext> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
+		const lowPrioCommands: Array<AMCPCommandVOWithContext> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
 
 		for (const layer of diff) {
 			let containsSlowCommand = false
@@ -239,8 +219,7 @@ export class CasparCGState0 {
 					layer.cmds.splice(i, 1)
 					i-- // next entry now has the same index as this one.
 				} else if (
-					(layer.cmds[i]._commandName === 'PlayCommand' &&
-						layer.cmds[i]._objectParams.clip) ||
+					(layer.cmds[i]._commandName === 'PlayCommand' && layer.cmds[i]._objectParams.clip) ||
 					(layer.cmds[i]._commandName === 'PlayDecklinkCommand' &&
 						layer.cmds[i]._objectParams.device) ||
 					(layer.cmds[i]._commandName === 'PlayRouteCommand' &&
@@ -267,7 +246,7 @@ export class CasparCGState0 {
 	}
 
 	/** */
-	static diffStates (
+	static diffStates(
 		oldState: InternalState,
 		newState: State,
 		currentTime: number,
@@ -275,15 +254,28 @@ export class CasparCGState0 {
 	): DiffCommandGroups {
 		const commands: DiffCommandGroups = []
 
-		let bundledCmds: {
-			[bundleGroup: string]: Array<IAMCPCommandWithContext>;
+		const bundledCmds: {
+			[bundleGroup: string]: Array<AMCPCommandWithContext>
 		} = {}
 
 		// Added/updated things:
-		for (const [ channelKey, newChannel] of Object.entries(newState.channels)) {
-			for (const [ layerKey, newLayer ] of Object.entries(newChannel.layers)) {
-				const fgChanges = resolveForegroundState(oldState, newState, channelKey, layerKey, currentTime, minTimeSincePlay)
-				const bgChanges = resolveBackgroundState(oldState, newState, channelKey, layerKey, fgChanges.bgCleared)
+		for (const [channelKey, newChannel] of Object.entries(newState.channels)) {
+			for (const [layerKey, newLayer] of Object.entries(newChannel.layers)) {
+				const fgChanges = resolveForegroundState(
+					oldState,
+					newState,
+					channelKey,
+					layerKey,
+					currentTime,
+					minTimeSincePlay
+				)
+				const bgChanges = resolveBackgroundState(
+					oldState,
+					newState,
+					channelKey,
+					layerKey,
+					fgChanges.bgCleared
+				)
 				const mixerChanges = resolveMixerState(oldState, newState, channelKey, layerKey)
 
 				const diffCmds: DiffCommands = {
@@ -297,15 +289,12 @@ export class CasparCGState0 {
 				commands.push(diffCmds)
 
 				for (const group of Object.keys(mixerChanges.bundledCmds)) {
-					bundledCmds[group] = [
-						...(bundledCmds[group] || []),
-						...mixerChanges.bundledCmds[group]
-					]
+					bundledCmds[group] = [...(bundledCmds[group] || []), ...mixerChanges.bundledCmds[group]]
 				}
 			}
 		}
 		// Removed things:
-		for (const [ channelKey, oldChannel] of Object.entries(oldState.channels)) {
+		for (const [channelKey, oldChannel] of Object.entries(oldState.channels)) {
 			for (const layerKey of Object.keys(oldChannel.layers)) {
 				const diff = resolveEmptyState(oldState, newState, channelKey, layerKey)
 				if (diff.commands.cmds.length) commands.push(diff.commands)
@@ -315,7 +304,7 @@ export class CasparCGState0 {
 		// bundled commands:
 		_.each(bundledCmds, (bundle) => {
 			console.log(bundle)
-			let channels = _.uniq(_.pluck(bundle, 'channel'))
+			const channels = _.uniq(_.pluck(bundle, 'channel'))
 
 			_.each(channels, (channel) => {
 				bundle.push(
@@ -339,25 +328,25 @@ export class CasparCGState0 {
 		return commands
 	}
 
-	valueOf (): InternalState {
+	valueOf(): InternalState {
 		return this.getState()
 	}
-	toString (): string {
+	toString(): string {
 		return JSON.stringify(this.getState())
 	}
 
 	/** */
-	public get isInitialised (): boolean {
+	public get isInitialised(): boolean {
 		return this._isInitialised
 	}
 
 	/** */
-	public setIsInitialised (initialised: boolean, _currentTime: number) {
+	public setIsInitialised(initialised: boolean, _currentTime: number) {
 		if (this._isInitialised !== initialised) {
 			this._isInitialised = initialised
 		}
 	}
-	
+
 	// private log (...args: Array<any>): void {
 	// 	if (this._externalLog) {
 	// 		this._externalLog(...args)
@@ -365,14 +354,13 @@ export class CasparCGState0 {
 	// 		console.log(...args)
 	// 	}
 	// }
-
 }
 export class CasparCGState extends CasparCGState0 {
 	/**
 	 * Set the current state to provided state
 	 * @param state The new state
 	 */
-	setState (state: InternalState): void {
+	setState(state: InternalState): void {
 		super.setState(clone(state))
 	}
 	/**
@@ -380,7 +368,7 @@ export class CasparCGState extends CasparCGState0 {
 	 * @param  {true}}   options [description]
 	 * @return {InternalState} The current state
 	 */
-	getState (): InternalState {
+	getState(): InternalState {
 		return clone(super.getState())
 	}
 }

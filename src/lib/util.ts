@@ -1,27 +1,29 @@
-import { Channel, IMediaLayer, NextUpMedia, NextUp, LayerContentType, ILayerBase, TransitionObject, Transition, State } from './api'
+import {
+	Channel,
+	IMediaLayer,
+	NextUpMedia,
+	NextUp,
+	LayerContentType,
+	ILayerBase,
+	TransitionObject,
+	Transition,
+	State
+} from './api'
 import * as _ from 'underscore'
 import { Mixer } from './mixer'
 import { IAMCPCommandWithContext, IAMCPCommandVOWithContext, DiffCommands } from './casparCGState'
 import { Command as CommandNS } from 'casparcg-connection'
 import { InternalLayer, InternalState } from './stateObjectStorage'
 
-export function frames2Time (
-	frames: number,
-	newChannel: Channel,
-	oldChannel?: Channel
-): number {
+export function frames2Time(frames: number, newChannel: Channel, oldChannel?: Channel): number {
 	// ms = frames * (1000 / fps)
-	let fps = ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 25)
+	let fps = newChannel.fps || (oldChannel ? oldChannel.fps : 0) || 25
 	fps = fps < 1 ? 1 / fps : fps
 	return frames * (1000 / fps)
 }
-export function time2Frames (
-	time: number,
-	newChannel: Channel,
-	oldChannel?: Channel
-): number {
+export function time2Frames(time: number, newChannel: Channel, oldChannel?: Channel): number {
 	// frames = ms / (1000 / fps)
-	let fps = ((newChannel.fps || (oldChannel ? oldChannel.fps : 0)) || 25)
+	let fps = newChannel.fps || (oldChannel ? oldChannel.fps : 0) || 25
 	fps = fps < 1 ? 1 / fps : fps
 	return Math.floor(time / (1000 / fps))
 }
@@ -29,7 +31,7 @@ export function time2Frames (
  * Calculate seek time needed to make the clip to play in sync
  * Returns seek, in frames
  */
-export function calculateSeek (
+export function calculateSeek(
 	newChannel: Channel,
 	oldChannel: Channel,
 	layer: IMediaLayer | NextUpMedia,
@@ -39,70 +41,51 @@ export function calculateSeek (
 		// if we don't know the length of the loop, we can't seek..
 		return 0
 	}
-	const seekStart: number =
-		(layer.seek !== undefined ? layer.seek : layer.inPoint) || 0
+	const seekStart: number = (layer.seek !== undefined ? layer.seek : layer.inPoint) || 0
 
 	let seekFrames: number = Math.max(
 		0,
-		time2Frames(
-			seekStart + (timeSincePlay || 0),
-			newChannel,
-			oldChannel
-		)
+		time2Frames(seekStart + (timeSincePlay || 0), newChannel, oldChannel)
 	)
-	let inPointFrames: number | undefined =
-		layer.inPoint !== undefined
-			? time2Frames(layer.inPoint, newChannel, oldChannel)
-			: undefined
-	let lengthFrames: number | undefined =
-		layer.length !== undefined
-			? time2Frames(layer.length, newChannel, oldChannel)
-			: undefined
+	const inPointFrames: number | undefined =
+		layer.inPoint !== undefined ? time2Frames(layer.inPoint, newChannel, oldChannel) : undefined
+	const lengthFrames: number | undefined =
+		layer.length !== undefined ? time2Frames(layer.length, newChannel, oldChannel) : undefined
 
 	if (layer.looping) {
-		let seekSinceInPoint = seekFrames - (inPointFrames || 0)
+		const seekSinceInPoint = seekFrames - (inPointFrames || 0)
 
 		if (seekSinceInPoint > 0 && lengthFrames) {
-			seekFrames =
-				(inPointFrames || 0) + (seekSinceInPoint % lengthFrames)
+			seekFrames = (inPointFrames || 0) + (seekSinceInPoint % lengthFrames)
 		}
 	}
 	return seekFrames
 }
-export function calculatePlayAttributes (
+export function calculatePlayAttributes(
 	timeSincePlay: number | null,
 	nl: IMediaLayer | NextUp,
 	newChannel: Channel,
 	oldChannel: Channel
 ): {
-	inPointFrames: number | undefined;
-	lengthFrames: number | undefined;
-	seekFrames: number;
-	looping: boolean;
-	channelLayout: string | undefined;
+	inPointFrames: number | undefined
+	lengthFrames: number | undefined
+	seekFrames: number
+	looping: boolean
+	channelLayout: string | undefined
 } {
 	let inPointFrames: number | undefined
 	let lengthFrames: number | undefined
-	let seekFrames: number = 0
+	let seekFrames = 0
 	let channelLayout: string | undefined
-	let looping: boolean = false
+	let looping = false
 
 	if (nl.content === LayerContentType.MEDIA) {
 		looping = !!nl.looping
 		inPointFrames =
-			nl.inPoint !== undefined
-				? time2Frames(nl.inPoint, newChannel, oldChannel)
-				: undefined
+			nl.inPoint !== undefined ? time2Frames(nl.inPoint, newChannel, oldChannel) : undefined
 		lengthFrames =
-			nl.length !== undefined
-				? time2Frames(nl.length, newChannel, oldChannel)
-				: undefined
-		seekFrames = calculateSeek(
-			newChannel,
-			oldChannel,
-			nl,
-			timeSincePlay
-		)
+			nl.length !== undefined ? time2Frames(nl.length, newChannel, oldChannel) : undefined
+		seekFrames = calculateSeek(newChannel, oldChannel, nl, timeSincePlay)
 	}
 	if (nl.content === LayerContentType.MEDIA) {
 		channelLayout = nl.channelLayout
@@ -122,11 +105,13 @@ export function calculatePlayAttributes (
 		channelLayout
 	}
 }
-export function getTimeSincePlay (layer: IMediaLayer, currentTime: number, minTimeSincePlay: number) {
+export function getTimeSincePlay(
+	layer: IMediaLayer,
+	currentTime: number,
+	minTimeSincePlay: number
+) {
 	let timeSincePlay: number | null =
-		layer.playTime === undefined
-			? 0
-			: (layer.pauseTime || currentTime) - (layer.playTime || 0)
+		layer.playTime === undefined ? 0 : (layer.pauseTime || currentTime) - (layer.playTime || 0)
 	if (timeSincePlay < minTimeSincePlay) {
 		timeSincePlay = 0
 	}
@@ -137,7 +122,7 @@ export function getTimeSincePlay (layer: IMediaLayer, currentTime: number, minTi
 	}
 	return timeSincePlay
 }
-export function fixPlayCommandInput<T extends object> (o: T): T {
+export function fixPlayCommandInput<T extends object>(o: T): T {
 	const o2: any = {}
 	for (const key of Object.keys(o)) {
 		const value: any = o[key as keyof T]
@@ -145,24 +130,24 @@ export function fixPlayCommandInput<T extends object> (o: T): T {
 	}
 	return o2
 }
-export function compareAttrs (
+export function compareAttrs(
 	obj0: any,
 	obj1: any,
 	attrs: Array<string>,
 	minTimeSincePlay = 0.15, // [s]
-	strict?: boolean,
+	strict?: boolean
 ): null | string {
 	let difference: null | string = null
 
 	let diff0 = ''
 	let diff1 = ''
 
-	let getValue: any = function (val: any) {
+	const getValue: any = function (val: any) {
 		if (val && val._transition) return val._value
 		if (val && val.getString) return val.getString()
 		return Mixer.getValue(val)
 	}
-	let cmp = (a: any, b: any, name: any) => {
+	const cmp = (a: any, b: any, name: any) => {
 		if (name === 'playTime') {
 			return Math.abs(a - b) > minTimeSincePlay
 		} else {
@@ -210,34 +195,34 @@ export function compareAttrs (
 	}
 	return difference
 }
-export function addContext<T extends CommandNS.IAMCPCommandVO> (
+export function addContext<T extends CommandNS.IAMCPCommandVO>(
 	cmd: T,
 	context: string,
 	layer: ILayerBase | null
 ): IAMCPCommandVOWithContext
-export function addContext<T extends CommandNS.IAMCPCommand> (
+export function addContext<T extends CommandNS.IAMCPCommand>(
 	cmd: T,
 	context: string,
 	layer: ILayerBase | null
 ): IAMCPCommandWithContext
-export function addContext<
-	T extends CommandNS.IAMCPCommandVO & CommandNS.IAMCPCommand
-> (
+export function addContext<T extends CommandNS.IAMCPCommandVO | CommandNS.IAMCPCommand>(
 	cmd: T,
 	context: string,
 	layer: ILayerBase | null
-): IAMCPCommandVOWithContext & IAMCPCommandWithContext {
-	// @ts-ignore
-	cmd.context = {
-		context,
-		layerId: layer ? layer.id : ''
+): T & { context: IAMCPCommandVOWithContext['context'] } {
+	const returnCmd = {
+		...cmd,
+		context: {
+			context,
+			layerId: layer ? layer.id : ''
+		}
 	}
-	return cmd as any
+	return returnCmd
 }
-export function isIAMCPCommand (cmd: any): cmd is CommandNS.IAMCPCommand {
+export function isIAMCPCommand(cmd: any): cmd is CommandNS.IAMCPCommand {
 	return cmd && typeof cmd.serialize === 'function'
 }
-export function setTransition (
+export function setTransition(
 	options: any | null,
 	channel: Channel,
 	oldLayer: ILayerBase,
@@ -248,10 +233,8 @@ export function setTransition (
 	if (!options) options = {}
 	const comesFromBG = (transitionObj: TransitionObject) => {
 		if (oldLayer.nextUp && _.isObject(oldLayer.nextUp.media)) {
-			let t0 = new Transition(transitionObj)
-			let t1 = new Transition(
-				(oldLayer.nextUp.media as TransitionObject).inTransition
-			)
+			const t0 = new Transition(transitionObj)
+			const t1 = new Transition((oldLayer.nextUp.media as TransitionObject).inTransition)
 			return t0.getString() === t1.getString()
 		}
 		return false
@@ -267,10 +250,7 @@ export function setTransition (
 		} else {
 			if (oldLayer.playing && content.changeTransition) {
 				transition = new Transition(content.changeTransition)
-			} else if (
-				content.inTransition &&
-				(isBg || !comesFromBG(content.inTransition))
-			) {
+			} else if (content.inTransition && (isBg || !comesFromBG(content.inTransition))) {
 				transition = new Transition(content.inTransition)
 			}
 		}
@@ -282,11 +262,7 @@ export function setTransition (
 
 	return options
 }
-export function setDefaultValue (
-	obj: any | Array<any>,
-	key: string | Array<string>,
-	value: any
-) {
+export function setDefaultValue(obj: any | Array<any>, key: string | Array<string>, value: any) {
 	if (_.isArray(obj)) {
 		_.each(obj, (o) => {
 			setDefaultValue(o, key, value)
@@ -301,18 +277,14 @@ export function setDefaultValue (
 		}
 	}
 }
-export function compareMixerValues (
+export function compareMixerValues(
 	layer: ILayerBase,
 	oldLayer: InternalLayer,
 	attr: string,
 	attrs?: Array<string>
 ): string | null {
-	let val0: any = Mixer.getValue(
-		(layer.mixer || {})[attr]
-	)
-	let val1: any = Mixer.getValue(
-		(oldLayer.mixer || {})[attr]
-	)
+	const val0: any = Mixer.getValue((layer.mixer || {})[attr])
+	const val1: any = Mixer.getValue((oldLayer.mixer || {})[attr])
 
 	if (attrs) {
 		let diff: string | null = null
@@ -336,11 +308,7 @@ export function compareMixerValues (
 		} else if (_.isObject(val0) && !_.isObject(val1)) {
 			return `${attr}: val1 is object, but val0 is not`
 		} else {
-			let omitAttrs = [
-				'inTransition',
-				'changeTransition',
-				'outTransition'
-			]
+			const omitAttrs = ['inTransition', 'changeTransition', 'outTransition']
 
 			const omit0 = _.omit(val0, omitAttrs)
 			const omit1 = _.omit(val1, omitAttrs)
@@ -356,17 +324,22 @@ export function compareMixerValues (
 	return null
 }
 export function getChannel(state: State | InternalState, channelNo: string) {
-	return state.channels[channelNo]  || { channelNo: channelNo, layers: {} }
+	return state.channels[channelNo] || { channelNo: channelNo, layers: {} }
 }
 export function getLayer(state: State | InternalState, channelNo: string, layerNo: string) {
 	const channel = getChannel(state, channelNo)
-	return channel.layers[layerNo] || {
-		content: LayerContentType.NOTHING,
-		id: '',
-		layerNo: layerNo
-	}
+	return (
+		channel.layers[layerNo] || {
+			content: LayerContentType.NOTHING,
+			id: '',
+			layerNo: layerNo
+		}
+	)
 }
-export function addCommands(diff: DiffCommands, ...commands: Array<IAMCPCommandWithContext | IAMCPCommandVOWithContext>): void {
+export function addCommands(
+	diff: DiffCommands,
+	...commands: Array<IAMCPCommandWithContext | IAMCPCommandVOWithContext>
+): void {
 	for (const cmd of commands) {
 		if (isIAMCPCommand(cmd)) {
 			diff.cmds.push({

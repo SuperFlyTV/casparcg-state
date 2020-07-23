@@ -1,13 +1,10 @@
-import {
-	StateObjectStorage,
-	InternalState
-} from '../stateObjectStorage'
+import { StateObjectStorage, InternalState } from '../stateObjectStorage'
 import { LayerContentType } from '../api'
 
 test('test StateObjectStorage', () => {
-	let sos = new StateObjectStorage()
+	const sos = new StateObjectStorage()
 
-	let state0: InternalState = {
+	const state0: InternalState = {
 		channels: {
 			'1': {
 				channelNo: 1,
@@ -18,7 +15,6 @@ test('test StateObjectStorage', () => {
 						id: 'abc',
 						layerNo: 1,
 						content: LayerContentType.NOTHING
-
 					}
 				}
 			}
@@ -30,7 +26,7 @@ test('test StateObjectStorage', () => {
 	expect(sos.fetchState()).toEqual(state0)
 
 	sos.clearState()
-	let empty: InternalState = {
+	const empty: InternalState = {
 		channels: {}
 	}
 
@@ -38,7 +34,7 @@ test('test StateObjectStorage', () => {
 })
 
 test('test externalStorage', () => {
-	let state0: InternalState = {
+	const state0: InternalState = {
 		channels: {
 			'2': {
 				channelNo: 1,
@@ -49,16 +45,15 @@ test('test externalStorage', () => {
 						id: 'abc',
 						layerNo: 1,
 						content: LayerContentType.NOTHING
-
 					}
 				}
 			}
 		}
 	}
-	let sos = new StateObjectStorage()
+	const sos = new StateObjectStorage()
 
 	let myExternalStorage: any = {}
-	let fcn = jest.fn((action: string, data: Object | null) => {
+	const fcn = jest.fn((action: string, data: Record<string, any> | null) => {
 		if (action === 'store') {
 			myExternalStorage = data
 		} else if (action === 'fetch') {
@@ -75,12 +70,11 @@ test('test externalStorage', () => {
 	expect(fcn).toHaveBeenCalledTimes(1)
 	expect(fcn).toHaveBeenCalledWith('store', state0)
 
-	let stateReturned = sos.fetchState()
+	const stateReturned = sos.fetchState()
 
 	expect(stateReturned).toEqual(state0)
 
 	sos.clearState()
 
 	expect(sos.fetchState()).toEqual({})
-
 })

@@ -1,5 +1,5 @@
 import * as _ from 'underscore'
-import { ITransition } from './api'
+// import { Transition } from './api'
 
 export class TransitionObject {
 	_transition: true
@@ -9,11 +9,14 @@ export class TransitionObject {
 	outTransition: Transition
 
 	/** */
-	constructor (value?: any, options ?: {
-		inTransition?: Transition,
-		changeTransition?: Transition,
-		outTransition?: Transition
-	}) {
+	constructor(
+		value?: any,
+		options?: {
+			inTransition?: Transition
+			changeTransition?: Transition
+			outTransition?: Transition
+		}
+	) {
 		this._transition = true
 		if (!_.isUndefined(value)) {
 			this._value = value
@@ -26,34 +29,53 @@ export class TransitionObject {
 	}
 
 	/** */
-	valueOf (): string | number | boolean {
+	valueOf(): string | number | boolean {
 		return this._value
 	}
 
 	/** */
-	toString (): string {
+	toString(): string {
 		if (this._value) return this._value.toString()
 		return ''
 	}
 }
-export class Transition implements ITransition {
 
-	type: string = 'mix'
-	duration: number = 0
-	easing: string = 'linear'
-	direction: string = 'right'
+export interface Transition {
+	type?: string
+	duration?: number
+	easing?: string
+	direction?: string
 
-	maskFile: string = ''
-	delay: number = 0
-	overlayFile: string = ''
+	maskFile?: string
+	delay?: number
+	overlayFile?: string
+	audioFadeStart?: number
+	audioFadeDuration?: number
+}
+export class Transition implements Transition {
+	type? = 'mix'
+	duration? = 0
+	easing? = 'linear'
+	direction? = 'right'
+
+	maskFile? = ''
+	delay? = 0
+	overlayFile? = ''
 	audioFadeStart?: number = 0
 	audioFadeDuration?: number = 0
 
-	constructor (typeOrTransition?: string | object, durationOrMaskFile?: number | string, easingOrDelay?: string | number, directionOrOverlayFile?: string, audioFadeStart?: number, audioFadeDuration?: number) {
+	constructor(
+		typeOrTransition?: string | object,
+		durationOrMaskFile?: number | string,
+		easingOrDelay?: string | number,
+		directionOrOverlayFile?: string,
+		audioFadeStart?: number,
+		audioFadeDuration?: number
+	) {
 		let type: string
 
 		if (_.isObject(typeOrTransition)) {
-			let t: ITransition = typeOrTransition as ITransition
+			const t: Transition = typeOrTransition as Transition
 			type = t.type as string
 
 			const isSting = (type + '').match(/sting/i)
@@ -100,37 +122,41 @@ export class Transition implements ITransition {
 		}
 	}
 
-	getOptions (fps?: number) {
+	getOptions(fps?: number) {
 		if ((this.type + '').match(/sting/i)) {
 			if (this.audioFadeStart || this.audioFadeDuration) {
 				return {
 					transition: 'sting',
 					stingTransitionProperties: {
 						maskFile: this.maskFile,
-						delay: this.time2Frames(this.delay, fps),
+						delay: this.time2Frames(this.delay || 0, fps),
 						overlayFile: this.overlayFile,
-						audioFadeStart: this.audioFadeStart ? this.time2Frames(this.audioFadeStart, fps) : undefined,
-						audioFadeDuration: this.audioFadeDuration ? this.time2Frames(this.audioFadeDuration, fps) : undefined
+						audioFadeStart: this.audioFadeStart
+							? this.time2Frames(this.audioFadeStart, fps)
+							: undefined,
+						audioFadeDuration: this.audioFadeDuration
+							? this.time2Frames(this.audioFadeDuration, fps)
+							: undefined
 					}
 				}
 			}
 			return {
 				transition: 'sting',
 				stingMaskFilename: this.maskFile,
-				stingDelay: this.time2Frames(this.delay, fps),
+				stingDelay: this.time2Frames(this.delay || 0, fps),
 				stingOverlayFilename: this.overlayFile
 			}
 		} else {
 			return {
 				transition: this.type,
-				transitionDuration: this.time2Frames(this.duration, fps),
+				transitionDuration: this.time2Frames(this.duration || 0, fps),
 				transitionEasing: this.easing,
 				transitionDirection: this.direction
 			}
 		}
 	}
 
-	getString (fps?: number): string {
+	getString(fps?: number): string {
 		if ((this.type + '').match(/sting/i)) {
 			if (this.audioFadeStart || this.audioFadeDuration) {
 				let str = 'STING ('
@@ -138,8 +164,10 @@ export class Transition implements ITransition {
 				if (this.maskFile) str += `MASK="${this.maskFile}" `
 				if (this.overlayFile) str += `OVERLAY="${this.overlayFile}" `
 				if (this.delay) str += `TRIGGER_POINT="${this.time2Frames(this.delay, fps || 50)}" `
-				if (this.audioFadeStart) str += `AUDIO_FADE_START="${this.time2Frames(this.audioFadeStart, fps || 50)}" `
-				if (this.audioFadeDuration) str += `AUDIO_FADE_DURATION="${this.time2Frames(this.audioFadeDuration, fps || 50)}" `
+				if (this.audioFadeStart)
+					str += `AUDIO_FADE_START="${this.time2Frames(this.audioFadeStart, fps || 50)}" `
+				if (this.audioFadeDuration)
+					str += `AUDIO_FADE_DURATION="${this.time2Frames(this.audioFadeDuration, fps || 50)}" `
 
 				str = str.substr(0, str.length - 1) + ')'
 
@@ -148,20 +176,20 @@ export class Transition implements ITransition {
 			return [
 				'STING',
 				this.maskFile,
-				this.time2Frames(this.delay, fps || 50),
+				this.time2Frames(this.delay || 0, fps || 50),
 				this.overlayFile
 			].join(' ')
 		} else {
 			return [
 				this.type,
-				this.time2Frames(this.duration, fps || 50),
+				this.time2Frames(this.duration || 0, fps || 50),
 				this.easing,
 				this.direction
 			].join(' ')
 		}
 	}
 
-	fromCommand (command: any, fps?: number): Transition {
+	fromCommand(command: any, fps?: number): Transition {
 		if (command._objectParams) {
 			if ((command._objectParams.transition + '').match(/sting/i)) {
 				this.type = 'sting'
@@ -178,7 +206,10 @@ export class Transition implements ITransition {
 					this.audioFadeStart = this.frames2Time(command._objectParams.audioFadeStart, fps || 50)
 				}
 				if (command._objectParams.audioFadeDuration) {
-					this.audioFadeDuration = this.frames2Time(command._objectParams.audioFadeDuration, fps || 50)
+					this.audioFadeDuration = this.frames2Time(
+						command._objectParams.audioFadeDuration,
+						fps || 50
+					)
 				}
 			} else {
 				if (command._objectParams.transition) {
@@ -198,18 +229,12 @@ export class Transition implements ITransition {
 		return this
 	}
 
-	private frames2Time (
-		frames: number,
-		fps?: number
-	): number {
+	private frames2Time(frames: number, fps?: number): number {
 		// ms = frames * (1000 / fps)
 		fps = fps ? (fps < 1 ? 1 / fps : fps) : 25
 		return frames * (1000 / fps)
 	}
-	private time2Frames (
-		time: number,
-		fps?: number
-	): number {
+	private time2Frames(time: number, fps?: number): number {
 		// frames = ms / (1000 / fps)
 		fps = fps ? (fps < 1 ? 1 / fps : fps) : 25
 		time = time < 15 ? time * 1000 : time // less than 1 frame

@@ -1,27 +1,27 @@
 import * as _ from 'underscore'
-import { AMCP, Enum as CCG_Enum, Command as CommandNS } from 'casparcg-connection'
+import { AMCP, Enum as CCGEnum, Command as CommandNS } from 'casparcg-connection'
 
 import {
 	CasparCGState,
 	// DiffCommands,
 	// DiffCommandGroups,
-	IAMCPCommandVOWithContext,
+	AMCPCommandVOWithContext,
 	State,
-	IMediaLayer,
+	MediaLayer,
 	LayerContentType,
 	Channel,
-	IEmptyLayer,
-	ITemplateLayer,
-	IHtmlPageLayer,
-	IInputLayer,
-	IRouteLayer,
-	IRecordLayer,
-	IFunctionLayer,
+	EmptyLayer,
+	TemplateLayer,
+	HtmlPageLayer,
+	InputLayer,
+	RouteLayer,
+	RecordLayer,
+	FunctionLayer,
 	Mixer,
-	ILayerBase,
+	LayerBase,
 	TransitionObject,
 	Transition,
-	IRouteLayerBase
+	RouteLayerBase
 } from '../'
 import { InternalLayer } from '..//lib/stateObjectStorage'
 
@@ -30,7 +30,7 @@ interface CGState {
 	log: boolean
 	ccgState: CasparCGState
 }
-function getCasparCGState (): CGState {
+function getCasparCGState(): CGState {
 	let time = 1000
 	// let logging: boolean = false
 	// let externalLog = (...args: any[]) => {
@@ -39,13 +39,13 @@ function getCasparCGState (): CGState {
 	// 	}
 	// }
 	return {
-		set time (t) {
+		set time(t) {
 			time = t
 		},
-		get time () {
+		get time() {
 			return time
 		},
-		set log (_t: boolean) {
+		set log(_t: boolean) {
 			// logging = t
 		},
 		ccgState: new CasparCGState({
@@ -53,11 +53,16 @@ function getCasparCGState (): CGState {
 		})
 	}
 }
-function initState (c: CGState) {
-	c.ccgState.initStateFromChannelInfo([{
-		videoMode: 'PAL',
-		fps: 50
-	}], c.time)
+function initState(c: CGState) {
+	c.ccgState.initStateFromChannelInfo(
+		[
+			{
+				videoMode: 'PAL',
+				fps: 50
+			}
+		],
+		c.time
+	)
 }
 // function initState0 (s: CasparCGState, time: number) {
 // 	s.initStateFromChannelInfo([{
@@ -65,24 +70,28 @@ function initState (c: CGState) {
 // 		fps: 50
 // 	}], time)
 // }
-function initStateMS (c: CGState) {
-	c.ccgState.initStateFromChannelInfo([{
-		videoMode: 'PAL',
-		fps: 1 / 50
-	}], c.time)
+function initStateMS(c: CGState) {
+	c.ccgState.initStateFromChannelInfo(
+		[
+			{
+				videoMode: 'PAL',
+				fps: 1 / 50
+			}
+		],
+		c.time
+	)
 }
-function getDiff (c: CGState, targetState: State, _loggingAfter?: boolean) {
-
-	let cc = c.ccgState.getDiff(targetState, c.time)
+function getDiff(c: CGState, targetState: State, _loggingAfter?: boolean) {
+	const cc = c.ccgState.getDiff(targetState, c.time)
 
 	const s = c.ccgState.getState()
-	for (const [ channelNo, channel ] of Object.entries(targetState.channels)) {
-		for (const [ layerNo, layer ] of Object.entries(channel.layers)) {
+	for (const [channelNo, channel] of Object.entries(targetState.channels)) {
+		for (const [layerNo, layer] of Object.entries(channel.layers)) {
 			s.channels[channelNo].layers[layerNo] = layer
 		}
-	}	
-	for (const [ channelNo, channel ] of Object.entries(s.channels)) {
-		for (const [ layerNo ] of Object.entries(channel.layers)) {
+	}
+	for (const [channelNo, channel] of Object.entries(s.channels)) {
+		for (const [layerNo] of Object.entries(channel.layers)) {
 			if (!targetState.channels[channelNo]) {
 				delete s.channels[channelNo]
 			} else if (!targetState.channels[channelNo].layers[layerNo]) {
@@ -122,22 +131,22 @@ function getDiff (c: CGState, targetState: State, _loggingAfter?: boolean) {
 // 	})
 // 	c.ccgState.applyCommands(commands, c.time)
 // }
-function stripContext (c: any) {
+function stripContext(c: any) {
 	return _.omit(c, 'context')
 }
-function fixCommand (c: any, options?: any) {
+function fixCommand(c: any, options?: any) {
 	options = options || {}
-	// @ts-ignore access _objectParams
+	// @ts-expect-error access _objectParams
 	if (c instanceof AMCP.PlayCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
+	// @ts-expect-error access _objectParams
 	if (c instanceof AMCP.LoadCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
+	// @ts-expect-error access _objectParams
 	if (c instanceof AMCP.PauseCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
+	// @ts-expect-error access _objectParams
 	if (c instanceof AMCP.CGAddCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
+	// @ts-expect-error access _objectParams
 	if (c instanceof AMCP.PlayDecklinkCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
+	// @ts-expect-error access _objectParams
 	if (c instanceof AMCP.PlayHtmlPageCommand) c._objectParams.noClear = !!options.noClear
 
 	_.each(options, (val, key) => {
@@ -146,7 +155,7 @@ function fixCommand (c: any, options?: any) {
 	return c
 }
 test('get version', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	expect(c.ccgState.version).toMatch(/\d+-\d+-\d+ \d+:\d+\d/)
@@ -196,34 +205,48 @@ test('get version', () => {
 // 	}).toThrowError()
 // })
 test('bad initializations', () => {
-
 	expect(() => {
-		let ccgState = new CasparCGState()
-		ccgState.initStateFromChannelInfo([{
-			videoMode: 'PAL'
-		}], 1000)
+		const ccgState = new CasparCGState()
+		ccgState.initStateFromChannelInfo(
+			[
+				{
+					videoMode: 'PAL'
+				}
+			],
+			1000
+		)
 	}).toThrowError(/missing.*fps/i)
 	expect(() => {
-		let ccgState = new CasparCGState()
-		ccgState.initStateFromChannelInfo([{
-			fps: 50
-		}], 1000)
+		const ccgState = new CasparCGState()
+		ccgState.initStateFromChannelInfo(
+			[
+				{
+					fps: 50
+				}
+			],
+			1000
+		)
 	}).toThrowError(/missing.*videoMode/i)
 	expect(() => {
-		let ccgState = new CasparCGState()
-		ccgState.initStateFromChannelInfo([{
-			videoMode: 'PAL',
-			fps: -1 // bad fps
-		}], 1000)
+		const ccgState = new CasparCGState()
+		ccgState.initStateFromChannelInfo(
+			[
+				{
+					videoMode: 'PAL',
+					fps: -1 // bad fps
+				}
+			],
+			1000
+		)
 	}).toThrowError(/fps/i)
 })
 test('Play a video, then stop it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 	// Play a video file:
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -232,31 +255,39 @@ test('Play a video, then stop it', () => {
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Play another file
 	layer10.media = 'AMB2'
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB2',
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB2',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Remove the layer from the state, this should generate a stop command:
 	delete channel1.layers['10']
@@ -265,18 +296,22 @@ test('Play a video, then stop it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Play a video with the right channelLayout, then stop it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 	// Play a video file:
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -286,33 +321,41 @@ test('Play a video with the right channelLayout, then stop it', () => {
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		channelLayout: 'TEST_LAYOUT',
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				channelLayout: 'TEST_LAYOUT',
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Play another file
 	layer10.media = 'AMB2'
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB2',
-		loop: false,
-		channelLayout: 'TEST_LAYOUT',
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB2',
+				loop: false,
+				channelLayout: 'TEST_LAYOUT',
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Remove the layer from the state, this should generate a stop command:
 	delete channel1.layers['10']
@@ -320,20 +363,24 @@ test('Play a video with the right channelLayout, then stop it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Play a video, pause & resume it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initStateMS(c)
 
 	let cc: any
 
 	// Play a video file:
 
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -341,19 +388,23 @@ test('Play a video, pause & resume it', () => {
 		playing: true,
 		playTime: -4000 // 5 s ago
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 5 * 50
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 5 * 50
+			})
+		).serialize()
+	)
 
 	// Pause the video
 	c.time = 11000 // Advance the time 10s, to 11s
@@ -363,11 +414,15 @@ test('Play a video, pause & resume it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PauseCommand({
-		channel: 1,
-		layer: 10,
-		pauseTime: 11000
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PauseCommand({
+				channel: 1,
+				layer: 10,
+				pauseTime: 11000
+			})
+		).serialize()
+	)
 	// The video is now paused at 11s = 550
 
 	// Resume playing:
@@ -380,22 +435,26 @@ test('Play a video, pause & resume it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ResumeCommand({
-		channel: 1,
-		layer: 10,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ResumeCommand({
+				channel: 1,
+				layer: 10,
+				noClear: false
+			})
+		).serialize()
+	)
 })
 
 test('Load a video, then play it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -404,31 +463,39 @@ test('Load a video, then play it', () => {
 		playTime: 1000,
 		pauseTime: 1000
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 0,
-		pauseTime: 1000
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				pauseTime: 1000
+			})
+		).serialize()
+	)
 
 	// Start playing it:
 	layer10.playing = true
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ResumeCommand({
-		channel: 1,
-		layer: 10,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ResumeCommand({
+				channel: 1,
+				layer: 10,
+				noClear: false
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -436,21 +503,24 @@ test('Load a video, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg a video, then play it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -463,21 +533,25 @@ test('Loadbg a video, then play it', () => {
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Start playing it:
 	channel1.layers['10'] = {
@@ -491,10 +565,14 @@ test('Loadbg a video, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -502,21 +580,24 @@ test('Loadbg a video, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg a video, then remove it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -529,24 +610,28 @@ test('Loadbg a video, then remove it', () => {
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Remove the nextup
-	let layer10noNext = _.clone(layer10)
+	const layer10noNext = _.clone(layer10)
 	delete layer10noNext.nextUp
 
 	channel1.layers['10'] = layer10noNext
@@ -555,11 +640,15 @@ test('Loadbg a video, then remove it', () => {
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(0)
 	expect(cc[1].cmds).toHaveLength(1)
-	expect(stripContext(cc[1].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
+	expect(stripContext(cc[1].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY'
+			})
+		).serialize()
+	)
 
 	// Load the video again:
 	channel1.layers['10'] = layer10
@@ -574,22 +663,25 @@ test('Loadbg a video, then remove it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY'
+			})
+		).serialize()
+	)
 })
 test('Loadbg a video, then loadbg another', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -602,41 +694,53 @@ test('Loadbg a video, then loadbg another', () => {
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Now load another
 	layer10.nextUp!.media = 'go1080p25'
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(2)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'go1080p25',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY'
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'go1080p25',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -644,22 +748,25 @@ test('Loadbg a video, then loadbg another', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY'
+			})
+		).serialize()
+	)
 })
 test('Loadbg a video with a transition, then play it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -674,25 +781,29 @@ test('Loadbg a video with a transition, then play it', () => {
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		transition: 'sting',
-		stingMaskFilename: 'mask_file',
-		stingDelay: 0,
-		stingOverlayFilename: '',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				transition: 'sting',
+				stingMaskFilename: 'mask_file',
+				stingDelay: 0,
+				stingOverlayFilename: '',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Start playing it:
 	channel1.layers['10'] = {
@@ -708,10 +819,14 @@ test('Loadbg a video with a transition, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -719,21 +834,24 @@ test('Loadbg a video with a transition, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg a video with no transition, then play it with a transition', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -746,21 +864,25 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Start playing it:
 	channel1.layers['10'] = {
@@ -776,18 +898,22 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		transition: 'sting',
-		stingMaskFilename: 'mask_file',
-		stingDelay: 0,
-		stingOverlayFilename: '',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				transition: 'sting',
+				stingMaskFilename: 'mask_file',
+				stingDelay: 0,
+				stingOverlayFilename: '',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -795,19 +921,22 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Play a video, stop and loadbg another video', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 	// Play a video file:
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -816,22 +945,26 @@ test('Play a video, stop and loadbg another video', () => {
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Load a video file (paused):
 
-	let newLayer10: IEmptyLayer = {
+	const newLayer10: EmptyLayer = {
 		id: 'l1',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -851,20 +984,28 @@ test('Play a video, stop and loadbg another video', () => {
 	cc = getDiff(c, targetState, true)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(2)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.StopCommand({
-		channel: 1,
-		layer: 10,
-		noClear: false
-	})).serialize())
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.StopCommand({
+				channel: 1,
+				layer: 10,
+				noClear: false
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Start playing it:
 	channel1.layers['10'] = {
@@ -878,10 +1019,14 @@ test('Play a video, stop and loadbg another video', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -889,21 +1034,24 @@ test('Play a video, stop and loadbg another video', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg a video, then play another video maintaining the bg', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -916,23 +1064,27 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
-	let newLayer10: IMediaLayer = {
+	const newLayer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		media: 'CG1080i50',
@@ -945,27 +1097,39 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(3)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'CG1080i50',
-		loop: false,
-		seek: 0
-	})).serialize())
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-	expect(stripContext(cc[0].cmds[2])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'CG1080i50',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY'
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[2])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -973,21 +1137,24 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg a video and play another video. stop the foreground while maintaining the bg', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Load a video file (paused):
 
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		media: 'CG1080i50',
@@ -1001,30 +1168,38 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(2)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'CG1080i50',
-		loop: false,
-		seek: 0
-	})).serialize())
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'CG1080i50',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
-	let newLayer10: IEmptyLayer = {
+	const newLayer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -1036,11 +1211,15 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.StopCommand({
-		channel: 1,
-		layer: 10,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.StopCommand({
+				channel: 1,
+				layer: 10,
+				noClear: false
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	delete channel1.layers['10']
@@ -1048,22 +1227,23 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'EMPTY'
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY'
+			})
+		).serialize()
+	)
 })
 test('Play a looping video', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initStateMS(c)
-
-	let cc: any
 
 	// Play a video file:
 
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -1073,31 +1253,33 @@ test('Play a looping video', () => {
 		length: 30 * 1000,
 		looping: true
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
-	cc = getDiff(c, targetState)
+	const cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: true,
-		seek: 10 * 50,
-		in: 0,
-		length: 30 * 50
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: true,
+				seek: 10 * 50,
+				in: 0,
+				length: 30 * 50
+			})
+		).serialize()
+	)
 })
 test('Play a looping video, with inPoint', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initStateMS(c)
-
-	let cc: any
 
 	// Play a video file:
 
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -1108,31 +1290,33 @@ test('Play a looping video, with inPoint', () => {
 		inPoint: 4 * 1000, // 4 s into the clip
 		looping: true
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
-	cc = getDiff(c, targetState)
+	const cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: true,
-		seek: 5 * 50,
-		in: 4 * 50,
-		length: 10 * 50
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: true,
+				seek: 5 * 50,
+				in: 4 * 50,
+				length: 10 * 50
+			})
+		).serialize()
+	)
 })
 test('Play a looping video, with inPoint & seek', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initStateMS(c)
-
-	let cc: any
 
 	// Play a video file:
 
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -1144,31 +1328,35 @@ test('Play a looping video, with inPoint & seek', () => {
 		seek: 0, // beginning of clip
 		looping: true
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
-	cc = getDiff(c, targetState)
+	const cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: true,
-		seek: 1 * 50,
-		in: 10 * 50,
-		length: 2 * 50
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: true,
+				seek: 1 * 50,
+				in: 10 * 50,
+				length: 2 * 50
+			})
+		).serialize()
+	)
 })
 test('Play a looping video, pause & resume it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initStateMS(c)
 
 	let cc: any
 
 	// Play a video file:
 
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -1177,20 +1365,24 @@ test('Play a looping video, pause & resume it', () => {
 		playTime: -9000, // 10 s ago
 		looping: true
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: true,
-		seek: 0, // Because we only support accurate looping & seeking if length is provided
-		in: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: true,
+				seek: 0, // Because we only support accurate looping & seeking if length is provided
+				in: 0
+			})
+		).serialize()
+	)
 
 	// Pause the video
 	c.time = 6000 // Advance the time
@@ -1200,11 +1392,15 @@ test('Play a looping video, pause & resume it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PauseCommand({
-		channel: 1,
-		layer: 10,
-		pauseTime: 6000
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PauseCommand({
+				channel: 1,
+				layer: 10,
+				pauseTime: 6000
+			})
+		).serialize()
+	)
 
 	// Resume playing:
 	c.time = 11000 // Advance the time
@@ -1216,21 +1412,25 @@ test('Play a looping video, pause & resume it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ResumeCommand({
-		channel: 1,
-		layer: 10,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ResumeCommand({
+				channel: 1,
+				layer: 10,
+				noClear: false
+			})
+		).serialize()
+	)
 })
 test('Play a template, update the data & cgstop', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: ITemplateLayer = {
+	const layer10: TemplateLayer = {
 		id: 't0',
 		content: LayerContentType.TEMPLATE,
 		layerNo: 10,
@@ -1241,44 +1441,50 @@ test('Play a template, update the data & cgstop', () => {
 		cgStop: true,
 		playTime: 990 // 10s ago
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.CGAddCommand({
-		channel: 1,
-		layer: 10,
-		templateName: 'myTemplate',
-		templateType: 'html',
-		cgStop: true,
-		data: { var0: 'one' },
-		flashLayer: 1,
-		playOnLoad: true
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.CGAddCommand({
+				channel: 1,
+				layer: 10,
+				templateName: 'myTemplate',
+				templateType: 'html',
+				cgStop: true,
+				data: { var0: 'one' },
+				flashLayer: 1,
+				playOnLoad: true
+			})
+		).serialize()
+	)
 
 	// update, with the same data
-	layer10.templateData = { var0: 'one' },
-	// try again, to ensure no new commands are sent:
-	console.log('---------------------------------')
+	;(layer10.templateData = { var0: 'one' }),
+		// try again, to ensure no new commands are sent:
+		console.log('---------------------------------')
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(0)
 	console.log('==================================')
 
 	// Update the data:
-	layer10.templateData = { var0: 'two' },
-
-	cc = getDiff(c, targetState)
+	;(layer10.templateData = { var0: 'two' }), (cc = getDiff(c, targetState))
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.CGUpdateCommand({
-		channel: 1,
-		layer: 10,
-		data: { var0: 'two' },
-		flashLayer: 1
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.CGUpdateCommand({
+				channel: 1,
+				layer: 10,
+				data: { var0: 'two' },
+				flashLayer: 1
+			})
+		).serialize()
+	)
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -1286,21 +1492,25 @@ test('Play a template, update the data & cgstop', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.CGStopCommand({
-		channel: 1,
-		layer: 10,
-		flashLayer: 1
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.CGStopCommand({
+				channel: 1,
+				layer: 10,
+				flashLayer: 1
+			})
+		).serialize()
+	)
 })
 test('Play an html-page', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IHtmlPageLayer = {
+	const layer10: HtmlPageLayer = {
 		id: 'h0',
 		content: LayerContentType.HTMLPAGE,
 		layerNo: 10,
@@ -1308,17 +1518,21 @@ test('Play an html-page', () => {
 		playing: true,
 		playTime: 990 // 10s ago
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayHtmlPageCommand({
-		channel: 1,
-		layer: 10,
-		url: 'http://superfly.tv'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayHtmlPageCommand({
+				channel: 1,
+				layer: 10,
+				url: 'http://superfly.tv'
+			})
+		).serialize()
+	)
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -1326,20 +1540,24 @@ test('Play an html-page', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg a html-page, then play it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// put a html-template on onNext:
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -1355,19 +1573,23 @@ test('Loadbg a html-page, then play it', () => {
 		}
 	}
 
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadHtmlPageBgCommand({
-		channel: 1,
-		layer: 10,
-		url: 'http://superfly.tv',
-		auto: false,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadHtmlPageBgCommand({
+				channel: 1,
+				layer: 10,
+				url: 'http://superfly.tv',
+				auto: false,
+				noClear: false
+			})
+		).serialize()
+	)
 
 	// Start playing the template:
 	channel1.layers['10'] = {
@@ -1381,11 +1603,15 @@ test('Loadbg a html-page, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayHtmlPageCommand({
-		channel: 1,
-		layer: 10,
-		url: 'http://superfly.tv'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayHtmlPageCommand({
+				channel: 1,
+				layer: 10,
+				url: 'http://superfly.tv'
+			})
+		).serialize()
+	)
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -1393,20 +1619,24 @@ test('Loadbg a html-page, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Play an input', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IInputLayer = {
+	const layer10: InputLayer = {
 		id: 'i0',
 		content: LayerContentType.INPUT,
 		layerNo: 10,
@@ -1420,19 +1650,23 @@ test('Play an input', () => {
 
 		playTime: null
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayDecklinkCommand({
-		channel: 1,
-		layer: 10,
-		channelLayout: 'stereo',
-		device: 1,
-		format: '720p5000'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayDecklinkCommand({
+				channel: 1,
+				layer: 10,
+				channelLayout: 'stereo',
+				device: 1,
+				format: '720p5000'
+			})
+		).serialize()
+	)
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -1440,20 +1674,24 @@ test('Play an input', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg an input, then play it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -1474,25 +1712,29 @@ test('Loadbg an input, then play it', () => {
 
 		playTime: null
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadDecklinkBgCommand({
-		channel: 1,
-		layer: 10,
-		channelLayout: 'stereo',
-		device: 1,
-		format: '720p5000',
-		auto: false,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadDecklinkBgCommand({
+				channel: 1,
+				layer: 10,
+				channelLayout: 'stereo',
+				device: 1,
+				format: '720p5000',
+				auto: false,
+				noClear: false
+			})
+		).serialize()
+	)
 
 	// Start playing the input:
 
-	let newLayer10: IInputLayer = {
+	const newLayer10: InputLayer = {
 		id: 'l1',
 		content: LayerContentType.INPUT,
 		layerNo: 10,
@@ -1511,13 +1753,17 @@ test('Loadbg an input, then play it', () => {
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayDecklinkCommand({
-		channel: 1,
-		layer: 10,
-		channelLayout: 'stereo',
-		device: 1,
-		format: '720p5000'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayDecklinkCommand({
+				channel: 1,
+				layer: 10,
+				channelLayout: 'stereo',
+				device: 1,
+				format: '720p5000'
+			})
+		).serialize()
+	)
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -1525,21 +1771,25 @@ test('Loadbg an input, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 
 test('Play a Route', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IRouteLayer = {
+	const layer10: RouteLayer = {
 		id: 'r0',
 		content: LayerContentType.ROUTE,
 		layerNo: 10,
@@ -1553,8 +1803,8 @@ test('Play a Route', () => {
 		delay: 20,
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1577,21 +1827,24 @@ test('Play a Route', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Loadbg a Route, then change it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -1613,56 +1866,65 @@ test('Loadbg a Route, then change it', () => {
 		},
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
-		channel: 1,
-		layer: 10,
-		route: {
-			channel: 2,
-			layer: 15
-		},
-		channelLayout: undefined,
-		mode: undefined,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadRouteBgCommand({
+				channel: 1,
+				layer: 10,
+				route: {
+					channel: 2,
+					layer: 15
+				},
+				channelLayout: undefined,
+				mode: undefined,
+				noClear: false
+			})
+		).serialize()
+	)
 
 	expect(c.ccgState.getState().channels['1'].layers['10'].nextUp).toBeTruthy()
-	expect((c.ccgState.getState().channels['1'].layers['10'].nextUp! as IRouteLayerBase).route).toMatchObject({
+	expect(
+		(c.ccgState.getState().channels['1'].layers['10'].nextUp! as RouteLayerBase).route
+	).toMatchObject({
 		channel: 2,
 		layer: 15
-	});
-
-	((layer10.nextUp! as IRouteLayerBase).route!).layer = 20
+	})
+	;(layer10.nextUp! as RouteLayerBase).route!.layer = 20
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
-		channel: 1,
-		layer: 10,
-		route: {
-			channel: 2,
-			layer: 20
-		},
-		channelLayout: undefined,
-		mode: undefined,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadRouteBgCommand({
+				channel: 1,
+				layer: 10,
+				route: {
+					channel: 2,
+					layer: 20
+				},
+				channelLayout: undefined,
+				mode: undefined,
+				noClear: false
+			})
+		).serialize()
+	)
 })
 test('Loadbg a Route, then play it', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -1683,28 +1945,32 @@ test('Loadbg a Route, then play it', () => {
 		},
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.LoadRouteBgCommand({
-		channel: 1,
-		layer: 10,
-		route: {
-			channel: 2,
-			layer: 15
-		},
-		channelLayout: undefined,
-		framesDelay: 5,
-		mode: undefined,
-		noClear: false
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadRouteBgCommand({
+				channel: 1,
+				layer: 10,
+				route: {
+					channel: 2,
+					layer: 15
+				},
+				channelLayout: undefined,
+				framesDelay: 5,
+				mode: undefined,
+				noClear: false
+			})
+		).serialize()
+	)
 
 	// Start playing it:
 
-	let playLayer10: IRouteLayer = {
+	const playLayer10: RouteLayer = {
 		id: 'l1',
 		content: LayerContentType.ROUTE,
 		layerNo: 10,
@@ -1722,10 +1988,14 @@ test('Loadbg a Route, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toMatchObject(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(cc[0].cmds[0]).toMatchObject(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -1733,21 +2003,24 @@ test('Loadbg a Route, then play it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Play a BG Route', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IRouteLayer = {
+	const layer10: RouteLayer = {
 		id: 'r0',
 		content: LayerContentType.ROUTE,
 		layerNo: 10,
@@ -1761,8 +2034,8 @@ test('Play a BG Route', () => {
 		mode: 'BACKGROUND',
 		playTime: null // playtime is null because it is irrelevant
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1776,21 +2049,24 @@ test('Play a BG Route', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 test('Record to a file', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initStateMS(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IRecordLayer = {
+	const layer10: RecordLayer = {
 		id: 'rec0',
 		content: LayerContentType.RECORD,
 		layerNo: 10,
@@ -1799,8 +2075,8 @@ test('Record to a file', () => {
 		encoderOptions: '--fastdecode',
 		playTime: -4000
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1823,17 +2099,16 @@ test('Record to a file', () => {
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 	expect(cc[0].cmds[0]._objectParams.command).toEqual('REMOVE 1 FILE')
-
 })
 test('Run a function', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a template file:
 
-	let layer10: IFunctionLayer = {
+	const layer10: FunctionLayer = {
 		id: 'fcn0',
 		content: LayerContentType.FUNCTION,
 		layerNo: 10,
@@ -1842,8 +2117,8 @@ test('Run a function', () => {
 		executeData: 'my cool data',
 		playTime: 995
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -1861,17 +2136,16 @@ test('Run a function', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(0)
-
 })
 test('Play a video, then add mixer attributes', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a video file:
 
-	let layer10: IMediaLayer = {
+	let layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -1880,35 +2154,43 @@ test('Play a video, then add mixer attributes', () => {
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState, true)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Rotate the video:
-	let mixer0: Mixer = {
+	const mixer0: Mixer = {
 		rotation: 90
 	}
 	layer10.mixer = mixer0
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.MixerRotationCommand({
-		channel: 1,
-		layer: 10,
-		rotation: 90
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerRotationCommand({
+				channel: 1,
+				layer: 10,
+				rotation: 90
+			})
+		).serialize()
+	)
 
 	// set master volume:
-	let layerMinus1: ILayerBase = {
+	const layerMinus1: LayerBase = {
 		id: 'b1',
 		content: LayerContentType.NOTHING,
 		layerNo: -1
@@ -1920,10 +2202,14 @@ test('Play a video, then add mixer attributes', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[1].cmds).toHaveLength(1)
-	expect(stripContext(cc[1].cmds[0])).toEqual(fixCommand(new AMCP.MixerMastervolumeCommand({
-		channel: 1,
-		mastervolume: 0.5
-	})).serialize())
+	expect(stripContext(cc[1].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerMastervolumeCommand({
+				channel: 1,
+				mastervolume: 0.5
+			})
+		).serialize()
+	)
 
 	// scale & move the video:
 	delete mixer0.rotation
@@ -1936,33 +2222,46 @@ test('Play a video, then add mixer attributes', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(2)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.MixerFillCommand({
-		channel: 1,
-		layer: 10,
-		x: 0.5,
-		y: 0.5,
-		xScale: 0.5,
-		yScale: 0.5
-	})).serialize())
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.MixerRotationCommand({
-		channel: 1,
-		layer: 10,
-		rotation: 0
-	}),{ _defaultOptions: true }).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerFillCommand({
+				channel: 1,
+				layer: 10,
+				x: 0.5,
+				y: 0.5,
+				xScale: 0.5,
+				yScale: 0.5
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.MixerRotationCommand({
+				channel: 1,
+				layer: 10,
+				rotation: 0
+			}),
+			{ _defaultOptions: true }
+		).serialize()
+	)
 
 	// move the video, with animation:
 	mixer0.fill.x = 0
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.MixerFillCommand({
-		channel: 1,
-		layer: 10,
-		x: 0,
-		y: 0.5,
-		xScale: 0.5,
-		yScale: 0.5
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerFillCommand({
+				channel: 1,
+				layer: 10,
+				x: 0,
+				y: 0.5,
+				xScale: 0.5,
+				yScale: 0.5
+			})
+		).serialize()
+	)
 
 	// fade down opacity a bit:
 	mixer0.opacity = 0.62
@@ -1978,39 +2277,51 @@ test('Play a video, then add mixer attributes', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(2)
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.MixerOpacityCommand({
-		channel: 1,
-		layer: 10,
-		opacity: 0.62,
-		transition: 'mix',
-		transitionDuration: 25,
-		transitionDirection: 'right',
-		transitionEasing: 'linear'
-	})).serialize())
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.MixerBrightnessCommand({
-		channel: 1,
-		layer: 10,
-		brightness: 2,
-		transition: 'mix',
-		transitionDuration: 25,
-		transitionDirection: 'right',
-		transitionEasing: 'linear'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.MixerOpacityCommand({
+				channel: 1,
+				layer: 10,
+				opacity: 0.62,
+				transition: 'mix',
+				transitionDuration: 25,
+				transitionDirection: 'right',
+				transitionEasing: 'linear'
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerBrightnessCommand({
+				channel: 1,
+				layer: 10,
+				brightness: 2,
+				transition: 'mix',
+				transitionDuration: 25,
+				transitionDirection: 'right',
+				transitionEasing: 'linear'
+			})
+		).serialize()
+	)
 
 	// fade down opacity fully:
 	mixer0.opacity = 0
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.MixerOpacityCommand({
-		channel: 1,
-		layer: 10,
-		opacity: 0,
-		transition: 'mix',
-		transitionDuration: 25,
-		transitionDirection: 'right',
-		transitionEasing: 'linear'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerOpacityCommand({
+				channel: 1,
+				layer: 10,
+				opacity: 0,
+				transition: 'mix',
+				transitionDuration: 25,
+				transitionDirection: 'right',
+				transitionEasing: 'linear'
+			})
+		).serialize()
+	)
 
 	// reset / fade up opacity again (fade due to previous outTransition)
 	delete mixer0.opacity
@@ -2019,38 +2330,52 @@ test('Play a video, then add mixer attributes', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(2)
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.MixerOpacityCommand({
-		channel: 1,
-		layer: 10,
-		opacity: 1,
-		transition: 'mix',
-		transitionDuration: 12,
-		transitionDirection: 'right',
-		transitionEasing: 'linear'
-	}),{ _defaultOptions: true }).serialize())
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.MixerBrightnessCommand({
-		channel: 1,
-		layer: 10,
-		brightness: 1,
-		transition: 'mix',
-		transitionDuration: 12,
-		transitionDirection: 'right',
-		transitionEasing: 'linear'
-	}),{ _defaultOptions: true }).serialize())
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.MixerOpacityCommand({
+				channel: 1,
+				layer: 10,
+				opacity: 1,
+				transition: 'mix',
+				transitionDuration: 12,
+				transitionDirection: 'right',
+				transitionEasing: 'linear'
+			}),
+			{ _defaultOptions: true }
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerBrightnessCommand({
+				channel: 1,
+				layer: 10,
+				brightness: 1,
+				transition: 'mix',
+				transitionDuration: 12,
+				transitionDirection: 'right',
+				transitionEasing: 'linear'
+			}),
+			{ _defaultOptions: true }
+		).serialize()
+	)
 
 	// Remove the layer from the state
 	delete channel1.layers['10']
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[1].cmds).toHaveLength(2)
-	expect(stripContext(cc[1].cmds[0])).toEqual(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	}).serialize())
-	expect(stripContext(cc[1].cmds[1])).toEqual(new AMCP.MixerClearCommand({
-		channel: 1,
-		layer: 10
-	}).serialize())
+	expect(stripContext(cc[1].cmds[0])).toEqual(
+		new AMCP.ClearCommand({
+			channel: 1,
+			layer: 10
+		}).serialize()
+	)
+	expect(stripContext(cc[1].cmds[1])).toEqual(
+		new AMCP.MixerClearCommand({
+			channel: 1,
+			layer: 10
+		}).serialize()
+	)
 
 	// Play a new video (without no mixer attributes)
 
@@ -2068,49 +2393,56 @@ test('Play a video, then add mixer attributes', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 })
 test('Play a video with transition, then stop it with transition', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a video file:
-	let layer10: IMediaLayer = {
+	const layer10: MediaLayer = {
 		id: 'l0',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: new TransitionObject('AMB', {
 			inTransition: new Transition('mix', 1),
 			outTransition: new Transition({ type: 'sting', maskFile: 'mask_transition' })
-
 		}),
 		playing: true,
 		playTime: 1000
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 0,
-		transition: 'mix',
-		transitionDirection: 'right',
-		transitionDuration: 25,
-		transitionEasing: 'linear'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				transition: 'mix',
+				transitionDirection: 'right',
+				transitionDuration: 25,
+				transitionEasing: 'linear'
+			})
+		).serialize()
+	)
 
 	// Remove the layer from the state
 	delete channel1.layers['10']
@@ -2118,24 +2450,26 @@ test('Play a video with transition, then stop it with transition', () => {
 
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'empty',
-		transition: 'sting',
-		stingMaskFilename: 'mask_transition',
-		stingDelay: 0,
-		stingOverlayFilename: ''
-	}).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		new AMCP.PlayCommand({
+			channel: 1,
+			layer: 10,
+			clip: 'empty',
+			transition: 'sting',
+			stingMaskFilename: 'mask_transition',
+			stingDelay: 0,
+			stingOverlayFilename: ''
+		}).serialize()
+	)
 })
 test('Play a Route with transition, then stop it with transition', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a Route:
-	let layer10: IRouteLayer = {
+	const layer10: RouteLayer = {
 		id: 'r0',
 		content: LayerContentType.ROUTE,
 		layerNo: 10,
@@ -2149,8 +2483,8 @@ test('Play a Route with transition, then stop it with transition', () => {
 		playing: true,
 		playTime: null
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
@@ -2162,24 +2496,26 @@ test('Play a Route with transition, then stop it with transition', () => {
 
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'empty',
-		transition: 'mix',
-		transitionDirection: 'right',
-		transitionDuration: 50,
-		transitionEasing: 'linear'
-	}).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		new AMCP.PlayCommand({
+			channel: 1,
+			layer: 10,
+			clip: 'empty',
+			transition: 'mix',
+			transitionDirection: 'right',
+			transitionDuration: 50,
+			transitionEasing: 'linear'
+		}).serialize()
+	)
 })
 test('Play a Decklink-input with transition, then stop it with transition', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	let cc: any
 
 	// Play a video file:
-	let layer10: IInputLayer = {
+	const layer10: InputLayer = {
 		id: 'i0',
 		content: LayerContentType.INPUT,
 		layerNo: 10,
@@ -2195,22 +2531,26 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 		playing: true,
 		playTime: null
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayDecklinkCommand({
-		channel: 1,
-		layer: 10,
-		channelLayout: undefined,
-		device: 1,
-		format: '720p5000',
-		transition: 'mix',
-		transitionDirection: 'right',
-		transitionDuration: 12, // .5 seconds in 50i
-		transitionEasing: 'linear'
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayDecklinkCommand({
+				channel: 1,
+				layer: 10,
+				channelLayout: undefined,
+				device: 1,
+				format: '720p5000',
+				transition: 'mix',
+				transitionDirection: 'right',
+				transitionDuration: 12, // .5 seconds in 50i
+				transitionEasing: 'linear'
+			})
+		).serialize()
+	)
 
 	// Remove the layer from the state
 	delete channel1.layers['10']
@@ -2218,15 +2558,17 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'empty',
-		transition: 'mix',
-		transitionDirection: 'right',
-		transitionDuration: 50,
-		transitionEasing: 'linear'
-	}).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		new AMCP.PlayCommand({
+			channel: 1,
+			layer: 10,
+			clip: 'empty',
+			transition: 'mix',
+			transitionDirection: 'right',
+			transitionDuration: 50,
+			transitionEasing: 'linear'
+		}).serialize()
+	)
 })
 // test('Apply commands before init', () => {
 // 	let c = getCasparCGState()
@@ -2264,20 +2606,26 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 // })
 
 test('Bundle commands', () => {
-	let c = getCasparCGState()
-	c.ccgState.initStateFromChannelInfo([{
-		videoMode: 'PAL',
-		fps: 50
-	},{
-		videoMode: 'PAL',
-		fps: 50
-	}], c.time)
+	const c = getCasparCGState()
+	c.ccgState.initStateFromChannelInfo(
+		[
+			{
+				videoMode: 'PAL',
+				fps: 50
+			},
+			{
+				videoMode: 'PAL',
+				fps: 50
+			}
+		],
+		c.time
+	)
 
 	let cc: any
 
 	// Play two a video files
 
-	let layer110: IMediaLayer = {
+	const layer110: MediaLayer = {
 		id: 'l110',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -2286,8 +2634,8 @@ test('Bundle commands', () => {
 		playTime: 1000,
 		seek: 0
 	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer110 } }
-	let layer210: IMediaLayer = {
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer110 } }
+	const layer210: MediaLayer = {
 		id: 'l210',
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
@@ -2296,30 +2644,38 @@ test('Bundle commands', () => {
 		playTime: 1000,
 		seek: 0
 	}
-	let channel2: Channel = { channelNo: 2, layers: { '10': layer210 } }
-	let targetState: State = { channels: { '1': channel1, '2': channel2 } }
+	const channel2: Channel = { channelNo: 2, layers: { '10': layer210 } }
+	const targetState: State = { channels: { '1': channel1, '2': channel2 } }
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB',
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 	expect(cc[1].cmds).toHaveLength(1)
-	expect(stripContext(cc[1].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 2,
-		layer: 10,
-		clip: 'AMB2',
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cc[1].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 2,
+				layer: 10,
+				clip: 'AMB2',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// change the perspective of video1, and the saturation of video 2 at the same time
-	let mixer110: Mixer = {
+	const mixer110: Mixer = {
 		perspective: {
 			topLeftX: 0.3,
 			topLeftY: 0.3,
@@ -2334,7 +2690,7 @@ test('Bundle commands', () => {
 	}
 	layer110.mixer = mixer110
 
-	let mixer210: Mixer = {
+	const mixer210: Mixer = {
 		saturation: 0.5,
 		bundleWithCommands: 1234
 	}
@@ -2344,41 +2700,57 @@ test('Bundle commands', () => {
 	expect(cc[0].cmds).toHaveLength(0)
 	expect(cc[1].cmds).toHaveLength(0)
 	expect(cc[2].cmds).toHaveLength(4)
-	expect(stripContext(cc[2].cmds[0])).toEqual(fixCommand(new AMCP.MixerPerspectiveCommand({
-		channel: 1,
-		layer: 10,
-		topLeftX: 0.3,
-		topLeftY: 0.3,
-		topRightX: 1,
-		topRightY: 0,
-		bottomRightX: 1,
-		bottomRightY: 1,
-		bottomLeftX: 0,
-		bottomLeftY: 1,
-		defer: true,
-		bundleWithCommands: 1234
-	})).serialize()),
-	expect(stripContext(cc[2].cmds[1])).toEqual(fixCommand(new AMCP.MixerSaturationCommand({
-		channel: 2,
-		layer: 10,
-		saturation: 0.5,
-		defer: true,
-		bundleWithCommands: 1234
-	})).serialize()),
-	expect(stripContext(cc[2].cmds[2])).toEqual(fixCommand(new AMCP.MixerCommitCommand({
-		channel: 1
-	})).serialize())
-	expect(stripContext(cc[2].cmds[3])).toEqual(fixCommand(new AMCP.MixerCommitCommand({
-		channel: 2
-	})).serialize())
+	expect(stripContext(cc[2].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.MixerPerspectiveCommand({
+				channel: 1,
+				layer: 10,
+				topLeftX: 0.3,
+				topLeftY: 0.3,
+				topRightX: 1,
+				topRightY: 0,
+				bottomRightX: 1,
+				bottomRightY: 1,
+				bottomLeftX: 0,
+				bottomLeftY: 1,
+				defer: true,
+				bundleWithCommands: 1234
+			})
+		).serialize()
+	),
+		expect(stripContext(cc[2].cmds[1])).toEqual(
+			fixCommand(
+				new AMCP.MixerSaturationCommand({
+					channel: 2,
+					layer: 10,
+					saturation: 0.5,
+					defer: true,
+					bundleWithCommands: 1234
+				})
+			).serialize()
+		),
+		expect(stripContext(cc[2].cmds[2])).toEqual(
+			fixCommand(
+				new AMCP.MixerCommitCommand({
+					channel: 1
+				})
+			).serialize()
+		)
+	expect(stripContext(cc[2].cmds[3])).toEqual(
+		fixCommand(
+			new AMCP.MixerCommitCommand({
+				channel: 2
+			})
+		).serialize()
+	)
 })
 
 test('Prioritize commands', () => {
-	let c = getCasparCGState()
+	const c = getCasparCGState()
 	initState(c)
 
 	// Load a video file (paused):
-	let layer10: IEmptyLayer = {
+	const layer10: EmptyLayer = {
 		id: 'e0',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -2391,25 +2763,29 @@ test('Prioritize commands', () => {
 			auto: false
 		}
 	}
-	let channel1: Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
+	const channel1: Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
 
 	let cmds = CasparCGState.diffStatesOrderedCommands(c.ccgState.getState(), targetState, c.time)
 
 	expect(cmds).toHaveLength(1)
-	expect(stripContext(cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 10,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	let oldState = JSON.parse(JSON.stringify(targetState))
 	// First loadbg another video:
-	let layer8: IEmptyLayer = {
+	const layer8: EmptyLayer = {
 		id: 'l8',
 		content: LayerContentType.NOTHING,
 		media: '',
@@ -2424,7 +2800,7 @@ test('Prioritize commands', () => {
 	}
 	channel1.layers['8'] = layer8
 	// Then play a new video:
-	let layer9: IMediaLayer = {
+	const layer9: MediaLayer = {
 		id: 'l9',
 		content: LayerContentType.MEDIA,
 		layerNo: 9,
@@ -2446,26 +2822,38 @@ test('Prioritize commands', () => {
 	cmds = CasparCGState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	// Note that the order should be reversed: first play 1-10, then play 1-9 amb, then loadbg 1-8 amb
 	expect(cmds).toHaveLength(3)
-	expect(stripContext(cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
-	expect(stripContext(cmds[1])).toEqual(fixCommand(new AMCP.PlayCommand({
-		channel: 1,
-		layer: 9,
-		clip: 'AMB',
-		loop: false,
-		seek: 0
-	})).serialize())
-	expect(stripContext(cmds[2])).toEqual(fixCommand(new AMCP.LoadbgCommand({
-		channel: 1,
-		layer: 8,
-		auto: false,
-		clip: 'AMB',
-		noClear: false,
-		loop: false,
-		seek: 0
-	})).serialize())
+	expect(stripContext(cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
+	expect(stripContext(cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 9,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
+	expect(stripContext(cmds[2])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 8,
+				auto: false,
+				clip: 'AMB',
+				noClear: false,
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
 
 	// Remove the video
 	oldState = JSON.parse(JSON.stringify(targetState))
@@ -2473,21 +2861,25 @@ test('Prioritize commands', () => {
 
 	cmds = CasparCGState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	expect(cmds).toHaveLength(1)
-	expect(stripContext(cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
-		channel: 1,
-		layer: 10
-	})).serialize())
+	expect(stripContext(cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.ClearCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
+	)
 })
 
 describe('MixerCommands', () => {
 	let c: CGState
 	let cc: {
-		cmds: IAMCPCommandVOWithContext[];
-		additionalLayerState?: InternalLayer;
+		cmds: AMCPCommandVOWithContext[]
+		additionalLayerState?: InternalLayer
 	}[]
 	let targetState: State
-	let layer10: IMediaLayer
-	let layerMinus1: IEmptyLayer
+	let layer10: MediaLayer
+	let layerMinus1: EmptyLayer
 	let channel1: Channel
 	beforeAll(() => {
 		c = getCasparCGState()
@@ -2516,17 +2908,24 @@ describe('MixerCommands', () => {
 		cc = getDiff(c, targetState, false)
 		expect(cc).toHaveLength(2)
 		expect(cc[0].cmds).toHaveLength(1)
-		expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(fixCommand(new AMCP.PlayCommand({
-			channel: 1,
-			layer: 10,
-			clip: 'AMB',
-			loop: false,
-			seek: 0
-		})).serialize())
+		expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(
+			fixCommand(
+				new AMCP.PlayCommand({
+					channel: 1,
+					layer: 10,
+					clip: 'AMB',
+					loop: false,
+					seek: 0
+				})
+			).serialize()
+		)
 		expect(cc[1].cmds).toHaveLength(0)
 	})
 	test('Mixer Anchor', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ anchor: { x: 100, y: 132 } },
 			new AMCP.MixerAnchorCommand({
 				channel: 1,
@@ -2544,23 +2943,29 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Blend', () => {
-		testMixerEffect(c, targetState, layer10,
-			{ blendmode: CCG_Enum.BlendMode.COLOR_BURN },
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{ blendmode: CCGEnum.BlendMode.COLOR_BURN },
 			new AMCP.MixerBlendCommand({
 				channel: 1,
 				layer: 10,
-				blendmode: CCG_Enum.BlendMode.COLOR_BURN
+				blendmode: CCGEnum.BlendMode.COLOR_BURN
 			}),
 			new AMCP.MixerBlendCommand({
 				channel: 1,
 				layer: 10,
-				blendmode: CCG_Enum.BlendMode.NORMAL,
+				blendmode: CCGEnum.BlendMode.NORMAL,
 				_defaultOptions: true
 			})
 		)
 	})
 	test('Mixer Brightness', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ brightness: 1.5 },
 			new AMCP.MixerBrightnessCommand({
 				channel: 1,
@@ -2576,17 +2981,22 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Chroma', () => {
-		testMixerEffect(c, targetState, layer10,
-			{ chroma: {
-				keyer: CCG_Enum.Chroma.BLUE,
-				threshold: 0.5,
-				softness: 0.2,
-				spill: 0.1
-			} },
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				chroma: {
+					keyer: CCGEnum.Chroma.BLUE,
+					threshold: 0.5,
+					softness: 0.2,
+					spill: 0.1
+				}
+			},
 			new AMCP.MixerChromaCommand({
 				channel: 1,
 				layer: 10,
-				keyer: CCG_Enum.Chroma.BLUE,
+				keyer: CCGEnum.Chroma.BLUE,
 				threshold: 0.5,
 				softness: 0.2,
 				spill: 0.1
@@ -2594,7 +3004,7 @@ describe('MixerCommands', () => {
 			new AMCP.MixerChromaCommand({
 				channel: 1,
 				layer: 10,
-				keyer: CCG_Enum.Chroma.NONE,
+				keyer: CCGEnum.Chroma.NONE,
 				threshold: 0,
 				softness: 0,
 				spill: 0,
@@ -2603,13 +3013,18 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Clip', () => {
-		testMixerEffect(c, targetState, layer10,
-			{ clip: {
-				x: 0.5,
-				y: 0.5,
-				width: 0.25,
-				height: 0.25
-			} },
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				clip: {
+					x: 0.5,
+					y: 0.5,
+					width: 0.25,
+					height: 0.25
+				}
+			},
 			new AMCP.MixerClipCommand({
 				channel: 1,
 				layer: 10,
@@ -2630,7 +3045,10 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Contrast', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ contrast: 1.5 },
 			new AMCP.MixerContrastCommand({
 				channel: 1,
@@ -2646,13 +3064,18 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Crop', () => {
-		testMixerEffect(c, targetState, layer10,
-			{ crop: {
-				left: 0.25,
-				top: 0.25,
-				right: 0.33,
-				bottom: 0.34
-			} },
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				crop: {
+					left: 0.25,
+					top: 0.25,
+					right: 0.33,
+					bottom: 0.34
+				}
+			},
 			new AMCP.MixerCropCommand({
 				channel: 1,
 				layer: 10,
@@ -2673,13 +3096,18 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Fill', () => {
-		testMixerEffect(c, targetState, layer10,
-			{ fill: {
-				x: 0.1,
-				y: 0.2,
-				xScale: 0.9,
-				yScale: 0.85
-			} },
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				fill: {
+					x: 0.1,
+					y: 0.2,
+					xScale: 0.9,
+					yScale: 0.85
+				}
+			},
 			new AMCP.MixerFillCommand({
 				channel: 1,
 				layer: 10,
@@ -2700,7 +3128,10 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Keyer', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ keyer: true },
 			new AMCP.MixerKeyerCommand({
 				channel: 1,
@@ -2716,37 +3147,45 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Levels', () => {
-		testMixerEffect(c, targetState, layer10,
-			{ levels: {
-				minInput: 	0.1,
-				maxInput: 	0.9,
-				gamma: 		1.1,
-				minOutput: 	0.2,
-				maxOutput: 	0.99
-			} },
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				levels: {
+					minInput: 0.1,
+					maxInput: 0.9,
+					gamma: 1.1,
+					minOutput: 0.2,
+					maxOutput: 0.99
+				}
+			},
 			new AMCP.MixerLevelsCommand({
 				channel: 1,
 				layer: 10,
-				minInput: 	0.1,
-				maxInput: 	0.9,
-				gamma: 		1.1,
-				minOutput: 	0.2,
-				maxOutput: 	0.99
+				minInput: 0.1,
+				maxInput: 0.9,
+				gamma: 1.1,
+				minOutput: 0.2,
+				maxOutput: 0.99
 			}),
 			new AMCP.MixerLevelsCommand({
 				channel: 1,
 				layer: 10,
-				minInput: 	0,
-				maxInput: 	1,
-				gamma: 		1,
-				minOutput: 	0,
-				maxOutput: 	1,
+				minInput: 0,
+				maxInput: 1,
+				gamma: 1,
+				minOutput: 0,
+				maxOutput: 1,
 				_defaultOptions: true
 			})
 		)
 	})
 	test('Mixer Mastervolume', () => {
-		testMixerEffect(c, targetState, layerMinus1,
+		testMixerEffect(
+			c,
+			targetState,
+			layerMinus1,
 			{ mastervolume: 0.9 },
 			new AMCP.MixerMastervolumeCommand({
 				channel: 1,
@@ -2760,7 +3199,10 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Opacity', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ opacity: 0.9 },
 			new AMCP.MixerOpacityCommand({
 				channel: 1,
@@ -2776,17 +3218,22 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Perspective', () => {
-		testMixerEffect(c, targetState, layer10,
-			{ perspective: {
-				topLeftX: 0.1,
-				topLeftY: 0.05,
-				topRightX: 1.1,
-				topRightY: 0.2,
-				bottomRightX: 1.2,
-				bottomRightY: 0.9,
-				bottomLeftX: 0.12,
-				bottomLeftY: 1.01
-			} },
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				perspective: {
+					topLeftX: 0.1,
+					topLeftY: 0.05,
+					topRightX: 1.1,
+					topRightY: 0.2,
+					bottomRightX: 1.2,
+					bottomRightY: 0.9,
+					bottomLeftX: 0.12,
+					bottomLeftY: 1.01
+				}
+			},
 			new AMCP.MixerPerspectiveCommand({
 				channel: 1,
 				layer: 10,
@@ -2815,7 +3262,10 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Rotation', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ rotation: 16 },
 			new AMCP.MixerRotationCommand({
 				channel: 1,
@@ -2831,7 +3281,10 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer Saturation', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ saturation: 0.5 },
 			new AMCP.MixerSaturationCommand({
 				channel: 1,
@@ -2847,21 +3300,29 @@ describe('MixerCommands', () => {
 		)
 	})
 	test('Mixer StraightAlphaOutput', () => {
-		testMixerEffect(c, targetState, layerMinus1,
+		testMixerEffect(
+			c,
+			targetState,
+			layerMinus1,
 			{ straightAlpha: true },
 			new AMCP.MixerStraightAlphaOutputCommand({
 				channel: 1,
+				// eslint-disable-next-line
 				straight_alpha_output: true
 			}),
 			new AMCP.MixerStraightAlphaOutputCommand({
 				channel: 1,
+				// eslint-disable-next-line
 				straight_alpha_output: false,
 				_defaultOptions: true
 			})
 		)
 	})
 	test('Mixer Volume', () => {
-		testMixerEffect(c, targetState, layer10,
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
 			{ volume: 0.45 },
 			new AMCP.MixerVolumeCommand({
 				channel: 1,
@@ -2878,10 +3339,10 @@ describe('MixerCommands', () => {
 	})
 })
 
-function testMixerEffect (
+function testMixerEffect(
 	c: CGState,
 	targetState: State,
-	layer: ILayerBase,
+	layer: LayerBase,
 	mixer: Mixer,
 	cmd0: CommandNS.IAMCPCommand,
 	cmd1: CommandNS.IAMCPCommand
@@ -2900,8 +3361,7 @@ function testMixerEffect (
 		expect(cc).toHaveLength(2)
 		expect(cc[0].cmds).toHaveLength(1)
 		expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(cmd1).serialize())
-		expect(cc[1].cmds).toHaveLength(0)  // the layer -1
-
+		expect(cc[1].cmds).toHaveLength(0) // the layer -1
 	} else {
 		expect(cc[0].cmds).toHaveLength(0) // the layer 10
 		expect(cc[1].cmds).toHaveLength(1)
@@ -2910,9 +3370,8 @@ function testMixerEffect (
 		layer.mixer = {}
 		cc = getDiff(c, targetState)
 		expect(cc).toHaveLength(2)
-		expect(cc[0].cmds).toHaveLength(0)  // the layer 10
+		expect(cc[0].cmds).toHaveLength(0) // the layer 10
 		expect(cc[1].cmds).toHaveLength(1)
 		expect(stripContext(cc[1].cmds[0])).toEqual(fixCommand(cmd1).serialize())
-
 	}
 }

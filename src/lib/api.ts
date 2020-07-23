@@ -18,19 +18,19 @@ export interface ChannelInfo {
 }
 export interface Channel extends ChannelInfo {
 	channelNo: number
-	layers: { [layer: string]: ILayerBase }
+	layers: { [layer: string]: LayerBase }
 }
-export type ILayer =
-	| IMediaLayer
-	| ITemplateLayer
-	| IHtmlPageLayer
-	| IInputLayer
-	| IRouteLayer
-	| IRecordLayer
-	| IFunctionLayer
-	| IEmptyLayer
+export type Layer =
+	| MediaLayer
+	| TemplateLayer
+	| HtmlPageLayer
+	| InputLayer
+	| RouteLayer
+	| RecordLayer
+	| FunctionLayer
+	| EmptyLayer
 
-export interface ILayerBaseBase {
+export interface LayerBaseBase {
 	content: LayerContentType
 
 	/** [timestamp] If set, at what point in time the object started playing, null means "irrelevant" */
@@ -44,7 +44,7 @@ export interface ILayerBaseBase {
 	/** Mixer attributes to apply on the layer, like transform, rotate or opacity */
 	mixer?: MixerBase
 }
-export interface ILayerBase extends ILayerBaseBase {
+export interface LayerBase extends LayerBaseBase {
 	/** Id of the original timelineObject */
 	id: string
 	/** What layer to put the content on */
@@ -66,7 +66,7 @@ export enum LayerContentType {
 	RECORD = 'record',
 	FUNCTION = 'function'
 }
-export interface IMediaLayerBase {
+export interface MediaLayerBase {
 	/** Media clip name. Could be a filename, a path, or even a color */
 	media: string | TransitionObject | null
 
@@ -85,110 +85,110 @@ export interface IMediaLayerBase {
 	channelLayout?: string
 	clearOn404?: boolean
 }
-export interface IMediaLayer extends ILayerBase, IMediaLayerBase {
+export interface MediaLayer extends LayerBase, MediaLayerBase {
 	content: LayerContentType.MEDIA
-	media: IMediaLayerBase['media']
+	media: MediaLayerBase['media']
 	/** If the media is playing or not (is paused) */
 	playing: boolean
 }
-export interface ITemplateLayerBase {
+export interface TemplateLayerBase {
 	/** Template name / file path */
 	media: string | TransitionObject | null
 
 	templateType?: 'flash' | 'html'
 	templateFcn?: 'play' | 'update' | 'stop' | string // string = invoke
 	/** Template data to send to the template */
-	templateData?: Object | string | null
+	templateData?: Record<string, any> | string | null
 	/** True if the template supports CG STOP, otherwise the template will be cleared with a CLEAR */
 	cgStop?: boolean
 }
-export interface ITemplateLayer extends ILayerBase, ITemplateLayerBase {
+export interface TemplateLayer extends LayerBase, TemplateLayerBase {
 	content: LayerContentType.TEMPLATE
-	media: ITemplateLayerBase['media']
+	media: TemplateLayerBase['media']
 
 	/** [timestamp] If set, at what point in time the object started playing */
 	playTime: number | null
 	/** If the graphics is playing or not (is paused) */
 	playing: boolean
 }
-export interface IHtmlPageLayerBase {
+export interface HtmlPageLayerBase {
 	media: string | TransitionObject | null // template name
 	playing: true
 }
-export interface IHtmlPageLayer extends ILayerBase, IHtmlPageLayerBase {
+export interface HtmlPageLayer extends LayerBase, HtmlPageLayerBase {
 	content: LayerContentType.HTMLPAGE
-	media: IHtmlPageLayerBase['media']
-	playing: IHtmlPageLayerBase['playing']
+	media: HtmlPageLayerBase['media']
+	playing: HtmlPageLayerBase['playing']
 
 	/** [timestamp] If set, at what point in time the object started playing */
 	playTime: number | null
 }
-export interface IInputLayerBase {
+export interface InputLayerBase {
 	media: 'decklink' | TransitionObject
 	input: {
-		device: number;
-		format?: string;
-		channelLayout?: string;
+		device: number
+		format?: string
+		channelLayout?: string
 	}
 	filter?: string
 	playing: true
 }
-export interface IInputLayer extends ILayerBase, IInputLayerBase {
+export interface InputLayer extends LayerBase, InputLayerBase {
 	content: LayerContentType.INPUT
-	media: IInputLayerBase['media']
-	playing: IInputLayerBase['playing']
+	media: InputLayerBase['media']
+	playing: InputLayerBase['playing']
 	playTime: null
 }
-export interface IRouteLayerBase {
+export interface RouteLayerBase {
 	media: 'route' | TransitionObject
 	route?: {
-		channel: number;
-		layer?: number | null;
-		channelLayout?: string;
+		channel: number
+		layer?: number | null
+		channelLayout?: string
 	}
 	delay?: number
 	mode?: 'BACKGROUND' | 'NEXT'
 	playing: true
 }
-export interface IRouteLayer extends ILayerBase, IRouteLayerBase {
+export interface RouteLayer extends LayerBase, RouteLayerBase {
 	content: LayerContentType.ROUTE
-	media: IRouteLayerBase['media']
-	playing: IRouteLayerBase['playing']
+	media: RouteLayerBase['media']
+	playing: RouteLayerBase['playing']
 	playTime: null
 
 	nextUp?: NextUp
 }
-export interface IRecordLayerBase {
+export interface RecordLayerBase {
 	media: string
 	encoderOptions: string
 	playing: true
 }
-export interface IRecordLayer extends ILayerBase, IRecordLayerBase {
+export interface RecordLayer extends LayerBase, RecordLayerBase {
 	content: LayerContentType.RECORD
-	media: IRecordLayerBase['media']
-	playing: IRecordLayerBase['playing']
+	media: RecordLayerBase['media']
+	playing: RecordLayerBase['playing']
 	playTime: number
 }
-export interface IFunctionLayerBase {
+export interface FunctionLayerBase {
 	executeFcn?: string // name of function to execute
 	executeData?: any
 	oscDevice?: number
 	inMessage?: {
-		url: string;
-		args?: {};
+		url: string
+		args?: {}
 	} | null
 	outMessage?: {
-		url: string;
-		args?: {};
+		url: string
+		args?: {}
 	} | null
 }
-export interface IFunctionLayer extends ILayerBase, IFunctionLayerBase {
+export interface FunctionLayer extends LayerBase, FunctionLayerBase {
 	content: LayerContentType.FUNCTION
 }
-export interface IEmptyLayerBase {
+export interface EmptyLayerBase {
 	playing: false
 }
-export interface IEmptyLayer extends ILayerBase, IEmptyLayerBase {
+export interface EmptyLayer extends LayerBase, EmptyLayerBase {
 	content: LayerContentType.NOTHING
 	playing: false
 	nextUp?: NextUp
@@ -204,31 +204,19 @@ export interface NextUpBase {
 	id: string
 	mode?: 'BACKGROUND' | 'NEXT'
 }
-export interface NextUpMedia
-	extends NextUpBase,
-		ILayerBaseBase,
-		IMediaLayerBase {
+export interface NextUpMedia extends NextUpBase, LayerBaseBase, MediaLayerBase {
 	content: LayerContentType.MEDIA
 	auto?: boolean
 }
-export interface NextUpHTML
-	extends NextUpBase,
-		ILayerBaseBase,
-		IHtmlPageLayerBase {
+export interface NextUpHTML extends NextUpBase, LayerBaseBase, HtmlPageLayerBase {
 	content: LayerContentType.HTMLPAGE
 	auto?: boolean
 }
-export interface NextUpInput
-	extends NextUpBase,
-		ILayerBaseBase,
-		IInputLayerBase {
+export interface NextUpInput extends NextUpBase, LayerBaseBase, InputLayerBase {
 	content: LayerContentType.INPUT
 	auto?: boolean
 }
-export interface NextUpRoute
-	extends NextUpBase,
-		ILayerBaseBase,
-		IRouteLayerBase {
+export interface NextUpRoute extends NextUpBase, LayerBaseBase, RouteLayerBase {
 	content: LayerContentType.ROUTE
 	auto?: boolean
 
@@ -236,17 +224,6 @@ export interface NextUpRoute
 	/** [time in ms] How long to delay the routed content */
 	delay?: number
 }
-export interface Mixer extends MixerBase {}
-export interface ITransition {
-	type?: string
-	duration?: number
-	easing?: string
-	direction?: string
+export type Mixer = MixerBase
 
-	maskFile?: string
-	delay?: number
-	overlayFile?: string
-	audioFadeStart?: number
-	audioFadeDuration?: number
-}
 export { TransitionObject, Transition }
