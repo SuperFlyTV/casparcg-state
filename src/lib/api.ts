@@ -226,4 +226,16 @@ export interface NextUpRoute extends NextUpBase, LayerBaseBase, RouteLayerBase {
 }
 export type Mixer = MixerBase
 
+export interface TransitionOptions {
+	type?: string
+	duration?: number
+	easing?: string
+	direction?: string
+
+	maskFile?: string
+	delay?: number
+	overlayFile?: string
+	audioFadeStart?: number
+	audioFadeDuration?: number
+}
 export { TransitionObject, Transition }

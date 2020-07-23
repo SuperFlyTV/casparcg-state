@@ -136,17 +136,17 @@ function stripContext(c: any) {
 }
 function fixCommand(c: any, options?: any) {
 	options = options || {}
-	// @ts-expect-error access _objectParams
+	// @ts-ignore access _objectParams
 	if (c instanceof AMCP.PlayCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-expect-error access _objectParams
+	// @ts-ignore access _objectParams
 	if (c instanceof AMCP.LoadCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-expect-error access _objectParams
+	// @ts-ignore access _objectParams
 	if (c instanceof AMCP.PauseCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-expect-error access _objectParams
+	// @ts-ignore access _objectParams
 	if (c instanceof AMCP.CGAddCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-expect-error access _objectParams
+	// @ts-ignore access _objectParams
 	if (c instanceof AMCP.PlayDecklinkCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-expect-error access _objectParams
+	// @ts-ignore access _objectParams
 	if (c instanceof AMCP.PlayHtmlPageCommand) c._objectParams.noClear = !!options.noClear
 
 	_.each(options, (val, key) => {

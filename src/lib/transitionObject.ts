@@ -1,20 +1,20 @@
 import * as _ from 'underscore'
-// import { Transition } from './api'
+import { TransitionOptions } from './api'
 
 export class TransitionObject {
 	_transition: true
 	_value: string | number | boolean
-	inTransition: Transition
-	changeTransition: Transition
-	outTransition: Transition
+	inTransition: TransitionOptions
+	changeTransition: TransitionOptions
+	outTransition: TransitionOptions
 
 	/** */
 	constructor(
 		value?: any,
 		options?: {
-			inTransition?: Transition
-			changeTransition?: Transition
-			outTransition?: Transition
+			inTransition?: TransitionOptions
+			changeTransition?: TransitionOptions
+			outTransition?: TransitionOptions
 		}
 	) {
 		this._transition = true
@@ -40,29 +40,17 @@ export class TransitionObject {
 	}
 }
 
-export interface Transition {
-	type?: string
-	duration?: number
-	easing?: string
-	direction?: string
+export class Transition implements TransitionOptions {
+	type = 'mix'
+	duration = 0
+	easing = 'linear'
+	direction = 'right'
 
-	maskFile?: string
-	delay?: number
-	overlayFile?: string
-	audioFadeStart?: number
-	audioFadeDuration?: number
-}
-export class Transition implements Transition {
-	type? = 'mix'
-	duration? = 0
-	easing? = 'linear'
-	direction? = 'right'
-
-	maskFile? = ''
-	delay? = 0
-	overlayFile? = ''
-	audioFadeStart?: number = 0
-	audioFadeDuration?: number = 0
+	maskFile = ''
+	delay = 0
+	overlayFile = ''
+	audioFadeStart = 0
+	audioFadeDuration = 0
 
 	constructor(
 		typeOrTransition?: string | object,
@@ -75,7 +63,7 @@ export class Transition implements Transition {
 		let type: string
 
 		if (_.isObject(typeOrTransition)) {
-			const t: Transition = typeOrTransition as Transition
+			const t: TransitionOptions = typeOrTransition as TransitionOptions
 			type = t.type as string
 
 			const isSting = (type + '').match(/sting/i)
@@ -189,7 +177,7 @@ export class Transition implements Transition {
 		}
 	}
 
-	fromCommand(command: any, fps?: number): Transition {
+	fromCommand(command: any, fps?: number): TransitionOptions {
 		if (command._objectParams) {
 			if ((command._objectParams.transition + '').match(/sting/i)) {
 				this.type = 'sting'

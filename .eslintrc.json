@@ -5,13 +5,20 @@
 		"prettier/prettier": "error",
 		"no-use-before-define": "off"
 	},
-	"env": { "es2017": true },
-	"parserOptions": { "sourceType": "module", "ecmaVersion": 2018 },
+	"env": {
+		"es2017": true
+	},
+	"parserOptions": {
+		"sourceType": "module",
+		"ecmaVersion": 2018
+	},
 	"overrides": [
 		{
 			"files": ["*.ts"],
 			"parser": "@typescript-eslint/parser",
-			"parserOptions": { "project": "./tsconfig.json" },
+			"parserOptions": {
+				"project": "./tsconfig.json"
+			},
 			"plugins": ["@typescript-eslint"],
 			"extends": [
 				"eslint:recommended",
@@ -21,7 +28,8 @@
 			],
 			"rules": {
 				"no-use-before-define": "off",
-				"@typescript-eslint/no-use-before-define": "off"
+				"@typescript-eslint/no-use-before-define": "off",
+				"@typescript-eslint/ban-ts-ignore": "off"
 			}
 		},
 		{

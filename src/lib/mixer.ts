@@ -1,7 +1,7 @@
 import * as _ from 'underscore'
 import { Enum as CCGEnum } from 'casparcg-connection'
 import { TransitionObject } from './transitionObject'
-import { Transition } from './api'
+import { TransitionOptions } from './api'
 
 export interface Chroma {
 	keyer: CCGEnum.Chroma
@@ -21,9 +21,9 @@ export interface Perspective {
 }
 export class Mixer {
 	[key: string]: any
-	inTransition?: Transition
-	changeTransition?: Transition
-	outTransition?: Transition
+	inTransition?: TransitionOptions
+	changeTransition?: TransitionOptions
+	outTransition?: TransitionOptions
 
 	anchor?: { x: number; y: number } | TransitionObject
 	blendmode?: CCGEnum.BlendMode | TransitionObject
