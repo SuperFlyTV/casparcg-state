@@ -3,8 +3,8 @@ import { AMCP, Enum as CCG_Enum, Command as CommandNS } from 'casparcg-connectio
 
 import {
 	CasparCGState,
-	DiffCommands,
-	DiffCommandGroups,
+	// DiffCommands,
+	// DiffCommandGroups,
 	IAMCPCommandVOWithContext,
 	State,
 	IMediaLayer,
@@ -32,12 +32,12 @@ interface CGState {
 }
 function getCasparCGState (): CGState {
 	let time = 1000
-	let logging: boolean = false
-	let externalLog = (...args: any[]) => {
-		if (logging) {
-			console.log(...args)
-		}
-	}
+	// let logging: boolean = false
+	// let externalLog = (...args: any[]) => {
+	// 	if (logging) {
+	// 		console.log(...args)
+	// 	}
+	// }
 	return {
 		set time (t) {
 			time = t
@@ -45,11 +45,11 @@ function getCasparCGState (): CGState {
 		get time () {
 			return time
 		},
-		set log (t: boolean) {
-			logging = t
+		set log (_t: boolean) {
+			// logging = t
 		},
 		ccgState: new CasparCGState({
-			externalLog: externalLog
+			// externalLog: externalLog
 		})
 	}
 }
@@ -59,52 +59,69 @@ function initState (c: CGState) {
 		fps: 50
 	}], c.time)
 }
-function initState0 (s: CasparCGState, time: number) {
-	s.initStateFromChannelInfo([{
-		videoMode: 'PAL',
-		fps: 50
-	}], time)
-}
+// function initState0 (s: CasparCGState, time: number) {
+// 	s.initStateFromChannelInfo([{
+// 		videoMode: 'PAL',
+// 		fps: 50
+// 	}], time)
+// }
 function initStateMS (c: CGState) {
 	c.ccgState.initStateFromChannelInfo([{
 		videoMode: 'PAL',
 		fps: 1 / 50
 	}], c.time)
 }
-function getDiff (c: CGState, targetState: State, loggingAfter?: boolean) {
+function getDiff (c: CGState, targetState: State, _loggingAfter?: boolean) {
 
 	let cc = c.ccgState.getDiff(targetState, c.time)
 
-	if (loggingAfter) c.log = true
-	applyCommands(c, cc)
+	const s = c.ccgState.getState()
+	for (const [ channelNo, channel ] of Object.entries(targetState.channels)) {
+		for (const [ layerNo, layer ] of Object.entries(channel.layers)) {
+			s.channels[channelNo].layers[layerNo] = layer
+		}
+	}	
+	for (const [ channelNo, channel ] of Object.entries(s.channels)) {
+		for (const [ layerNo ] of Object.entries(channel.layers)) {
+			if (!targetState.channels[channelNo]) {
+				delete s.channels[channelNo]
+			} else if (!targetState.channels[channelNo].layers[layerNo]) {
+				delete s.channels[channelNo].layers[layerNo]
+			}
+		}
+	}
+	c.ccgState.setState(s)
 
-	// after applying, test again vs same state, no new commands should be generated:
-	console.log('second try')
-	let cc2 = c.ccgState.getDiff(targetState, c.time)
-	expect(cc2.length).toBeLessThanOrEqual(2)
-	if (cc2.length === 1) expect(cc2[0].cmds).toHaveLength(0)
-	if (cc2.length === 2) expect(cc2[1].cmds).toHaveLength(0)
+	// if (loggingAfter) c.log = true
+	// applyCommands(c, cc)
 
-	if (loggingAfter) c.log = false
+	// // after applying, test again vs same state, no new commands should be generated:
+	// console.log('second try')
+	// let cc2 = c.ccgState.getDiff(targetState, c.time)
+	// expect(cc2.length).toBeLessThanOrEqual(2)
+	// if (cc2.length === 1) expect(cc2[0].cmds).toHaveLength(0)
+	// if (cc2.length === 2) expect(cc2[1].cmds).toHaveLength(0)
+
+	// if (loggingAfter) c.log = false
 	return cc
 }
-function applyCommands (c: CGState, cc: DiffCommandGroups) {
+// function applyCommands (c: CGState, cc: DiffCommandGroups) {
 
-	let commands: Array<{
-		cmd: CommandNS.IAMCPCommandVO,
-		additionalLayerState?: InternalLayer
-	}> = []
+// 	let commands: Array<{
+// 		cmd: CommandNS.IAMCPCommandVO,
+// 		additionalLayerState?: InternalLayer
+// 	}> = []
 
-	_.each(cc, (c: DiffCommands) => {
-		_.each(c.cmds, (cmd) => {
-			commands.push({
-				cmd: cmd,
-				additionalLayerState: c.additionalLayerState
-			})
-		})
-	})
-	c.ccgState.applyCommands(commands, c.time)
-}
+// 	_.each(cc, (c: DiffCommands) => {
+// 		_.each(c.cmds, (cmd) => {
+// 			commands.push({
+// 				cmd: cmd,
+// 				additionalLayerState: c.additionalLayerState
+// 			})
+// 		})
+// 	})
+// 	c.ccgState.applyCommands(commands, c.time)
+// }
 function stripContext (c: any) {
 	return _.omit(c, 'context')
 }
@@ -134,50 +151,50 @@ test('get version', () => {
 
 	expect(c.ccgState.version).toMatch(/\d+-\d+-\d+ \d+:\d+\d/)
 })
-test('get & set state', () => {
-	let c = getCasparCGState()
-	initState(c)
+// test('get & set state', () => {
+// 	let c = getCasparCGState()
+// 	initState(c)
 
-	// initialize:
+// 	// initialize:
 
-	// Make some test commands:
-	let myTestPlayCommand = new AMCP.PlayCommand({
-		channel: 1,
-		layer: 10,
-		clip: 'AMB'
-	})
-	c.ccgState.applyCommands([{
-		cmd: myTestPlayCommand.serialize()
-	}], c.time)
+// 	// Make some test commands:
+// 	let myTestPlayCommand = new AMCP.PlayCommand({
+// 		channel: 1,
+// 		layer: 10,
+// 		clip: 'AMB'
+// 	})
+// 	c.ccgState.applyCommands([{
+// 		cmd: myTestPlayCommand.serialize()
+// 	}], c.time)
 
-	let myState0 = c.ccgState.getState()
+// 	let myState0 = c.ccgState.getState()
 
-	let ccgState1 = new CasparCGState()
-	initState0(ccgState1, c.time)
+// 	let ccgState1 = new CasparCGState()
+// 	initState0(ccgState1, c.time)
 
-	let ccgStateInitialized = new CasparCGState()
-	initState0(ccgStateInitialized, c.time)
+// 	let ccgStateInitialized = new CasparCGState()
+// 	initState0(ccgStateInitialized, c.time)
 
-	let unInitializedState = {}
+// 	let unInitializedState = {}
 
-	ccgState1.setState(myState0)
-	expect(c.ccgState.getState()).toEqual(ccgState1.getState())
-	expect(c.ccgState.getState()).not.toEqual(ccgStateInitialized.getState())
-	expect(c.ccgState.getState()).not.toEqual(unInitializedState)
+// 	ccgState1.setState(myState0)
+// 	expect(c.ccgState.getState()).toEqual(ccgState1.getState())
+// 	expect(c.ccgState.getState()).not.toEqual(ccgStateInitialized.getState())
+// 	expect(c.ccgState.getState()).not.toEqual(unInitializedState)
 
-	// Clear the state, but keep the initialization info
-	c.ccgState.softClearState()
+// 	// Clear the state, but keep the initialization info
+// 	c.ccgState.softClearState()
 
-	expect(c.ccgState.getState()).toEqual(ccgStateInitialized.getState())
-	expect(c.ccgState.getState()).not.toEqual(ccgState1.getState())
-	expect(c.ccgState.getState()).not.toEqual(unInitializedState)
+// 	expect(c.ccgState.getState()).toEqual(ccgStateInitialized.getState())
+// 	expect(c.ccgState.getState()).not.toEqual(ccgState1.getState())
+// 	expect(c.ccgState.getState()).not.toEqual(unInitializedState)
 
-	// Clear the state completely
-	c.ccgState.clearState()
-	expect(() => {
-		c.ccgState.getState()
-	}).toThrowError()
-})
+// 	// Clear the state completely
+// 	c.ccgState.clearState()
+// 	expect(() => {
+// 		c.ccgState.getState()
+// 	}).toThrowError()
+// })
 test('bad initializations', () => {
 
 	expect(() => {
@@ -784,7 +801,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	})).serialize())
 
 })
-test.only('Play a video, stop and loadbg another video', () => {
+test('Play a video, stop and loadbg another video', () => {
 	let c = getCasparCGState()
 	initState(c)
 
@@ -2025,8 +2042,12 @@ test('Play a video, then add mixer attributes', () => {
 	delete channel1.layers['10']
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
-	expect(cc[1].cmds).toHaveLength(1)
+	expect(cc[1].cmds).toHaveLength(2)
 	expect(stripContext(cc[1].cmds[0])).toEqual(new AMCP.ClearCommand({
+		channel: 1,
+		layer: 10
+	}).serialize())
+	expect(stripContext(cc[1].cmds[1])).toEqual(new AMCP.MixerClearCommand({
 		channel: 1,
 		layer: 10
 	}).serialize())
@@ -2046,7 +2067,7 @@ test('Play a video, then add mixer attributes', () => {
 
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
-	expect(cc[0].cmds).toHaveLength(2)
+	expect(cc[0].cmds).toHaveLength(1)
 	expect(stripContext(cc[0].cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
 		channel: 1,
 		layer: 10,
@@ -2054,14 +2075,6 @@ test('Play a video, then add mixer attributes', () => {
 		loop: false,
 		seek: 0
 	})).serialize())
-	expect(stripContext(cc[0].cmds[1])).toEqual(fixCommand(new AMCP.MixerFillCommand({
-		channel: 1,
-		layer: 10,
-		x: 0,
-		y: 0,
-		xScale: 1,
-		yScale: 1
-	}),{ _defaultOptions: true }).serialize())
 })
 test('Play a video with transition, then stop it with transition', () => {
 	let c = getCasparCGState()
@@ -2215,40 +2228,40 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 		transitionEasing: 'linear'
 	}).serialize())
 })
-test('Apply commands before init', () => {
-	let c = getCasparCGState()
-	initState(c)
-	let cc: any
+// test('Apply commands before init', () => {
+// 	let c = getCasparCGState()
+// 	initState(c)
+// 	let cc: any
 
-	// Play a video file:
+// 	// Play a video file:
 
-	let layer10: IMediaLayer = {
-		id: 'l0',
-		content: LayerContentType.MEDIA,
-		layerNo: 10,
-		media: 'AMB',
-		playing: true,
-		playTime: 1000,
-		seek: 0
-	}
-	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	let targetState: State = { channels: { '1': channel1 } }
-	// cc = getDiff(c, targetState)
+// 	let layer10: IMediaLayer = {
+// 		id: 'l0',
+// 		content: LayerContentType.MEDIA,
+// 		layerNo: 10,
+// 		media: 'AMB',
+// 		playing: true,
+// 		playTime: 1000,
+// 		seek: 0
+// 	}
+// 	let channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+// 	let targetState: State = { channels: { '1': channel1 } }
+// 	// cc = getDiff(c, targetState)
 
-	cc = c.ccgState.getDiff(targetState, c.time)
+// 	cc = c.ccgState.getDiff(targetState, c.time)
 
-	let c2 = getCasparCGState()
+// 	let c2 = getCasparCGState()
 
-	// Apply commands before init
-	applyCommands(c2, cc)
+// 	// Apply commands before init
+// 	applyCommands(c2, cc)
 
-	initState(c2)
+// 	initState(c2)
 
-	// Then resolve state, it should generate no commands:
-	cc = getDiff(c2, targetState)
-	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(0)
-})
+// 	// Then resolve state, it should generate no commands:
+// 	cc = getDiff(c2, targetState)
+// 	expect(cc).toHaveLength(1)
+// 	expect(cc[0].cmds).toHaveLength(0)
+// })
 
 test('Bundle commands', () => {
 	let c = getCasparCGState()
@@ -2381,7 +2394,7 @@ test('Prioritize commands', () => {
 	let channel1: Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
 	let targetState: State = { channels: { '1': channel1 } }
 
-	let cmds = c.ccgState.diffStatesOrderedCommands(c.ccgState.getState(), targetState, c.time)
+	let cmds = CasparCGState.diffStatesOrderedCommands(c.ccgState.getState(), targetState, c.time)
 
 	expect(cmds).toHaveLength(1)
 	expect(stripContext(cmds[0])).toEqual(fixCommand(new AMCP.LoadbgCommand({
@@ -2430,7 +2443,7 @@ test('Prioritize commands', () => {
 		playTime: 1000,
 		layerNo: 10
 	}
-	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState, c.time)
+	cmds = CasparCGState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	// Note that the order should be reversed: first play 1-10, then play 1-9 amb, then loadbg 1-8 amb
 	expect(cmds).toHaveLength(3)
 	expect(stripContext(cmds[0])).toEqual(fixCommand(new AMCP.PlayCommand({
@@ -2458,7 +2471,7 @@ test('Prioritize commands', () => {
 	oldState = JSON.parse(JSON.stringify(targetState))
 	delete channel1.layers['10']
 
-	cmds = c.ccgState.diffStatesOrderedCommands(oldState, targetState, c.time)
+	cmds = CasparCGState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	expect(cmds).toHaveLength(1)
 	expect(stripContext(cmds[0])).toEqual(fixCommand(new AMCP.ClearCommand({
 		channel: 1,
