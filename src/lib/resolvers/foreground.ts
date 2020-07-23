@@ -536,7 +536,7 @@ function resolveForegroundState(
 						channel: options.channel,
 						layer: options.layer,
 						_commandName: 'executeFunction',
-						// @ts-expect-error special: nl.media used for diffing
+						// @ts-ignore special: nl.media used for diffing
 						media: nl.media,
 						externalFunction: true
 					}

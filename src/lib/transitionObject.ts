@@ -177,7 +177,7 @@ export class Transition implements TransitionOptions {
 		}
 	}
 
-	fromCommand(command: any, fps?: number): TransitionOptions {
+	fromCommand(command: any, fps?: number): Transition {
 		if (command._objectParams) {
 			if ((command._objectParams.transition + '').match(/sting/i)) {
 				this.type = 'sting'

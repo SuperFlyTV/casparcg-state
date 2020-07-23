@@ -1,17 +1,17 @@
 import {
 	Channel,
-	IMediaLayer,
+	MediaLayer,
 	NextUpMedia,
 	NextUp,
 	LayerContentType,
-	ILayerBase,
+	LayerBase,
 	TransitionObject,
 	Transition,
 	State
 } from './api'
 import * as _ from 'underscore'
 import { Mixer } from './mixer'
-import { IAMCPCommandWithContext, IAMCPCommandVOWithContext, DiffCommands } from './casparCGState'
+import { AMCPCommandWithContext, AMCPCommandVOWithContext, DiffCommands } from './casparCGState'
 import { Command as CommandNS } from 'casparcg-connection'
 import { InternalLayer, InternalState } from './stateObjectStorage'
 
@@ -34,7 +34,7 @@ export function time2Frames(time: number, newChannel: Channel, oldChannel?: Chan
 export function calculateSeek(
 	newChannel: Channel,
 	oldChannel: Channel,
-	layer: IMediaLayer | NextUpMedia,
+	layer: MediaLayer | NextUpMedia,
 	timeSincePlay: number | null
 ): number {
 	if (layer.looping && !layer.length) {
@@ -63,7 +63,7 @@ export function calculateSeek(
 }
 export function calculatePlayAttributes(
 	timeSincePlay: number | null,
-	nl: IMediaLayer | NextUp,
+	nl: MediaLayer | NextUp,
 	newChannel: Channel,
 	oldChannel: Channel
 ): {
@@ -105,11 +105,7 @@ export function calculatePlayAttributes(
 		channelLayout
 	}
 }
-export function getTimeSincePlay(
-	layer: IMediaLayer,
-	currentTime: number,
-	minTimeSincePlay: number
-) {
+export function getTimeSincePlay(layer: MediaLayer, currentTime: number, minTimeSincePlay: number) {
 	let timeSincePlay: number | null =
 		layer.playTime === undefined ? 0 : (layer.pauseTime || currentTime) - (layer.playTime || 0)
 	if (timeSincePlay < minTimeSincePlay) {
@@ -198,24 +194,22 @@ export function compareAttrs(
 export function addContext<T extends CommandNS.IAMCPCommandVO>(
 	cmd: T,
 	context: string,
-	layer: ILayerBase | null
-): IAMCPCommandVOWithContext
+	layer: LayerBase | null
+): AMCPCommandVOWithContext
 export function addContext<T extends CommandNS.IAMCPCommand>(
 	cmd: T,
 	context: string,
-	layer: ILayerBase | null
-): IAMCPCommandWithContext
+	layer: LayerBase | null
+): AMCPCommandWithContext
 export function addContext<T extends CommandNS.IAMCPCommandVO | CommandNS.IAMCPCommand>(
 	cmd: T,
 	context: string,
-	layer: ILayerBase | null
-): T & { context: IAMCPCommandVOWithContext['context'] } {
-	const returnCmd = {
-		...cmd,
-		context: {
-			context,
-			layerId: layer ? layer.id : ''
-		}
+	layer: LayerBase | null
+): T & { context: AMCPCommandVOWithContext['context'] } {
+	const returnCmd = cmd as T & { context: AMCPCommandVOWithContext['context'] }
+	returnCmd.context = {
+		context,
+		layerId: layer ? layer.id : ''
 	}
 	return returnCmd
 }
@@ -225,7 +219,7 @@ export function isIAMCPCommand(cmd: any): cmd is CommandNS.IAMCPCommand {
 export function setTransition(
 	options: any | null,
 	channel: Channel,
-	oldLayer: ILayerBase,
+	oldLayer: LayerBase,
 	content: any,
 	isRemove: boolean,
 	isBg?: boolean
@@ -278,7 +272,7 @@ export function setDefaultValue(obj: any | Array<any>, key: string | Array<strin
 	}
 }
 export function compareMixerValues(
-	layer: ILayerBase,
+	layer: LayerBase,
 	oldLayer: InternalLayer,
 	attr: string,
 	attrs?: Array<string>
@@ -338,7 +332,7 @@ export function getLayer(state: State | InternalState, channelNo: string, layerN
 }
 export function addCommands(
 	diff: DiffCommands,
-	...commands: Array<IAMCPCommandWithContext | IAMCPCommandVOWithContext>
+	...commands: Array<AMCPCommandWithContext | AMCPCommandVOWithContext>
 ): void {
 	for (const cmd of commands) {
 		if (isIAMCPCommand(cmd)) {
