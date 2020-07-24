@@ -6,10 +6,10 @@ import {
 	setTransition,
 	getTimeSincePlay,
 	calculatePlayAttributes,
-	frames2Time,
+	frames2TimeChannel,
 	addContext,
 	fixPlayCommandInput,
-	time2Frames,
+	time2FramesChannel,
 	addCommands
 } from '../util'
 import { InternalState } from '../stateObjectStorage'
@@ -192,7 +192,11 @@ function resolveForegroundState(
 					nl.pauseTime = 0
 
 					const newMedia = compareAttrs(nl, ol, ['media'])
-					const seekDiff = frames2Time(Math.abs(oldSeekFrames - seekFrames), newChannel, oldChannel)
+					const seekDiff = frames2TimeChannel(
+						Math.abs(oldSeekFrames - seekFrames),
+						newChannel,
+						oldChannel
+					)
 					const seekIsSmall: boolean = seekDiff < minTimeSincePlay
 
 					if (!newMedia && ol.pauseTime && seekIsSmall) {
@@ -435,7 +439,7 @@ function resolveForegroundState(
 					const routeLayer: number | null = nl.route.layer || null
 					const mode = nl.mode
 					const framesDelay: number | undefined = nl.delay
-						? Math.floor(time2Frames(nl.delay, newChannel, oldChannel))
+						? Math.floor(time2FramesChannel(nl.delay, newChannel, oldChannel))
 						: undefined
 					const diffMediaFromBg =
 						!olNext ||

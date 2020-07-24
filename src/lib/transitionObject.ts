@@ -1,5 +1,6 @@
 import * as _ from 'underscore'
 import { TransitionOptions } from './api'
+import { frames2Time, time2Frames } from './util'
 
 export class TransitionObject {
 	_transition: true
@@ -151,11 +152,11 @@ export class Transition implements TransitionOptions {
 
 				if (this.maskFile) str += `MASK="${this.maskFile}" `
 				if (this.overlayFile) str += `OVERLAY="${this.overlayFile}" `
-				if (this.delay) str += `TRIGGER_POINT="${this.time2Frames(this.delay, fps || 50)}" `
+				if (this.delay) str += `TRIGGER_POINT="${this.time2Frames(this.delay, fps)}" `
 				if (this.audioFadeStart)
-					str += `AUDIO_FADE_START="${this.time2Frames(this.audioFadeStart, fps || 50)}" `
+					str += `AUDIO_FADE_START="${this.time2Frames(this.audioFadeStart, fps)}" `
 				if (this.audioFadeDuration)
-					str += `AUDIO_FADE_DURATION="${this.time2Frames(this.audioFadeDuration, fps || 50)}" `
+					str += `AUDIO_FADE_DURATION="${this.time2Frames(this.audioFadeDuration, fps)}" `
 
 				str = str.substr(0, str.length - 1) + ')'
 
@@ -185,13 +186,13 @@ export class Transition implements TransitionOptions {
 					this.maskFile = command._objectParams.stingMaskFilename
 				}
 				if (command._objectParams.stingDelay) {
-					this.delay = this.frames2Time(command._objectParams.stingDelay, fps || 50)
+					this.delay = this.frames2Time(command._objectParams.stingDelay, fps)
 				}
 				if (command._objectParams.stingOverlayFilename) {
 					this.overlayFile = command._objectParams.stingOverlayFilename
 				}
 				if (command._objectParams.audioFadeStart) {
-					this.audioFadeStart = this.frames2Time(command._objectParams.audioFadeStart, fps || 50)
+					this.audioFadeStart = this.frames2Time(command._objectParams.audioFadeStart, fps)
 				}
 				if (command._objectParams.audioFadeDuration) {
 					this.audioFadeDuration = this.frames2Time(
@@ -204,7 +205,7 @@ export class Transition implements TransitionOptions {
 					this.type = command._objectParams.transition
 				}
 				if (command._objectParams.transitionDuration) {
-					this.duration = this.frames2Time(command._objectParams.transitionDuration, fps || 50)
+					this.duration = this.frames2Time(command._objectParams.transitionDuration, fps)
 				}
 				if (command._objectParams.transitionEasing) {
 					this.easing = command._objectParams.transitionEasing
@@ -218,15 +219,9 @@ export class Transition implements TransitionOptions {
 	}
 
 	private frames2Time(frames: number, fps?: number): number {
-		// ms = frames * (1000 / fps)
-		fps = fps ? (fps < 1 ? 1 / fps : fps) : 25
-		return frames * (1000 / fps)
+		return frames2Time(frames, fps)
 	}
 	private time2Frames(time: number, fps?: number): number {
-		// frames = ms / (1000 / fps)
-		fps = fps ? (fps < 1 ? 1 / fps : fps) : 25
-		time = time < 15 ? time * 1000 : time // less than 1 frame
-		console.log(`${time}ms is ${Math.floor(time / (1000 / fps))} frames`)
-		return Math.floor(time / (1000 / fps))
+		return time2Frames(time, fps)
 	}
 }

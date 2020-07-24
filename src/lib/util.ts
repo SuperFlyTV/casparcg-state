@@ -15,17 +15,33 @@ import { AMCPCommandWithContext, AMCPCommandVOWithContext, DiffCommands } from '
 import { Command as CommandNS } from 'casparcg-connection'
 import { InternalLayer, InternalState } from './stateObjectStorage'
 
-export function frames2Time(frames: number, newChannel: Channel, oldChannel?: Channel): number {
+export function frames2Time(frames: number, fps = 25): number {
 	// ms = frames * (1000 / fps)
-	let fps = newChannel.fps || (oldChannel ? oldChannel.fps : 0) || 25
 	fps = fps < 1 ? 1 / fps : fps
 	return frames * (1000 / fps)
 }
-export function time2Frames(time: number, newChannel: Channel, oldChannel?: Channel): number {
+export function time2Frames(time: number, fps = 25): number {
 	// frames = ms / (1000 / fps)
-	let fps = newChannel.fps || (oldChannel ? oldChannel.fps : 0) || 25
 	fps = fps < 1 ? 1 / fps : fps
 	return Math.floor(time / (1000 / fps))
+}
+export function frames2TimeChannel(
+	frames: number,
+	newChannel: Channel,
+	oldChannel?: Channel
+): number {
+	// ms = frames * (1000 / fps)
+	const fps = newChannel.fps || (oldChannel ? oldChannel.fps : 0) || 25
+	return frames2Time(frames, fps)
+}
+export function time2FramesChannel(
+	time: number,
+	newChannel: Channel,
+	oldChannel?: Channel
+): number {
+	// frames = ms / (1000 / fps)
+	const fps = newChannel.fps || (oldChannel ? oldChannel.fps : 0) || 25
+	return time2Frames(time, fps)
 }
 /**
  * Calculate seek time needed to make the clip to play in sync
@@ -43,14 +59,20 @@ export function calculateSeek(
 	}
 	const seekStart: number = (layer.seek !== undefined ? layer.seek : layer.inPoint) || 0
 
+	console.log(layer, seekStart, timeSincePlay)
+
 	let seekFrames: number = Math.max(
 		0,
-		time2Frames(seekStart + (timeSincePlay || 0), newChannel, oldChannel)
+		time2FramesChannel(seekStart + (timeSincePlay || 0), newChannel, oldChannel)
 	)
 	const inPointFrames: number | undefined =
-		layer.inPoint !== undefined ? time2Frames(layer.inPoint, newChannel, oldChannel) : undefined
+		layer.inPoint !== undefined
+			? time2FramesChannel(layer.inPoint, newChannel, oldChannel)
+			: undefined
 	const lengthFrames: number | undefined =
-		layer.length !== undefined ? time2Frames(layer.length, newChannel, oldChannel) : undefined
+		layer.length !== undefined
+			? time2FramesChannel(layer.length, newChannel, oldChannel)
+			: undefined
 
 	if (layer.looping) {
 		const seekSinceInPoint = seekFrames - (inPointFrames || 0)
@@ -82,9 +104,9 @@ export function calculatePlayAttributes(
 	if (nl.content === LayerContentType.MEDIA) {
 		looping = !!nl.looping
 		inPointFrames =
-			nl.inPoint !== undefined ? time2Frames(nl.inPoint, newChannel, oldChannel) : undefined
+			nl.inPoint !== undefined ? time2FramesChannel(nl.inPoint, newChannel, oldChannel) : undefined
 		lengthFrames =
-			nl.length !== undefined ? time2Frames(nl.length, newChannel, oldChannel) : undefined
+			nl.length !== undefined ? time2FramesChannel(nl.length, newChannel, oldChannel) : undefined
 		seekFrames = calculateSeek(newChannel, oldChannel, nl, timeSincePlay)
 	}
 	if (nl.content === LayerContentType.MEDIA) {

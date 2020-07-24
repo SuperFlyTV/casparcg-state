@@ -17,7 +17,7 @@ import {
 	setTransition,
 	calculatePlayAttributes,
 	fixPlayCommandInput,
-	time2Frames,
+	time2FramesChannel,
 	addCommands
 } from '../util'
 import { OptionsInterface, DiffCommands } from '../casparCGState'
@@ -209,7 +209,7 @@ function resolveBackgroundState(
 								mode: layer.mode,
 								channelLayout: layer.route ? layer.route.channelLayout : undefined,
 								framesDelay: layer.delay
-									? Math.floor(time2Frames(layer.delay, newChannel, oldChannel))
+									? Math.floor(time2FramesChannel(layer.delay, newChannel, oldChannel))
 									: undefined
 							})
 						),
