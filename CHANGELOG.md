@@ -1,6 +1,110 @@
-# Change Log
+# Changelog
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [1.12.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.2...1.12.0) (2020-03-11)
+
+
+### Features
+
+* decklink filter parameter ([4e970f4](https://github.com/SuperFlyTV/casparcg-state/commit/4e970f425c5643c8357bd359340935f683323d6f))
+
+### [1.11.2](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.1...1.11.2) (2019-12-11)
+
+
+### Bug Fixes
+
+* state mutations when nextUp routes change ([#41](https://github.com/SuperFlyTV/casparcg-state/issues/41)) ([7c6b605](https://github.com/SuperFlyTV/casparcg-state/commit/7c6b605bd8590b378dd3078f273b9f002b6f191b))
+
+### [1.11.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.0...1.11.1) (2019-12-05)
+
+
+### Bug Fixes
+
+* do not send empty LOAD command ([7e66cd1](https://github.com/SuperFlyTV/casparcg-state/commit/7e66cd1387b1c58c1c26a38b46e3a47bd05ab89f))
+
+## [1.11.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.10.0...1.11.0) (2019-11-22)
+
+
+### Features
+
+* add support for FRAMES_DELAY on route ([f1904af](https://github.com/SuperFlyTV/casparcg-state/commit/f1904afb4796861c5a230b4993e576240ecf285f))
+
+
+### Bug Fixes
+
+* change framesDelay to delay and use miliseconds instead of frames ([97b69b0](https://github.com/SuperFlyTV/casparcg-state/commit/97b69b037fc89f8d91283f9978bfc10a6c561b47))
+* changed routing delay triggers new command ([343b170](https://github.com/SuperFlyTV/casparcg-state/commit/343b170912ef57f13032a2af6af5f3ae220b583b))
+
+## [1.10.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.9.1...1.10.0) (2019-11-18)
+
+
+### Features
+
+* clear_on_404 parameter for PLAY/LOAD/LOADBG ([8ef80e7](https://github.com/SuperFlyTV/casparcg-state/commit/8ef80e78f8b4539f504ba676a70d558f5783157a))
+
+### [1.9.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.9.0...1.9.1) (2019-11-07)
+
+## [1.9.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.8.1...1.9.0) (2019-11-07)
+
+
+### Features
+
+* sting transition fade parameters ([00a0713](https://github.com/SuperFlyTV/casparcg-state/commit/00a0713d9d56b95b6b0553189182a00ee55ebcae))
+* update ci to run for node 8,10,12 ([51b7047](https://github.com/SuperFlyTV/casparcg-state/commit/51b7047eb3bcf860c4ed58d225d87b4ab41ac58a))
+
+
+### Bug Fixes
+
+* sting transition fade parameters are in ms ([a2ded80](https://github.com/SuperFlyTV/casparcg-state/commit/a2ded808b768524db9a402789302325737c7a218))
+
+### [1.8.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.8.0...1.8.1) (2019-08-07)
+
+
+### Bug Fixes
+
+* add support for deep object comparison ([b0b2138](https://github.com/SuperFlyTV/casparcg-state/commit/b0b2138))
+* changing clip transition after load ([d7fefcc](https://github.com/SuperFlyTV/casparcg-state/commit/d7fefcc))
+* downgrade gh-pages due to bug in 2.1.0 ([22260b1](https://github.com/SuperFlyTV/casparcg-state/commit/22260b1))
+
+## [1.8.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.7.0...1.8.0) (2019-06-05)
+
+
+### Features
+
+* Add context to all commands ([6d7f466](https://github.com/SuperFlyTV/casparcg-state/commit/6d7f466))
+
+
+
+# [1.7.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.6.0...1.7.0) (2019-04-11)
+
+
+### Bug Fixes
+
+* update dependencies ([e133436](https://github.com/SuperFlyTV/casparcg-state/commit/e133436))
+* update dependencies + TS3 ([72b44da](https://github.com/SuperFlyTV/casparcg-state/commit/72b44da))
+
+
+### Features
+
+* add support for inPoint, seek, length & loop. ([3173c9e](https://github.com/SuperFlyTV/casparcg-state/commit/3173c9e))
+
+
+
+<a name="1.6.0"></a>
+# [1.6.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.5.1...1.6.0) (2019-02-06)
+
+
+### Features
+
+* remove currentTime function and replacing it with time parameter, to allow for processing at multiple concurrent points in time. ([60553e0](https://github.com/SuperFlyTV/casparcg-state/commit/60553e0))
+
+
+
+<a name="1.5.1"></a>
+## [1.5.1](https://github.com/SuperFlyTV/casparcg-state/compare/1.5.0...1.5.1) (2018-12-16)
+
+
 
 <a name="1.5.0"></a>
 # [1.5.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.4.3...1.5.0) (2018-12-13)
