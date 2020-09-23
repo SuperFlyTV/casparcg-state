@@ -55,6 +55,12 @@ function diffBackground(oldState: InternalState, newState: State, channel: strin
 			bgDiff = compareAttrs(nl, ol, ['media', 'seek', 'length', 'inPoint'])
 		}
 
+		if (!bgDiff && newLayer.nextUp.content === LayerContentType.ROUTE) {
+			const nl: RouteLayer = newLayer.nextUp as RouteLayer
+			const ol: RouteLayer = oldLayer.nextUp as RouteLayer
+			bgDiff = compareAttrs(nl, ol, ['delay', 'mode'])
+		}
+
 		if (
 			!bgDiff &&
 			newLayer.nextUp &&

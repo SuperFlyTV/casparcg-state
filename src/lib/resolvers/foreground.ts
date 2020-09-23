@@ -101,7 +101,7 @@ function diffForeground(
 
 			diff = compareAttrs(nl.route, ol.route, ['channel', 'layer', 'channelLayout'])
 			if (!diff) {
-				diff = compareAttrs(nl, ol, ['delay'])
+				diff = compareAttrs(nl, ol, ['delay', 'mode'])
 			}
 		} else if (newLayer.content === LayerContentType.RECORD) {
 			const nl: RecordLayer = newLayer as RecordLayer
