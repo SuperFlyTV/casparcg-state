@@ -15,12 +15,14 @@ import { AMCPCommandWithContext, AMCPCommandVOWithContext, DiffCommands } from '
 import { Command as CommandNS } from 'casparcg-connection'
 import { InternalLayer, InternalState } from './stateObjectStorage'
 
-export function frames2Time(frames: number, fps = 25): number {
+export function frames2Time(frames: number, fps: number | undefined): number {
+	fps = fps || 25 // Set default:
 	// ms = frames * (1000 / fps)
 	fps = fps < 1 ? 1 / fps : fps
 	return frames * (1000 / fps)
 }
-export function time2Frames(time: number, fps = 25): number {
+export function time2Frames(time: number, fps: number | undefined): number {
+	fps = fps || 25 // Set default:
 	// frames = ms / (1000 / fps)
 	fps = fps < 1 ? 1 / fps : fps
 	return Math.floor(time / (1000 / fps))
@@ -58,8 +60,6 @@ export function calculateSeek(
 		return 0
 	}
 	const seekStart: number = (layer.seek !== undefined ? layer.seek : layer.inPoint) || 0
-
-	console.log(layer, seekStart, timeSincePlay)
 
 	let seekFrames: number = Math.max(
 		0,

@@ -1,4 +1,3 @@
-import * as _ from 'underscore'
 import { AMCP } from 'casparcg-connection'
 
 import {
@@ -94,7 +93,7 @@ test('Record to a file', () => {
 	const c = getCasparCGState()
 	initStateMS(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -136,7 +135,7 @@ test('Run a function', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -172,7 +171,7 @@ test('Run a function', () => {
 // test('Apply commands before init', () => {
 // 	let c = getCasparCGState()
 // 	initState(c)
-// 	let cc: any
+// 	let cc: ReturnType<typeof getDiff>
 
 // 	// Play a video file:
 
@@ -220,7 +219,7 @@ test('Bundle commands', () => {
 		c.time
 	)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play two a video files
 

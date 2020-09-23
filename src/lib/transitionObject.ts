@@ -165,13 +165,13 @@ export class Transition implements TransitionOptions {
 			return [
 				'STING',
 				this.maskFile,
-				this.time2Frames(this.delay || 0, fps || 50),
+				this.time2Frames(this.delay || 0, fps),
 				this.overlayFile
 			].join(' ')
 		} else {
 			return [
 				this.type,
-				this.time2Frames(this.duration || 0, fps || 50),
+				this.time2Frames(this.duration || 0, fps),
 				this.easing,
 				this.direction
 			].join(' ')
@@ -195,10 +195,7 @@ export class Transition implements TransitionOptions {
 					this.audioFadeStart = this.frames2Time(command._objectParams.audioFadeStart, fps)
 				}
 				if (command._objectParams.audioFadeDuration) {
-					this.audioFadeDuration = this.frames2Time(
-						command._objectParams.audioFadeDuration,
-						fps || 50
-					)
+					this.audioFadeDuration = this.frames2Time(command._objectParams.audioFadeDuration, fps)
 				}
 			} else {
 				if (command._objectParams.transition) {

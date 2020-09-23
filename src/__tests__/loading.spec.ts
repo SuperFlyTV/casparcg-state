@@ -18,7 +18,7 @@ test('Load a video, then play it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -84,7 +84,7 @@ test('Loadbg a video, then play it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -161,7 +161,7 @@ test('Loadbg a video, then remove it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -245,7 +245,7 @@ test('Loadbg a video, then loadbg another', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -330,7 +330,7 @@ test('Loadbg a video with a transition, then play it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -415,7 +415,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -502,7 +502,7 @@ test('Play a video, stop and loadbg another video', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 	// Play a video file:
 	const layer10: MediaLayer = {
 		id: 'l0',
@@ -615,7 +615,7 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -718,7 +718,7 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Load a video file (paused):
 
@@ -809,7 +809,7 @@ test('Loadbg a html-page, then play it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// put a html-template on onNext:
 
@@ -888,7 +888,7 @@ test('Loadbg an input, then play it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -985,7 +985,7 @@ test('Loadbg a Route, then change it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -1065,7 +1065,7 @@ test('Loadbg a Route, then play it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 

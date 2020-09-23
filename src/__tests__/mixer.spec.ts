@@ -487,7 +487,7 @@ function testMixerEffect(
 	mixer: Mixer,
 	cmd0: CommandNS.IAMCPCommand,
 	cmd1: CommandNS.IAMCPCommand
-) {
+): void {
 	// apply mixer effect
 	layer.mixer = mixer
 	let cc = getDiff(c, targetState)

@@ -303,7 +303,6 @@ export class CasparCGState0 {
 
 		// bundled commands:
 		_.each(bundledCmds, (bundle) => {
-			console.log(bundle)
 			const channels = _.uniq(_.pluck(bundle, 'channel'))
 
 			_.each(channels, (channel) => {

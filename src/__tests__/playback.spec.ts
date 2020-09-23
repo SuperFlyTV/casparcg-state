@@ -56,7 +56,7 @@ test('Play a video, then stop it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 	// Play a video file:
 	const layer10: MediaLayer = {
 		id: 'l0',
@@ -121,7 +121,7 @@ test('Play a video with the right channelLayout, then stop it', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 	// Play a video file:
 	const layer10: MediaLayer = {
 		id: 'l0',
@@ -188,7 +188,7 @@ test('Play a video, pause & resume it', () => {
 	const c = getCasparCGState()
 	initStateMS(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a video file:
 
@@ -372,7 +372,7 @@ test('Play a looping video, pause & resume it', () => {
 	const c = getCasparCGState()
 	initStateMS(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a video file:
 
@@ -446,7 +446,7 @@ test('Play a template, update the data & cgstop', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -526,7 +526,7 @@ test('Play an html-page', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -573,7 +573,7 @@ test('Play an input', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -628,7 +628,7 @@ test('Play a Route', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -683,7 +683,7 @@ test('Play a BG Route', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a template file:
 
@@ -729,7 +729,7 @@ test('Play a video, then add mixer attributes', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a video file:
 
@@ -997,7 +997,7 @@ test('Play a video with transition, then stop it with transition', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a video file:
 	const layer10: MediaLayer = {
@@ -1054,7 +1054,7 @@ test('Play a Route with transition, then stop it with transition', () => {
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a Route:
 	const layer10: RouteLayer = {
@@ -1100,7 +1100,7 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 	const c = getCasparCGState()
 	initState(c)
 
-	let cc: any
+	let cc: ReturnType<typeof getDiff>
 
 	// Play a video file:
 	const layer10: InputLayer = {

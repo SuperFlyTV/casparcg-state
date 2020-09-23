@@ -1,6 +1,7 @@
 import { CasparCGState, State } from '../'
 import * as _ from 'underscore'
 import { AMCP } from 'casparcg-connection'
+import { DiffCommandGroups } from '../lib/casparCGState'
 
 export interface CGState {
 	time: number
@@ -19,7 +20,7 @@ export function getCasparCGState(): CGState {
 		set time(t) {
 			time = t
 		},
-		get time() {
+		get time(): number {
 			return time
 		},
 		set log(_t: boolean) {
@@ -30,7 +31,7 @@ export function getCasparCGState(): CGState {
 		})
 	}
 }
-export function initState(c: CGState) {
+export function initState(c: CGState): void {
 	c.ccgState.initStateFromChannelInfo(
 		[
 			{
@@ -41,18 +42,22 @@ export function initState(c: CGState) {
 		c.time
 	)
 }
-export function initStateMS(c: CGState) {
+export function initStateMS(c: CGState): void {
 	c.ccgState.initStateFromChannelInfo(
 		[
 			{
 				videoMode: 'PAL',
-				fps: 1 / 50
+				fps: 50
 			}
 		],
 		c.time
 	)
 }
-export function getDiff(c: CGState, targetState: State, _loggingAfter?: boolean) {
+export function getDiff(
+	c: CGState,
+	targetState: State,
+	_loggingAfter?: boolean
+): DiffCommandGroups {
 	const cc = c.ccgState.getDiff(targetState, c.time)
 
 	const s = c.ccgState.getState()
