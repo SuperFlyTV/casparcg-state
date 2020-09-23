@@ -1,172 +1,241 @@
-import {
-	TransitionObject as TransitionObject0,
-	Transition as Transition0
-} from './transitionObject'
+import { TransitionObject, Transition } from './transitionObject'
 import { Mixer as MixerBase } from './mixer'
 
-export namespace CasparCG { // for external use
-	export class Mappings {
-		layers: {[GLayer: string]: Mapping} = {}
-	}
-	export class Mapping {
-		channel: number
-		layer: number
-	}
-	export class State {
-		channels: { [channel: string]: Channel} = {}
-	}
-	export class ChannelInfo {
-		videoMode?: string | null
-		fps?: number
-	}
-	export class Channel extends ChannelInfo {
-		channelNo: number
-		layers: { [layer: string]: ILayerBase} = {}
-	}
-	export class ILayerBase {
-		/** id of the original timelineObject */
-		id: string
-		layerNo: number
-		content: LayerContentType // string | null 		// @todo: enum?
-		media?: string | TransitionObject0 | null // clip or templatename
-		looping?: boolean
-		playTime?: number | null // timestamp when content started playing, (null == 'irrelevant')
-		duration?: number
-		noClear?: boolean
-		playing?: boolean
-		mixer?: MixerBase
-		input?: Object
-		route?: Object
-		nextUp?: NextUp | undefined | null
-	}
-	export class NextUp extends ILayerBase {
-		auto: boolean
-		content: LayerContentType.MEDIA | LayerContentType.HTMLPAGE | LayerContentType.INPUT | LayerContentType.ROUTE // not sure about input...
-
-		looping?: boolean
-		inPoint?: number // The time in the video the video starts playing at (and loops to, when looping)
-		length?: number	// The duration the video will be playing until freezing (or looping)
-		seek?: number // If set, the time in the video the video starts playing at
-		channelLayout?: string
-		delay?: number
-	}
-	export interface IMediaLayer extends ILayerBase {
-		content: LayerContentType.MEDIA
-		media: string | TransitionObject0 | null // clip name
-		playTime?: number | null
-		playing: boolean
-
-		looping?: boolean
-		inPoint?: number // The time in the video the video starts playing at (and loops to, when looping)
-		length?: number	// The duration the video will be playing until freezing (or looping)
-		seek?: number // If set, the time in the video the video starts playing at
-
-		pauseTime?: number | null
-
-		channelLayout?: string
-		clearOn404?: boolean
-
-		nextUp?: NextUp | null
-	}
-	export interface ITemplateLayer extends ILayerBase {
-		content: LayerContentType.TEMPLATE
-		media: string | TransitionObject0 | null // template name
-		playTime: number | null
-		playing: boolean
-
-		templateType?: 'flash' | 'html'	// @todo: string literal 'flash', 'html'
-		templateFcn?: string // 'play', 'update', 'stop' or else (invoke)
-		templateData?: Object | string | null
-		cgStop?: boolean
-
-		nextUp?: NextUp | null
-	}
-	export interface IHtmlPageLayer extends ILayerBase {
-		content: LayerContentType.HTMLPAGE
-		media: string | TransitionObject0 | null // template name
-		playTime: number | null
-		playing: true
-
-		nextUp?: NextUp | null
-	}
-	export interface IInputLayer extends ILayerBase {
-		content: LayerContentType.INPUT
-		media: 'decklink' | TransitionObject0
-		input: {
-			device: number,
-			format?: string,
-			channelLayout?: string
-		}
-		filter?: string, // should this be separate for af/vf?
-		playing: true,
-		playTime: null
-	}
-	export interface IRouteLayer extends ILayerBase {
-		content: LayerContentType.ROUTE
-		media: 'route' | TransitionObject0
-		route?: {
-			channel: number,
-			layer?: number | null
-			channelLayout?: string
-		}
-		delay?: number
-		mode?: 'BACKGROUND' | 'NEXT'
-		playing: true
-		playTime: null
-	}
-	export interface IRecordLayer extends ILayerBase {
-		content: LayerContentType.RECORD
-		encoderOptions: string
-		playing: true
-		playTime: number
-	}
-	export interface IFunctionLayer extends ILayerBase {
-		content: LayerContentType.FUNCTION
-		executeFcn?: string // name of function to execute
-		executeData?: any
-		oscDevice?: number
-		inMessage?: {
-			url: string,
-			args?: {}
-		} | null
-		outMessage?: {
-			url: string,
-			args?: {}
-		} | null
-	}
-	export interface IEmptyLayer extends ILayerBase {
-		content: LayerContentType.NOTHING,
-		playing: false
-		pauseTime: 0
-		nextUp?: NextUp | null
-		templateData?: Object | null,
-		encoderOptions?: string
-	}
-	export enum LayerContentType {
-		NOTHING = '',
-		MEDIA = 'media',
-		TEMPLATE = 'template',
-		HTMLPAGE = 'htmlpage',
-		INPUT = 'input',
-		ROUTE = 'route',
-		RECORD = 'record',
-		FUNCTION = 'function'
-
-	}
-	export interface Mixer extends MixerBase {}
-	export interface ITransition {
-
-		type?: string
-		duration?: number
-		easing?: string
-		direction?: string
-
-		maskFile?: string
-		delay?: number
-		overlayFile?: string
-		audioFadeStart?: number
-		audioFadeDuration?: number
-	}
-	export class TransitionObject extends TransitionObject0 {}
-	export class Transition extends Transition0 {}
+export interface Mappings {
+	layers: { [GLayer: string]: Mapping }
 }
+export interface Mapping {
+	channel: number
+	layer: number
+}
+export interface State {
+	channels: { [channel: string]: Channel }
+}
+export interface ChannelInfo {
+	videoMode?: string | null
+	/** Frames per second the channel is running in. Note that 50i is only running in 25 fps */
+	fps?: number
+}
+export interface Channel extends ChannelInfo {
+	channelNo: number
+	layers: { [layer: string]: LayerBase }
+}
+export type Layer =
+	| MediaLayer
+	| TemplateLayer
+	| HtmlPageLayer
+	| InputLayer
+	| RouteLayer
+	| RecordLayer
+	| FunctionLayer
+	| EmptyLayer
+
+export interface LayerBaseBase {
+	content: LayerContentType
+
+	/** [timestamp] If set, at what point in time the object started playing, null means "irrelevant" */
+	playTime?: number | null
+
+	/** If true, we'll never send a CLEAR for this object when it stops.
+	 * Might be useful in some cases where it's important to not kill the object (like when piping through a decklink input)
+	 */
+	noClear?: boolean
+
+	/** Mixer attributes to apply on the layer, like transform, rotate or opacity */
+	mixer?: MixerBase
+}
+export interface LayerBase extends LayerBaseBase {
+	/** Id of the original timelineObject */
+	id: string
+	/** What layer to put the content on */
+	layerNo: number
+
+	media?: string | TransitionObject | null
+
+	playing?: boolean
+
+	nextUp?: NextUp
+}
+export enum LayerContentType {
+	NOTHING = '',
+	MEDIA = 'media',
+	TEMPLATE = 'template',
+	HTMLPAGE = 'htmlpage',
+	INPUT = 'input',
+	ROUTE = 'route',
+	RECORD = 'record',
+	FUNCTION = 'function'
+}
+export interface MediaLayerBase {
+	/** Media clip name. Could be a filename, a path, or even a color */
+	media: string | TransitionObject | null
+
+	/** If the media should be looping, otherwise it'll freeze on last frame */
+	looping?: boolean
+	/** [time in ms] The time in the video the video starts playing at (and loops to, when looping) */
+	inPoint?: number
+	/** [time in ms] The duration the video will be playing until freezing (or looping) */
+	length?: number
+	/** [time in ms] If set, the time in the video the video starts playing at */
+	seek?: number
+
+	/** [timestamp] If set, at what point in time the object was paused */
+	pauseTime?: number | null
+
+	channelLayout?: string
+	clearOn404?: boolean
+}
+export interface MediaLayer extends LayerBase, MediaLayerBase {
+	content: LayerContentType.MEDIA
+	media: MediaLayerBase['media']
+	/** If the media is playing or not (is paused) */
+	playing: boolean
+}
+export interface TemplateLayerBase {
+	/** Template name / file path */
+	media: string | TransitionObject | null
+
+	templateType?: 'flash' | 'html'
+	templateFcn?: 'play' | 'update' | 'stop' | string // string = invoke
+	/** Template data to send to the template */
+	templateData?: Record<string, any> | string | null
+	/** True if the template supports CG STOP, otherwise the template will be cleared with a CLEAR */
+	cgStop?: boolean
+}
+export interface TemplateLayer extends LayerBase, TemplateLayerBase {
+	content: LayerContentType.TEMPLATE
+	media: TemplateLayerBase['media']
+
+	/** [timestamp] If set, at what point in time the object started playing */
+	playTime: number | null
+	/** If the graphics is playing or not (is paused) */
+	playing: boolean
+}
+export interface HtmlPageLayerBase {
+	media: string | TransitionObject | null // template name
+	playing: true
+}
+export interface HtmlPageLayer extends LayerBase, HtmlPageLayerBase {
+	content: LayerContentType.HTMLPAGE
+	media: HtmlPageLayerBase['media']
+	playing: HtmlPageLayerBase['playing']
+
+	/** [timestamp] If set, at what point in time the object started playing */
+	playTime: number | null
+}
+export interface InputLayerBase {
+	media: 'decklink' | TransitionObject
+	input: {
+		device: number
+		format?: string
+		channelLayout?: string
+	}
+	filter?: string
+	playing: true
+}
+export interface InputLayer extends LayerBase, InputLayerBase {
+	content: LayerContentType.INPUT
+	media: InputLayerBase['media']
+	playing: InputLayerBase['playing']
+	playTime: null
+}
+export interface RouteLayerBase {
+	media: 'route' | TransitionObject
+	route?: {
+		channel: number
+		layer?: number | null
+		channelLayout?: string
+	}
+	delay?: number
+	mode?: 'BACKGROUND' | 'NEXT'
+	playing: true
+}
+export interface RouteLayer extends LayerBase, RouteLayerBase {
+	content: LayerContentType.ROUTE
+	media: RouteLayerBase['media']
+	playing: RouteLayerBase['playing']
+	playTime: null
+
+	nextUp?: NextUp
+}
+export interface RecordLayerBase {
+	media: string
+	encoderOptions: string
+	playing: true
+}
+export interface RecordLayer extends LayerBase, RecordLayerBase {
+	content: LayerContentType.RECORD
+	media: RecordLayerBase['media']
+	playing: RecordLayerBase['playing']
+	playTime: number
+}
+export interface FunctionLayerBase {
+	executeFcn?: string // name of function to execute
+	executeData?: any
+	oscDevice?: number
+	inMessage?: {
+		url: string
+		args?: {}
+	} | null
+	outMessage?: {
+		url: string
+		args?: {}
+	} | null
+}
+export interface FunctionLayer extends LayerBase, FunctionLayerBase {
+	content: LayerContentType.FUNCTION
+}
+export interface EmptyLayerBase {
+	playing: false
+}
+export interface EmptyLayer extends LayerBase, EmptyLayerBase {
+	content: LayerContentType.NOTHING
+	playing: false
+	nextUp?: NextUp
+}
+
+export type NextUp = NextUpMedia | NextUpHTML | NextUpInput | NextUpRoute
+export interface NextUpBase {
+	content:
+		| LayerContentType.MEDIA
+		| LayerContentType.HTMLPAGE
+		| LayerContentType.INPUT
+		| LayerContentType.ROUTE
+	id: string
+	mode?: 'BACKGROUND' | 'NEXT'
+}
+export interface NextUpMedia extends NextUpBase, LayerBaseBase, MediaLayerBase {
+	content: LayerContentType.MEDIA
+	auto?: boolean
+}
+export interface NextUpHTML extends NextUpBase, LayerBaseBase, HtmlPageLayerBase {
+	content: LayerContentType.HTMLPAGE
+	auto?: boolean
+}
+export interface NextUpInput extends NextUpBase, LayerBaseBase, InputLayerBase {
+	content: LayerContentType.INPUT
+	auto?: boolean
+}
+export interface NextUpRoute extends NextUpBase, LayerBaseBase, RouteLayerBase {
+	content: LayerContentType.ROUTE
+	auto?: boolean
+
+	channelLayout?: string
+	/** [time in ms] How long to delay the routed content */
+	delay?: number
+}
+export type Mixer = MixerBase
+
+export interface TransitionOptions {
+	type?: string
+	duration?: number
+	easing?: string
+	direction?: string
+
+	maskFile?: string
+	delay?: number
+	overlayFile?: string
+	audioFadeStart?: number
+	audioFadeDuration?: number
+}
+export { TransitionObject, Transition }

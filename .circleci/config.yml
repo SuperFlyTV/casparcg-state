@@ -81,10 +81,10 @@ jobs:
             - yarn-cache-12-{{ .Branch }}-{{ checksum "yarn.lock" }}
             - yarn-cache-12-{{ .Branch }}
             - yarn-cache-12-
-            
+
       - run: yarn install
       - run: yarn validate:dependencies
-      
+
   validate-all-dependencies:
     docker:
       - image: circleci/node:12
@@ -96,7 +96,7 @@ jobs:
             - yarn-cache-12-{{ .Branch }}-{{ checksum "yarn.lock" }}
             - yarn-cache-12-{{ .Branch }}
             - yarn-cache-12-
-            
+
       - run: yarn install
       - run: yarn validate:dependencies
       - run: yarn validate:dev-dependencies
@@ -110,7 +110,7 @@ jobs:
           at: ~/project
       - add_ssh_keys:
           fingerprints:
-            - "0e:b8:ca:57:c4:44:f9:07:12:a6:2c:11:c4:25:79:0f"
+            - '0e:b8:ca:57:c4:44:f9:07:12:a6:2c:11:c4:25:79:0f'
       - run: mkdir -p ~/.ssh
       - run:
           name: Keyscan Github
@@ -151,7 +151,7 @@ jobs:
           name: Publish to NPM with yarn
           command: NEW_VERSION=$(node -p "require('./package.json').version") && yarn publish --access=public --new-version=$NEW_VERSION --network-timeout 100000 $PUBLISH_ARGS
 
-  prereleases:
+  prerelease:
     docker:
       - image: circleci/node:12
     working_directory: ~/project
@@ -169,7 +169,7 @@ jobs:
             fi
       - add_ssh_keys:
           fingerprints:
-            - "0e:b8:ca:57:c4:44:f9:07:12:a6:2c:11:c4:25:79:0f"
+            - '0e:b8:ca:57:c4:44:f9:07:12:a6:2c:11:c4:25:79:0f'
       - run: mkdir -p ~/.ssh
       - run:
           name: Keyscan Github

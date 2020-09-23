@@ -1,0 +1,11 @@
+node_modules
+/dist
+/scratch
+/build
+package-lock.json
+/lib
+/coverage
+/docs
+/test
+
+jest.config.js
