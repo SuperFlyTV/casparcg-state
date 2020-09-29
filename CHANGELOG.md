@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.12.0...2.0.0) (2020-09-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* refactoring of CasparCGState
+* drop node 8 support
+
+### Features
+
+* drop node 8 support ([afdfa2c](https://github.com/SuperFlyTV/casparcg-state/commit/afdfa2c679eeb8e26ed45cc977e5ea2c0e4ec9ff))
+* full refactor of all typings, and making it clearer what is frames and what is milliseconds ([5333a12](https://github.com/SuperFlyTV/casparcg-state/commit/5333a123aa9dfc51961f2aea005aa49f5310a7cf))
+* refactoring of CasparCGState ([92468c7](https://github.com/SuperFlyTV/casparcg-state/commit/92468c7ca4949ada1f6c5a4f58ff9e48b964266c))
+* **ci:** prerelease workflow + optionally skip audit ([b18e3f8](https://github.com/SuperFlyTV/casparcg-state/commit/b18e3f8568a69f62db2a9affb013cebf0396fdd9))
+
+
+### Bug Fixes
+
+* compare route modes ([b5dc3ae](https://github.com/SuperFlyTV/casparcg-state/commit/b5dc3ae2b24e49272ac3c8f45409b101ab7d9632))
+* standardize frame - time conversions ([2d5673a](https://github.com/SuperFlyTV/casparcg-state/commit/2d5673aede60ba327bab4552130876e2ec368731))
+* timings ([b7f3507](https://github.com/SuperFlyTV/casparcg-state/commit/b7f3507f065147f0649cb3daf21e350654b85c5b))
+
 ## [1.12.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.11.2...1.12.0) (2020-03-11)
 
 
