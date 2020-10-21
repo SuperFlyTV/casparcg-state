@@ -1043,10 +1043,10 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-casparcg-connection@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/casparcg-connection/-/casparcg-connection-5.0.1.tgz#5144f43664586ec2b73fc380f893b63704fc46e0"
-  integrity sha512-gurGsJozCeBVuW2rPnttBj3WS4HJxW3RXC4x2OINdcs+rwAJRKy5tBg2MilsRp2Hh+wQL/e/16ZTjpCkvvkG5A==
+casparcg-connection@5.1.0-nightly-feat-ffmpeg-filters-20201021-124046-7bc1e6ea.0:
+  version "5.1.0-nightly-feat-ffmpeg-filters-20201021-124046-7bc1e6ea.0"
+  resolved "https://registry.yarnpkg.com/casparcg-connection/-/casparcg-connection-5.1.0-nightly-feat-ffmpeg-filters-20201021-124046-7bc1e6ea.0.tgz#c0368eb0302b6896df0853437753aa79d440d31c"
+  integrity sha512-39TuQ/AgSGMiwAZvdTj2Kj/Zy/Qbej+73JZccVcBexDwsOrdd6T0ke7WDdwARfZZVI27fx/nl7nWL/Gc+2UJXg==
   dependencies:
     highland "^3.0.0-beta.6"
     xml2js "^0.4.19"
