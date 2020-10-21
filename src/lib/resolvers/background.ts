@@ -52,13 +52,19 @@ function diffBackground(oldState: InternalState, newState: State, channel: strin
 
 			setDefaultValue([nl, ol], ['seek', 'length', 'inPoint'], 0)
 
-			bgDiff = compareAttrs(nl, ol, ['media', 'seek', 'length', 'inPoint'])
+			bgDiff = compareAttrs(nl, ol, ['media', 'seek', 'length', 'inPoint', 'afilter', 'vfilter'])
 		}
 
 		if (!bgDiff && newLayer.nextUp.content === LayerContentType.ROUTE) {
 			const nl: RouteLayer = newLayer.nextUp as RouteLayer
 			const ol: RouteLayer = oldLayer.nextUp as RouteLayer
-			bgDiff = compareAttrs(nl, ol, ['delay', 'mode'])
+			bgDiff = compareAttrs(nl, ol, ['delay', 'mode', 'afilter', 'vfilter'])
+		}
+
+		if (!bgDiff && newLayer.nextUp.content === LayerContentType.INPUT) {
+			const nl: InputLayer = newLayer.nextUp as InputLayer
+			const ol: InputLayer = oldLayer.nextUp as InputLayer
+			bgDiff = compareAttrs(nl, ol, ['afilter', 'vfilter'])
 		}
 
 		if (
@@ -163,7 +169,9 @@ function resolveBackgroundState(
 									length: lengthFrames || undefined,
 									loop: !!looping,
 									channelLayout: channelLayout,
-									clearOn404: layer.clearOn404
+									clearOn404: layer.clearOn404,
+									afilter: layer.afilter,
+									vfilter: layer.vfilter
 								})
 							)
 						),
@@ -197,7 +205,9 @@ function resolveBackgroundState(
 								device: layer.input.device,
 								format: layer.input.format,
 								filter: layer.filter,
-								channelLayout: layer.input.channelLayout
+								channelLayout: layer.input.channelLayout,
+								afilter: layer.afilter,
+								vfilter: layer.vfilter
 							})
 						),
 						`Nextup Decklink (${layer.input.device})`,
@@ -216,7 +226,9 @@ function resolveBackgroundState(
 								channelLayout: layer.route ? layer.route.channelLayout : undefined,
 								framesDelay: layer.delay
 									? Math.floor(time2FramesChannel(layer.delay, newChannel, oldChannel))
-									: undefined
+									: undefined,
+								afilter: layer.afilter,
+								vfilter: layer.vfilter
 							})
 						),
 						`Nextup Route (${layer.route})`,
