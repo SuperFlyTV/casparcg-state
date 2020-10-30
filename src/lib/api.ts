@@ -237,5 +237,7 @@ export interface TransitionOptions {
 	overlayFile?: string
 	audioFadeStart?: number
 	audioFadeDuration?: number
+
+	customOptions?: any // used to pipe any data blob through to the command
 }
 export { TransitionObject, Transition }

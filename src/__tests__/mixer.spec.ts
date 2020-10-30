@@ -478,6 +478,44 @@ describe('MixerCommands', () => {
 			})
 		)
 	})
+	test('Mixer Other transition type', () => {
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				changeTransition: {
+					type: 'other',
+					customOptions: {
+						blob0: 'data-blob',
+						blob1: { test: 'this is another blob' }
+					}
+				},
+				volume: 0.48
+			},
+			new AMCP.MixerVolumeCommand({
+				channel: 1,
+				layer: 10,
+				volume: 0.48,
+				transition: 'other',
+				transitionDirection: 'right', // default value
+				transitionDuration: 0, // default
+				transitionEasing: 'linear', // default value
+
+				// Thie customOptions data is passed through into the command:
+				customOptions: {
+					blob0: 'data-blob',
+					blob1: { test: 'this is another blob' }
+				}
+			}),
+			new AMCP.MixerVolumeCommand({
+				channel: 1,
+				layer: 10,
+				volume: 1,
+				_defaultOptions: true
+			})
+		)
+	})
 })
 
 function testMixerEffect(
