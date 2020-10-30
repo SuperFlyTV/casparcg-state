@@ -6,7 +6,8 @@ import {
 	EmptyLayer,
 	Channel,
 	LayerContentType,
-	LayerBase
+	LayerBase,
+	TransitionObject
 } from '../'
 import { InternalLayer } from '../lib/stateObjectStorage'
 import { AMCP, Command as CommandNS, Enum as CCGEnum } from 'casparcg-connection'
@@ -469,6 +470,65 @@ describe('MixerCommands', () => {
 				channel: 1,
 				layer: 10,
 				volume: 0.45
+			}),
+			new AMCP.MixerVolumeCommand({
+				channel: 1,
+				layer: 10,
+				volume: 1,
+				_defaultOptions: true
+			})
+		)
+	})
+	test('Mixer with transition', () => {
+		// Mixer effect on layer
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				changeTransition: {
+					type: 'mix',
+					duration: 1000 // ms
+				},
+				volume: 0.92
+			},
+			new AMCP.MixerVolumeCommand({
+				channel: 1,
+				layer: 10,
+				volume: 0.92,
+				transition: 'mix',
+				transitionDirection: 'right', // default value
+				transitionDuration: 25, // frames
+				transitionEasing: 'linear' // default value
+			}),
+			new AMCP.MixerVolumeCommand({
+				channel: 1,
+				layer: 10,
+				volume: 1,
+				_defaultOptions: true
+			})
+		)
+		// Mixer effect on property
+		testMixerEffect(
+			c,
+			targetState,
+			layer10,
+			{
+				volume: new TransitionObject(0.92, {
+					changeTransition: {
+						type: 'mix',
+						duration: 1000 // ms
+					}
+				})
+			},
+			new AMCP.MixerVolumeCommand({
+				channel: 1,
+				layer: 10,
+				volume: 0.92,
+				transition: 'mix',
+				transitionDirection: 'right', // default value
+				transitionDuration: 25, // frames
+				transitionEasing: 'linear' // default value
 			}),
 			new AMCP.MixerVolumeCommand({
 				channel: 1,
