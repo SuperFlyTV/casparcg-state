@@ -124,7 +124,11 @@ function resolveEmptyState(
 			}
 		}
 	}
-	if (oldLayer.nextUp && !newLayer.nextUp && compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {
+	if (
+		oldLayer.nextUp &&
+		!newLayer.nextUp &&
+		compareAttrs<any>(oldLayer.nextUp, newLayer, ['media'])
+	) {
 		const prevClearCommand = _.find(diffCmds.cmds, (cmd) => {
 			return !!(cmd instanceof AMCP.ClearCommand) || cmd._commandName === 'ClearCommand'
 		})

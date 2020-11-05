@@ -6,7 +6,9 @@ import {
 	NextUp,
 	HtmlPageLayer,
 	InputLayer,
-	RouteLayer
+	RouteLayer,
+	TransitionObject,
+	NextUpMedia
 } from '../api'
 import {
 	getLayer,
@@ -40,8 +42,8 @@ function diffBackground(oldState: InternalState, newState: State, channel: strin
 			newLayer.nextUp.content === LayerContentType.HTMLPAGE ||
 			newLayer.nextUp.content === LayerContentType.ROUTE
 		) {
-			const nl: MediaLayer = newLayer.nextUp as any
-			const ol: MediaLayer = oldLayer.nextUp as any
+			const nl: NextUpMedia = newLayer.nextUp as any
+			const ol: NextUpMedia = oldLayer.nextUp as any
 			setDefaultValue([nl, ol], ['auto'], false)
 			bgDiff = compareAttrs(nl, ol, ['auto', 'channelLayout'])
 		}
@@ -67,8 +69,8 @@ function diffBackground(oldState: InternalState, newState: State, channel: strin
 			oldLayer.nextUp &&
 			(typeof newLayer.nextUp.media !== 'string' || typeof oldLayer.nextUp.media !== 'string')
 		) {
-			const nMedia = newLayer.nextUp.media
-			const oMedia = oldLayer.nextUp.media
+			const nMedia = newLayer.nextUp.media as TransitionObject | undefined
+			const oMedia = oldLayer.nextUp.media as TransitionObject | undefined
 
 			bgDiff = compareAttrs(nMedia, oMedia, ['inTransition', 'outTransition', 'changeTransition'])
 		}
@@ -224,7 +226,7 @@ function resolveBackgroundState(
 					)
 				)
 			}
-		} else if (compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {
+			// } else if (compareAttrs(oldLayer.nextUp, newLayer, ['media'])) {
 			// this.log('REMOVE BG')
 			// console.log('REMOVE BG', oldLayer.nextUp, newLayer)
 			// additionalCmds.push(new AMCP.LoadbgCommand({

@@ -148,10 +148,10 @@ export function fixPlayCommandInput<T extends object>(o: T): T {
 	}
 	return o2
 }
-export function compareAttrs(
-	obj0: any,
-	obj1: any,
-	attrs: Array<string>,
+export function compareAttrs<T extends { [key: string]: any }>(
+	obj0: T | undefined,
+	obj1: T | undefined,
+	attrs: Array<keyof T>,
 	minTimeSincePlay = 0.15, // [s]
 	strict?: boolean
 ): null | string {
