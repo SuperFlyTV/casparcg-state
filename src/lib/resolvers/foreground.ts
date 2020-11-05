@@ -25,7 +25,8 @@ import {
 	FunctionLayer,
 	NextUp,
 	Transition,
-	TransitionObject
+	TransitionObject,
+	MediaLayerBase
 } from '../api'
 import { OptionsInterface, AMCPCommandVOWithContext, DiffCommands } from '../casparCGState'
 import { AMCP } from 'casparcg-connection'
@@ -159,7 +160,7 @@ function resolveForegroundState(
 
 				const timeSincePlay = getTimeSincePlay(nl, currentTime, minTimeSincePlay)
 
-				let diffMediaFromBg = compareAttrs(nl, ol.nextUp, ['media'])
+				let diffMediaFromBg = compareAttrs<MediaLayerBase>(nl, ol.nextUp, ['media'])
 				if (options.transition) {
 					diffMediaFromBg = 'transition'
 				} // transition changed, so we need to reset
