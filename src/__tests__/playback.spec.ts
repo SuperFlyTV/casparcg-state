@@ -11,7 +11,8 @@ import {
 	Mixer,
 	LayerBase,
 	TransitionObject,
-	Transition
+	Transition,
+	NextUpMedia
 } from '../'
 import { getCasparCGState, initState, getDiff, stripContext, fixCommand, initStateMS } from './util'
 import { AMCP } from 'casparcg-connection'
@@ -1156,5 +1157,168 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 			transitionDuration: 50,
 			transitionEasing: 'linear'
 		}).serialize()
+	)
+})
+
+test('Play a video, then play the same one again', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	let cc: ReturnType<typeof getDiff>
+	// Play a video file:
+	const layer10: MediaLayer = {
+		id: 'l0',
+		content: LayerContentType.MEDIA,
+		layerNo: 10,
+		media: new TransitionObject('AMB', {
+			inTransition: {
+				type: 'sting',
+				maskFile: 'mask1'
+			}
+		}),
+		playing: true,
+		playTime: 1000,
+		seek: 0
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				stingDelay: 0,
+				stingMaskFilename: 'mask1',
+				stingOverlayFilename: '',
+				transition: 'sting'
+			})
+		).serialize()
+	)
+
+	// Play the same file again
+	const clip2 = {
+		...layer10,
+		id: 'l1',
+		playTime: c.time = 2000
+	}
+	channel1.layers['10'] = clip2
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				stingDelay: 0,
+				stingMaskFilename: 'mask1',
+				stingOverlayFilename: '',
+				transition: 'sting'
+			})
+		).serialize()
+	)
+})
+
+function literal<T>(v: T): T {
+	return v
+}
+test('Play a video, then preload and play the same one again', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	let cc: ReturnType<typeof getDiff>
+	// Play a video file:
+	const layer10: MediaLayer = {
+		id: 'l0',
+		content: LayerContentType.MEDIA,
+		layerNo: 10,
+		media: new TransitionObject('AMB', {
+			inTransition: {
+				type: 'sting',
+				maskFile: 'mask1'
+			}
+		}),
+		playing: true,
+		playTime: 1000,
+		seek: 0,
+		nextUp: literal<NextUpMedia>({
+			id: 'l0',
+			content: LayerContentType.MEDIA,
+			media: new TransitionObject('AMB', {
+				inTransition: {
+					type: 'sting',
+					maskFile: 'mask1'
+				}
+			}),
+			playTime: 1000,
+			seek: 0
+		})
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				stingDelay: 0,
+				stingMaskFilename: 'mask1',
+				stingOverlayFilename: '',
+				transition: 'sting'
+			})
+		).serialize()
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		fixCommand(
+			new AMCP.LoadbgCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				noClear: false,
+				seek: 0,
+				stingDelay: 0,
+				stingMaskFilename: 'mask1',
+				stingOverlayFilename: '',
+				transition: 'sting'
+			})
+		).serialize()
+	)
+
+	// Play the same file again
+	const clip2 = {
+		...layer10,
+		id: 'l1',
+		playTime: c.time = 2000,
+		nextUp: undefined
+	}
+	channel1.layers['10'] = clip2
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10
+			})
+		).serialize()
 	)
 })
