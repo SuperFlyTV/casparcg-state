@@ -57,6 +57,7 @@ function diffForeground(
 				ol,
 				[
 					'media',
+					'playbackId',
 					'playTime',
 					'looping',
 					'seek',
@@ -191,7 +192,7 @@ function resolveForegroundState(
 				if (nl.playing) {
 					nl.pauseTime = 0
 
-					const newMedia = compareAttrs(nl, ol, ['media'])
+					const newMedia = compareAttrs(nl, ol, ['media', 'playbackId'])
 					const seekDiff = frames2TimeChannel(
 						Math.abs(oldSeekFrames - seekFrames),
 						newChannel,

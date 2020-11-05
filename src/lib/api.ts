@@ -90,6 +90,8 @@ export interface MediaLayer extends LayerBase, MediaLayerBase {
 	media: MediaLayerBase['media']
 	/** If the media is playing or not (is paused) */
 	playing: boolean
+	/** An id for the playback, to tell us to treat states with the same clip media as different */
+	playbackId?: string
 }
 export interface TemplateLayerBase {
 	/** Template name / file path */

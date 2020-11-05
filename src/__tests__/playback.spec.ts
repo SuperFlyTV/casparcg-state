@@ -1158,3 +1158,60 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 		}).serialize()
 	)
 })
+
+test('Play a video, then play the same one again', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	let cc: ReturnType<typeof getDiff>
+	// Play a video file:
+	const layer10: MediaLayer = {
+		id: 'l0',
+		content: LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playbackId: '1',
+		playing: true,
+		playTime: 1000,
+		seek: 0
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
+
+	// Play the same file again
+	const clip2 = {
+		...layer10,
+		id: 'l1',
+		playbackId: '2'
+	}
+	channel1.layers['10'] = clip2
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0
+			})
+		).serialize()
+	)
+})
