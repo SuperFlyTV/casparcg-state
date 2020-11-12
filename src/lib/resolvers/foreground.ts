@@ -64,7 +64,9 @@ function diffForeground(
 					'inPoint',
 					'pauseTime',
 					'playing',
-					'channelLayout'
+					'channelLayout',
+					'vfilter',
+					'afilter'
 				],
 				minTimeSincePlay
 			)
@@ -86,7 +88,7 @@ function diffForeground(
 			const nl: InputLayer = newLayer as InputLayer
 			const ol: InputLayer = oldLayer as InputLayer
 
-			diff = compareAttrs(nl, ol, ['media'])
+			diff = compareAttrs(nl, ol, ['media', 'filter', 'vfilter', 'afilter'])
 
 			setDefaultValue([nl.input, ol.input], ['device', 'format', 'channelLayout'], '')
 
@@ -96,6 +98,8 @@ function diffForeground(
 		} else if (newLayer.content === LayerContentType.ROUTE) {
 			const nl: RouteLayer = newLayer as RouteLayer
 			const ol: RouteLayer = oldLayer as RouteLayer
+
+			diff = compareAttrs(nl, ol, ['vfilter', 'afilter'])
 
 			setDefaultValue([nl.route, ol.route], ['channel', 'layer'], 0)
 
@@ -224,8 +228,15 @@ function resolveForegroundState(
 						if (channelLayout !== oldChannelLayout) {
 							context = `ChannelLayout diff (${channelLayout}, ${oldChannelLayout})`
 						} // temporary, until CallCommand with channelLayout is implemented in ccg-conn (& casparcg?)
+						if (ol.afilter !== nl.afilter) {
+							context = `AFilter diff ("${ol.afilter}", "${nl.afilter}")`
+						}
+						if (ol.vfilter !== nl.vfilter) {
+							context = `VFilter diff ("${ol.vfilter}", "${nl.vfilter}")`
+						}
 						if (context) {
 							context += ` (${diff})`
+							console.log(ol, nl)
 
 							addCommands(
 								diffCmds,
@@ -239,7 +250,9 @@ function resolveForegroundState(
 												length: lengthFrames || undefined,
 												loop: !!nl.looping,
 												channelLayout: nl.channelLayout,
-												clearOn404: nl.clearOn404
+												clearOn404: nl.clearOn404,
+												afilter: nl.afilter,
+												vfilter: nl.vfilter
 											})
 										)
 									),
@@ -344,7 +357,10 @@ function resolveForegroundState(
 
 											pauseTime: nl.pauseTime,
 											channelLayout: nl.channelLayout,
-											clearOn404: nl.clearOn404
+											clearOn404: nl.clearOn404,
+
+											afilter: nl.afilter,
+											vfilter: nl.vfilter
 										})
 									),
 									`Load / Pause otherwise (${diff})`,
@@ -356,7 +372,10 @@ function resolveForegroundState(
 								diffCmds,
 								addContext(
 									new AMCP.LoadCommand({
-										...options
+										...options,
+
+										afilter: nl.afilter,
+										vfilter: nl.vfilter
 									}),
 									`No Media diff from bg (${nl.media})`,
 									nl
@@ -421,7 +440,9 @@ function resolveForegroundState(
 						device: device,
 						format: format || undefined,
 						filter: nl.filter,
-						channelLayout: channelLayout || undefined
+						channelLayout: channelLayout || undefined,
+						afilter: nl.afilter,
+						vfilter: nl.vfilter
 					})
 
 					addCommands(
@@ -490,7 +511,9 @@ function resolveForegroundState(
 										route: nl.route,
 										mode,
 										channelLayout: nl.route.channelLayout,
-										framesDelay
+										framesDelay,
+										afilter: nl.afilter,
+										vfilter: nl.vfilter
 									})
 								),
 								`Route: diffMediaFromBg (${diff})`,

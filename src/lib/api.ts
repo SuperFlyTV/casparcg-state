@@ -84,6 +84,9 @@ export interface MediaLayerBase {
 
 	channelLayout?: string
 	clearOn404?: boolean
+
+	afilter?: string
+	vfilter?: string
 }
 export interface MediaLayer extends LayerBase, MediaLayerBase {
 	content: LayerContentType.MEDIA
@@ -131,6 +134,8 @@ export interface InputLayerBase {
 		channelLayout?: string
 	}
 	filter?: string
+	afilter?: string
+	vfilter?: string
 	playing: true
 }
 export interface InputLayer extends LayerBase, InputLayerBase {
@@ -149,6 +154,9 @@ export interface RouteLayerBase {
 	delay?: number
 	mode?: 'BACKGROUND' | 'NEXT'
 	playing: true
+
+	afilter?: string
+	vfilter?: string
 }
 export interface RouteLayer extends LayerBase, RouteLayerBase {
 	content: LayerContentType.ROUTE

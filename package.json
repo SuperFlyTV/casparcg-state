@@ -109,7 +109,7 @@
 		"resolve"
 	],
 	"dependencies": {
-		"casparcg-connection": "^5.0.1",
+		"casparcg-connection": "5.1.0-nightly-20201112-112403-bd82a6f1.0",
 		"fast-clone": "^1.5.13",
 		"underscore": "^1.9.1"
 	},
