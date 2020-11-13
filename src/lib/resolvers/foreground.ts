@@ -236,7 +236,6 @@ function resolveForegroundState(
 						}
 						if (context) {
 							context += ` (${diff})`
-							console.log(ol, nl)
 
 							addCommands(
 								diffCmds,
