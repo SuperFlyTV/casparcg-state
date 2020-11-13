@@ -53,6 +53,8 @@ export class Transition implements TransitionOptions {
 	audioFadeStart = 0
 	audioFadeDuration = 0
 
+	customOptions: any = undefined
+
 	constructor(
 		typeOrTransition?: string | object,
 		durationOrMaskFile?: number | string,
@@ -74,6 +76,8 @@ export class Transition implements TransitionOptions {
 			directionOrOverlayFile = isSting ? t.overlayFile : t.direction
 			audioFadeStart = isSting ? t.audioFadeStart : undefined
 			audioFadeDuration = isSting ? t.audioFadeDuration : undefined
+
+			this.customOptions = t.customOptions
 		} else {
 			type = typeOrTransition as string
 		}
@@ -136,12 +140,14 @@ export class Transition implements TransitionOptions {
 				stingOverlayFilename: this.overlayFile
 			}
 		} else {
-			return {
+			const o: any = {
 				transition: this.type,
 				transitionDuration: this.time2Frames(this.duration || 0, fps),
 				transitionEasing: this.easing,
 				transitionDirection: this.direction
 			}
+			if (this.customOptions) o['customOptions'] = this.customOptions
+			return o
 		}
 	}
 
