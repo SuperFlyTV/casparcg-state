@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/SuperFlyTV/casparcg-state/compare/2.0.0...2.1.0) (2020-11-16)
+
+
+### Features
+
+* ffmpeg style filter strings ([57db8fa](https://github.com/SuperFlyTV/casparcg-state/commit/57db8faacf1b56d6ac2e0ddb18074e394d62f331))
+
+
+### Bug Fixes
+
+* add customOptions property on transitions, for pass-through of data blob ([adf60ac](https://github.com/SuperFlyTV/casparcg-state/commit/adf60ac87601da96738b87d6d4c3e546e67f7b6d))
+
 ## [2.0.0](https://github.com/SuperFlyTV/casparcg-state/compare/1.12.0...2.0.0) (2020-09-29)
 
 
