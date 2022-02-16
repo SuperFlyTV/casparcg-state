@@ -53,24 +53,24 @@ function diffForeground(
 
 			setDefaultValue([nl, ol], ['seek', 'length', 'inPoint', 'pauseTime'], 0)
 			setDefaultValue([nl, ol], ['looping', 'playing'], false)
-			diff = compareAttrs(
-				nl,
-				ol,
-				[
-					'media',
-					'playTime',
-					'looping',
-					'seek',
-					'length',
-					'inPoint',
-					'pauseTime',
-					'playing',
-					'channelLayout',
-					'vfilter',
-					'afilter'
-				],
-				minTimeSincePlay
-			)
+
+			const attrs: Array<keyof MediaLayer> = [
+				'media',
+				// 'playTime',
+				'looping',
+				'seek',
+				'length',
+				'inPoint',
+				'pauseTime',
+				'playing',
+				'channelLayout',
+				'vfilter',
+				'afilter'
+			]
+			// Only diff playTime if the new state cares about the value
+			if (nl.playTime !== null) attrs.push('playTime')
+
+			diff = compareAttrs(nl, ol, attrs, minTimeSincePlay)
 		} else if (newLayer.content === LayerContentType.TEMPLATE) {
 			const nl: TemplateLayer = newLayer as TemplateLayer
 			const ol: TemplateLayer = oldLayer as TemplateLayer
@@ -202,6 +202,7 @@ function resolveForegroundState(
 						newChannel,
 						oldChannel
 					)
+
 					const seekIsSmall: boolean = seekDiff < minTimeSincePlay
 
 					if (!newMedia && ol.pauseTime && seekIsSmall) {

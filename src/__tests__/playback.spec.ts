@@ -258,6 +258,51 @@ test('Play a video, pause & resume it', () => {
 		).serialize()
 	)
 })
+test('Play a video, then continue with playTime=null', () => {
+	const c = getCasparCGState()
+	initStateMS(c)
+
+	let cc: ReturnType<typeof getDiff>
+
+	// Play a video file:
+
+	const layer10: MediaLayer = {
+		id: 'l0',
+		content: LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: true,
+		playTime: -4000 // 5 s ago
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.PlayCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 5 * 50
+			})
+		).serialize()
+	)
+
+	// Continue playing:
+	c.time = 15000 // Advance the time 4s, to 15s
+	layer10.playing = true
+	// we don't care about time
+	layer10.playTime = null
+	delete layer10.pauseTime
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(0)
+})
 test('Play a looping video', () => {
 	const c = getCasparCGState()
 	initStateMS(c)
