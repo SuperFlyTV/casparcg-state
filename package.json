@@ -111,7 +111,7 @@
 	"dependencies": {
 		"casparcg-connection": "^5.1.0",
 		"fast-clone": "^1.5.13",
-		"underscore": "^1.9.1"
+		"underscore": "^1.13.2"
 	},
 	"devDependencies": {
 		"@types/jest": "^24.0.13",
