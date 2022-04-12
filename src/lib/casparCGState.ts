@@ -16,7 +16,7 @@ import { resolveForegroundState } from './resolvers/foreground'
 import { resolveBackgroundState } from './resolvers/background'
 import { resolveMixerState } from './resolvers/mixer'
 
-const MIN_TIME_SINCE_PLAY = 0.15 // [s]
+const MIN_TIME_SINCE_PLAY = 150 // [ms]
 const CasparCGStateVersion = '2017-11-06 19:15'
 
 export interface OptionsInterface {
