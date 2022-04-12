@@ -57,7 +57,6 @@ jobs:
       - name: Validate dependencies
         run: |
           yarn validate:dependencies
-          yarn validate:dev-dependencies
       - name: Run tests
         run: |
           yarn unit --coverage=true
