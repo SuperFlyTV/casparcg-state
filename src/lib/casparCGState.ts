@@ -16,7 +16,7 @@ import { resolveForegroundState } from './resolvers/foreground'
 import { resolveBackgroundState } from './resolvers/background'
 import { resolveMixerState } from './resolvers/mixer'
 
-const MIN_TIME_SINCE_PLAY = 0.15 // [s]
+const MIN_TIME_SINCE_PLAY = 150 // [ms]
 const CasparCGStateVersion = '2017-11-06 19:15'
 
 export interface OptionsInterface {
@@ -60,7 +60,7 @@ export class CasparCGState0 {
 		additionalLayerState?: InternalLayer
 	}> = []
 
-	public minTimeSincePlay: number = MIN_TIME_SINCE_PLAY // [s]
+	public minTimeSincePlay: number = MIN_TIME_SINCE_PLAY // [ms]
 
 	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 
