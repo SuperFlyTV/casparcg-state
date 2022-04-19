@@ -152,7 +152,7 @@ export function compareAttrs<T extends { [key: string]: any }>(
 	obj0: T | undefined,
 	obj1: T | undefined,
 	attrs: Array<keyof T>,
-	minTimeSincePlay = 0.15, // [s]
+	minTimeSincePlay = 150, // [ms]
 	strict?: boolean
 ): null | string {
 	let difference: null | string = null

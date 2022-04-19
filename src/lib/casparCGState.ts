@@ -60,7 +60,7 @@ export class CasparCGState0 {
 		additionalLayerState?: InternalLayer
 	}> = []
 
-	public minTimeSincePlay: number = MIN_TIME_SINCE_PLAY // [s]
+	public minTimeSincePlay: number = MIN_TIME_SINCE_PLAY // [ms]
 
 	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 
