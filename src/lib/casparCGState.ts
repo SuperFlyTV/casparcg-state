@@ -1,5 +1,13 @@
 import * as _ from 'underscore'
-import { Command as CommandNS, AMCP } from 'casparcg-connection'
+import {
+	AMCPCommand,
+	Command,
+	Commands,
+	PlayCommand,
+	PlayDecklinkCommand,
+	PlayRouteCommand,
+	PlayHtmlCommand
+} from 'casparcg-connection'
 // eslint-disable-next-line
 const clone = require('fast-clone')
 
@@ -10,7 +18,7 @@ import {
 	InternalChannel
 } from './stateObjectStorage'
 import { ChannelInfo, State } from './api'
-import { addContext, addCommands } from './util'
+import { addContext, addCommands, literal } from './util'
 import { resolveEmptyState } from './resolvers/empty'
 import { resolveForegroundState } from './resolvers/foreground'
 import { resolveBackgroundState } from './resolvers/background'
@@ -22,20 +30,12 @@ const CasparCGStateVersion = '2017-11-06 19:15'
 export interface OptionsInterface {
 	channel: number
 	layer: number
-	noClear: boolean
 	transition?: any
 	transitionDuration?: any
 	transitionEasing?: any
 }
 
-export interface AMCPCommandVOWithContext extends CommandNS.IAMCPCommandVO {
-	context: {
-		context: string
-		/** The id of the layer the command originates from */
-		layerId: string
-	}
-}
-export interface AMCPCommandWithContext extends CommandNS.IAMCPCommand {
+export interface AMCPCommandWithContext extends Command<Commands, unknown> {
 	context: {
 		context: string
 		/** The id of the layer the command originates from */
@@ -43,7 +43,7 @@ export interface AMCPCommandWithContext extends CommandNS.IAMCPCommand {
 	}
 }
 export interface DiffCommands {
-	cmds: Array<AMCPCommandVOWithContext>
+	cmds: Array<AMCPCommandWithContext>
 	additionalLayerState?: InternalLayer
 }
 export type DiffCommandGroups = Array<DiffCommands>
@@ -56,7 +56,7 @@ export type DiffCommandGroups = Array<DiffCommands>
 /** */
 export class CasparCGState0 {
 	public bufferedCommands: Array<{
-		cmd: CommandNS.IAMCPCommandVO
+		cmd: AMCPCommand
 		additionalLayerState?: InternalLayer
 	}> = []
 
@@ -198,11 +198,11 @@ export class CasparCGState0 {
 		newState: State,
 		currentTime: number,
 		minTimeSincePlay = MIN_TIME_SINCE_PLAY
-	): Array<AMCPCommandVOWithContext> {
+	): Array<AMCPCommandWithContext> {
 		const diff = CasparCGState0.diffStates(oldState, newState, currentTime, minTimeSincePlay)
-		const fastCommands: Array<AMCPCommandVOWithContext> = [] // fast to exec, and direct visual impact: PLAY 1-10
-		const slowCommands: Array<AMCPCommandVOWithContext> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
-		const lowPrioCommands: Array<AMCPCommandVOWithContext> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
+		const fastCommands: Array<AMCPCommandWithContext> = [] // fast to exec, and direct visual impact: PLAY 1-10
+		const slowCommands: Array<AMCPCommandWithContext> = [] // slow to exec, but direct visual impact: PLAY 1-10 FILE (needs to have all commands for that layer in the right order)
+		const lowPrioCommands: Array<AMCPCommandWithContext> = [] // slow to exec, and no direct visual impact: LOADBG 1-10 FILE
 
 		for (const layer of diff) {
 			let containsSlowCommand = false
@@ -210,26 +210,27 @@ export class CasparCGState0 {
 			// filter out lowPrioCommands
 			for (let i = 0; i < layer.cmds.length; i++) {
 				if (
-					layer.cmds[i]._commandName === 'LoadbgCommand' ||
-					layer.cmds[i]._commandName === 'LoadDecklinkBgCommand' ||
-					layer.cmds[i]._commandName === 'LoadRouteBgCommand' ||
-					layer.cmds[i]._commandName === 'LoadHtmlPageBgCommand'
+					layer.cmds[i].command === Commands.Loadbg ||
+					layer.cmds[i].command === Commands.LoadbgDecklink ||
+					layer.cmds[i].command === Commands.LoadbgRoute ||
+					layer.cmds[i].command === Commands.LoadbgHtml
 				) {
 					lowPrioCommands.push(layer.cmds[i])
 					layer.cmds.splice(i, 1)
 					i-- // next entry now has the same index as this one.
 				} else if (
-					(layer.cmds[i]._commandName === 'PlayCommand' && layer.cmds[i]._objectParams.clip) ||
-					(layer.cmds[i]._commandName === 'PlayDecklinkCommand' &&
-						layer.cmds[i]._objectParams.device) ||
-					(layer.cmds[i]._commandName === 'PlayRouteCommand' &&
-						layer.cmds[i]._objectParams.route) ||
-					(layer.cmds[i]._commandName === 'PlayHtmlPageCommand' &&
-						layer.cmds[i]._objectParams.url) ||
-					layer.cmds[i]._commandName === 'LoadCommand' ||
-					layer.cmds[i]._commandName === 'LoadDecklinkCommand' ||
-					layer.cmds[i]._commandName === 'LoadRouteCommand' ||
-					layer.cmds[i]._commandName === 'LoadHtmlPageCommand'
+					(layer.cmds[i].command === Commands.Play &&
+						(layer.cmds[i].params as PlayCommand['params']).clip) ||
+					(layer.cmds[i].command === Commands.PlayDecklink &&
+						(layer.cmds[i].params as PlayDecklinkCommand['params']).device) ||
+					(layer.cmds[i].command === Commands.PlayRoute &&
+						(layer.cmds[i].params as PlayRouteCommand['params']).route) ||
+					(layer.cmds[i].command === Commands.PlayHtml &&
+						(layer.cmds[i].params as PlayHtmlCommand['params']).url) ||
+					layer.cmds[i].command === Commands.Load // ||
+					// layer.cmds[i].command === 'LoadDecklinkCommand' ||
+					// layer.cmds[i].command === 'LoadRouteCommand' ||
+					// layer.cmds[i].command === 'LoadHtmlPageCommand'
 				) {
 					containsSlowCommand = true
 				}
@@ -303,13 +304,17 @@ export class CasparCGState0 {
 
 		// bundled commands:
 		_.each(bundledCmds, (bundle) => {
-			const channels = _.uniq(_.pluck(bundle, 'channel'))
+			const channels = _.uniq(bundle.map((c) => (c.params as any).channel))
+			// const channels = _.uniq(_.pluck(bundle, 'channel'))
 
 			_.each(channels, (channel) => {
 				bundle.push(
 					addContext(
-						new AMCP.MixerCommitCommand({
-							channel: Number(channel)
+						literal<AMCPCommand>({
+							command: Commands.MixerCommit,
+							params: {
+								channel: Number(channel)
+							}
 						}),
 						`Bundle commit`,
 						null

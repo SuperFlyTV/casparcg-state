@@ -10,7 +10,8 @@ import {
 	addContext,
 	fixPlayCommandInput,
 	time2FramesChannel,
-	addCommands
+	addCommands,
+	literal
 } from '../util'
 import { InternalState } from '../stateObjectStorage'
 import {
@@ -28,9 +29,10 @@ import {
 	TransitionObject,
 	MediaLayerBase
 } from '../api'
-import { OptionsInterface, AMCPCommandVOWithContext, DiffCommands } from '../casparCGState'
-import { AMCP } from 'casparcg-connection'
+import { OptionsInterface, DiffCommands } from '../casparCGState'
+import { AMCPCommand, CallCommand, Commands, PlayCommand, ResumeCommand } from 'casparcg-connection'
 import _ = require('underscore')
+import { RouteMode } from 'casparcg-connection/dist/enums'
 
 export { resolveForegroundState, diffForeground }
 
@@ -152,8 +154,7 @@ function resolveForegroundState(
 
 			const options: OptionsInterface = {
 				channel: newChannel.channelNo,
-				layer: newLayer.layerNo,
-				noClear: !!newLayer.noClear
+				layer: newLayer.layerNo
 			}
 
 			setTransition(options, newChannel, oldLayer, newLayer.media, false)
@@ -208,7 +209,16 @@ function resolveForegroundState(
 					if (!newMedia && ol.pauseTime && seekIsSmall) {
 						addCommands(
 							diffCmds,
-							addContext(new AMCP.ResumeCommand(options as any), `Seek is small (${seekDiff})`, nl)
+							addContext(
+								literal<AMCPCommand>({
+									command: Commands.Resume,
+									params: {
+										...options
+									}
+								}),
+								`Seek is small (${seekDiff})`,
+								nl
+							)
 						)
 					} else {
 						let context = ''
@@ -242,21 +252,21 @@ function resolveForegroundState(
 							addCommands(
 								diffCmds,
 								addContext(
-									new AMCP.PlayCommand(
-										fixPlayCommandInput(
-											_.extend(options, {
-												clip: (nl.media || '').toString(),
-												in: inPointFrames,
-												seek: seekFrames,
-												length: lengthFrames || undefined,
-												loop: !!nl.looping,
-												channelLayout: nl.channelLayout,
-												clearOn404: nl.clearOn404,
-												afilter: nl.afilter,
-												vfilter: nl.vfilter
-											})
-										)
-									),
+									literal<PlayCommand>({
+										command: Commands.Play,
+										params: fixPlayCommandInput({
+											...options,
+											clip: (nl.media || '').toString(),
+											inPoint: inPointFrames,
+											seek: seekFrames,
+											length: lengthFrames || undefined,
+											loop: !!nl.looping,
+											// channelLayout: nl.channelLayout,
+											clearOn404: nl.clearOn404,
+											afilter: nl.afilter,
+											vfilter: nl.vfilter
+										})
+									}),
 									context,
 									nl
 								)
@@ -266,8 +276,9 @@ function resolveForegroundState(
 							addCommands(
 								diffCmds,
 								addContext(
-									new AMCP.PlayCommand({
-										...options
+									literal<PlayCommand>({
+										command: Commands.Play,
+										params: { ...options }
 									}),
 									`No Media diff from bg (${nl.media})`,
 									nl
@@ -277,17 +288,20 @@ function resolveForegroundState(
 						} else {
 							addCommands(
 								diffCmds,
-								addContext(new AMCP.ResumeCommand(options as any), `Resume otherwise (${diff})`, nl)
+								addContext(
+									literal<ResumeCommand>({ command: Commands.Resume, params: { ...options } }),
+									`Resume otherwise (${diff})`,
+									nl
+								)
 							)
 							if (oldSeekFrames !== seekFrames && !nl.looping) {
 								addCommands(
 									diffCmds,
 									addContext(
-										new AMCP.CallCommand(
-											_.extend(options, {
-												seek: seekFrames
-											})
-										),
+										literal<CallCommand>({
+											command: Commands.Call,
+											params: { ...options, param: 'SEEK', value: seekFrames }
+										}),
 										`Seek diff (${seekFrames}, ${oldSeekFrames})`,
 										nl
 									)
@@ -297,30 +311,30 @@ function resolveForegroundState(
 								addCommands(
 									diffCmds,
 									addContext(
-										new AMCP.CallCommand(
-											_.extend(options, {
-												loop: !!nl.looping
-											})
-										),
+										literal<CallCommand>({
+											command: Commands.Call,
+											params: { ...options, param: 'LOOP', value: nl.looping ? 1 : 0 }
+										}),
 										`Loop diff (${nl.looping}, ${ol.looping})`,
 										nl
 									)
 								)
 							}
-							if (ol.channelLayout !== nl.channelLayout) {
-								addCommands(
-									diffCmds,
-									addContext(
-										new AMCP.CallCommand(
-											_.extend(options, {
-												channelLayout: !!nl.channelLayout
-											})
-										),
-										`ChannelLayout diff (${nl.channelLayout}, ${ol.channelLayout})`,
-										nl
-									)
-								)
-							}
+							// TODO - should we have channel layout anymore?
+							// if (ol.channelLayout !== nl.channelLayout) {
+							// 	addCommands(
+							// 		diffCmds,
+							// 		addContext(
+							// 			new AMCP.CallCommand(
+							// 				_.extend(options, {
+							// 					channelLayout: !!nl.channelLayout
+							// 				})
+							// 			),
+							// 			`ChannelLayout diff (${nl.channelLayout}, ${ol.channelLayout})`,
+							// 			nl
+							// 		)
+							// 	)
+							// }
 						}
 					}
 				} else {
@@ -335,11 +349,14 @@ function resolveForegroundState(
 						addCommands(
 							diffCmds,
 							addContext(
-								new AMCP.PauseCommand(
-									_.extend(options, {
-										pauseTime: nl.pauseTime
-									})
-								),
+								literal<AMCPCommand>({
+									command: Commands.Pause,
+									params: {
+										...options
+										// todo: missing param - where is this used?
+										// pauseTime: nl.pauseTime
+									}
+								}),
 								context,
 								nl
 							)
@@ -349,21 +366,24 @@ function resolveForegroundState(
 							addCommands(
 								diffCmds,
 								addContext(
-									new AMCP.LoadCommand(
-										_.extend(options, {
+									literal<AMCPCommand>({
+										command: Commands.Load,
+										params: {
+											...options,
 											clip: (nl.media || '').toString(),
 											seek: seekFrames,
 											length: lengthFrames || undefined,
 											loop: !!nl.looping,
 
-											pauseTime: nl.pauseTime,
-											channelLayout: nl.channelLayout,
+											// todo - missing params
+											// pauseTime: nl.pauseTime,
+											// channelLayout: nl.channelLayout,
 											clearOn404: nl.clearOn404,
 
-											afilter: nl.afilter,
-											vfilter: nl.vfilter
-										})
-									),
+											aFilter: nl.afilter,
+											vFilter: nl.vfilter
+										}
+									}),
 									`Load / Pause otherwise (${diff})`,
 									nl
 								)
@@ -372,11 +392,14 @@ function resolveForegroundState(
 							addCommands(
 								diffCmds,
 								addContext(
-									new AMCP.LoadCommand({
-										...options,
+									literal<AMCPCommand>({
+										command: Commands.Load,
+										params: {
+											...options,
 
-										afilter: nl.afilter,
-										vfilter: nl.vfilter
+											aFilter: nl.afilter,
+											vFilter: nl.vfilter
+										}
 									}),
 									`No Media diff from bg (${nl.media})`,
 									nl
@@ -393,17 +416,20 @@ function resolveForegroundState(
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.CGAddCommand(
-							_.extend(options, {
-								templateName: (nl.media || '').toString(),
-								flashLayer: 1,
-								playOnLoad: nl.playing,
-								data: nl.templateData || undefined,
+						literal<AMCPCommand>({
+							command: Commands.CgAdd,
+							params: {
+								...options,
 
-								cgStop: nl.cgStop,
-								templateType: nl.templateType
-							})
-						),
+								template: (nl.media || '').toString(),
+								cgLayer: 1,
+								playOnLoad: nl.playing,
+								data: nl.templateData || undefined
+
+								// cgStop: nl.cgStop,
+								// templateType: nl.templateType
+							}
+						}),
 						`Add Template (${diff})`,
 						nl
 					)
@@ -416,11 +442,13 @@ function resolveForegroundState(
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.PlayHtmlPageCommand(
-							_.extend(options, {
+						literal<AMCPCommand>({
+							command: Commands.PlayHtml,
+							params: {
+								...options,
 								url: (nl.media || '').toString()
-							})
-						),
+							}
+						}),
 						`Add HTML page (${diff})`,
 						nl
 					)
@@ -433,22 +461,28 @@ function resolveForegroundState(
 				const inputType: string =
 					(nl.input && nl.media && (nl.media || '').toString()) || 'decklink'
 				const device: number | null = nl.input && nl.input.device
-				const format: string | null = (nl.input && nl.input.format) || null
-				const channelLayout: string | null = (nl.input && nl.input.channelLayout) || null
+				// const format: string | null = (nl.input && nl.input.format) || null
+				// const channelLayout: string | null = (nl.input && nl.input.channelLayout) || null
 
 				if (inputType === 'decklink') {
-					_.extend(options, {
-						device: device,
-						format: format || undefined,
-						filter: nl.filter,
-						channelLayout: channelLayout || undefined,
-						afilter: nl.afilter,
-						vfilter: nl.vfilter
-					})
-
 					addCommands(
 						diffCmds,
-						addContext(new AMCP.PlayDecklinkCommand(options as any), `Add decklink (${diff})`, nl)
+						addContext(
+							literal<AMCPCommand>({
+								command: Commands.PlayDecklink,
+								params: {
+									...options,
+									device: device,
+									// format: format || undefined,
+									// filter: nl.filter,
+									// channelLayout: channelLayout || undefined,
+									aFilter: nl.afilter,
+									vFilter: nl.vfilter
+								}
+							}),
+							`Add decklink (${diff})`,
+							nl
+						)
 					)
 					bgCleared = true
 				}
@@ -457,8 +491,8 @@ function resolveForegroundState(
 				const olNext: RouteLayer = oldLayer.nextUp as any
 
 				if (nl.route) {
-					const routeChannel: number = nl.route.channel
-					const routeLayer: number | null = nl.route.layer || null
+					// const routeChannel: number = nl.route.channel
+					// const routeLayer: number | null = nl.route.layer || null
 					const mode = nl.mode
 					const framesDelay: number | undefined = nl.delay
 						? Math.floor(time2FramesChannel(nl.delay, newChannel, oldChannel))
@@ -473,50 +507,25 @@ function resolveForegroundState(
 						)
 
 					if (diffMediaFromBg) {
-						const transition = options.transition
-							? ` ${new Transition()
-									.fromCommand(
-										{
-											_objectParams: options
-										},
-										oldChannel.fps
-									)
-									.getString(oldChannel.fps)}`
-							: ''
-
-						_.extend(options, {
-							routeChannel: routeChannel,
-							routeLayer: routeLayer,
-
-							command:
-								'PLAY ' +
-								options.channel +
-								'-' +
-								options.layer +
-								' route://' +
-								routeChannel +
-								(routeLayer ? '-' + routeLayer : '') +
-								(mode ? ' ' + mode : '') +
-								(framesDelay ? ' FRAMES_DELAY ' + framesDelay : '') +
-								transition,
-							customCommand: 'route'
-						})
-
-						// cmd = new AMCP.CustomCommand(options as any)
-
 						addCommands(
 							diffCmds,
 							addContext(
-								new AMCP.PlayRouteCommand(
-									_.extend(options, {
-										route: nl.route,
-										mode,
-										channelLayout: nl.route.channelLayout,
+								literal<AMCPCommand>({
+									command: Commands.PlayRoute,
+									params: {
+										...options,
+
+										route: {
+											channel: nl.route.channel,
+											layer: nl.route.layer === null ? undefined : nl.route.layer // todo - replace with "?? undefined"
+										},
+										mode: mode as RouteMode,
 										framesDelay,
-										afilter: nl.afilter,
-										vfilter: nl.vfilter
-									})
-								),
+
+										aFilter: nl.afilter,
+										vFilter: nl.vfilter
+									}
+								}),
 								`Route: diffMediaFromBg (${diff})`,
 								nl
 							)
@@ -525,7 +534,12 @@ function resolveForegroundState(
 						addCommands(
 							diffCmds,
 							addContext(
-								new AMCP.PlayCommand({ ...options }),
+								literal<AMCPCommand>({
+									command: Commands.Play,
+									params: {
+										...options
+									}
+								}),
 								`Route: no diffMediaFromBg (${diff})`,
 								nl
 							)
@@ -539,52 +553,53 @@ function resolveForegroundState(
 
 				const media: any = nl.media
 				const encoderOptions: any = nl.encoderOptions || ''
-				const playTime: any = nl.playTime
-
-				_.extend(options, {
-					media: media, // file name
-					encoderOptions: encoderOptions,
-					playTime: playTime,
-
-					command: 'ADD ' + options.channel + ' FILE ' + media + ' ' + encoderOptions,
-
-					customCommand: 'add file'
-				})
+				// const playTime: any = nl.playTime
 
 				addCommands(
 					diffCmds,
-					addContext(new AMCP.CustomCommand(options as any), `Record (${diff})`, nl)
+					addContext(
+						literal<AMCPCommand>({
+							command: Commands.Add,
+							params: {
+								channel: options.channel,
+								consumer: 'FILE',
+								parameters: media + ' ' + encoderOptions
+								// playTime
+							}
+						}),
+						`Record (${diff})`,
+						nl
+					)
 				)
 				bgCleared = true // just to be sure
 			} else if (newLayer.content === LayerContentType.FUNCTION) {
-				const nl: FunctionLayer = newLayer as FunctionLayer
+				// const nl: FunctionLayer = newLayer as FunctionLayer
 				// let ol: CasparCG.IFunctionLayer = oldLayer as CasparCG.IFunctionLayer
-				if (nl.media && nl.executeFcn) {
-					let cmd: AMCPCommandVOWithContext = {
-						channel: options.channel,
-						layer: options.layer,
-						_commandName: 'executeFunction',
-						// @ts-ignore special: nl.media used for diffing
-						media: nl.media,
-						externalFunction: true
-					}
-
-					if (nl.executeFcn === 'special_osc') {
-						cmd = _.extend(cmd, {
-							specialFunction: 'osc',
-							oscDevice: nl.oscDevice,
-							message: nl.inMessage
-						})
-					} else {
-						cmd = _.extend(cmd, {
-							functionName: nl.executeFcn,
-							functionData: nl.executeData,
-							functionLayer: nl
-						})
-					}
-					cmd = addContext(cmd as any, `Function (${diff})`, nl)
-					addCommands(diffCmds, cmd)
-				}
+				// if (nl.media && nl.executeFcn) {
+				// 	let cmd: AMCPCommandVOWithContext = {
+				// 		channel: options.channel,
+				// 		layer: options.layer,
+				// 		_commandName: 'executeFunction',
+				// 		// @ts-ignore special: nl.media used for diffing
+				// 		media: nl.media,
+				// 		externalFunction: true
+				// 	}
+				// 	if (nl.executeFcn === 'special_osc') {
+				// 		cmd = _.extend(cmd, {
+				// 			specialFunction: 'osc',
+				// 			oscDevice: nl.oscDevice,
+				// 			message: nl.inMessage
+				// 		})
+				// 	} else {
+				// 		cmd = _.extend(cmd, {
+				// 			functionName: nl.executeFcn,
+				// 			functionData: nl.executeData,
+				// 			functionLayer: nl
+				// 		})
+				// 	}
+				// 	cmd = addContext(cmd as any, `Function (${diff})`, nl)
+				// 	addCommands(diffCmds, cmd)
+				// }
 			} else {
 				// oldLayer had content, newLayer had no content, newLayer has a nextup
 				if (
@@ -598,13 +613,16 @@ function resolveForegroundState(
 						addCommands(
 							diffCmds,
 							addContext(
-								new AMCP.PlayCommand({
-									channel: oldChannel.channelNo,
-									layer: oldLayer.layerNo,
-									clip: 'empty',
-									...new Transition((oldLayer.media as TransitionObject).outTransition).getOptions(
-										oldChannel.fps
-									)
+								literal<AMCPCommand>({
+									command: Commands.Play,
+									params: {
+										channel: oldChannel.channelNo,
+										layer: oldLayer.layerNo,
+										clip: 'empty',
+										...new Transition(
+											(oldLayer.media as TransitionObject).outTransition
+										).getOptions(oldChannel.fps)
+									}
 								}),
 								`No new content, but old outTransition (${newLayer.content})`,
 								oldLayer
@@ -615,7 +633,12 @@ function resolveForegroundState(
 						addCommands(
 							diffCmds,
 							addContext(
-								new AMCP.StopCommand(options as any),
+								literal<AMCPCommand>({
+									command: Commands.Stop,
+									params: {
+										...options
+									}
+								}),
 								`No new content (${newLayer.content})`,
 								oldLayer
 							)
@@ -627,9 +650,12 @@ function resolveForegroundState(
 						addCommands(
 							diffCmds,
 							addContext(
-								new AMCP.CGStopCommand({
-									...(options as any),
-									flashLayer: 1
+								literal<AMCPCommand>({
+									command: Commands.CgStop,
+									params: {
+										...options,
+										cgLayer: 1
+									}
 								}),
 								`No new content, but old cgCgStop (${newLayer.content})`,
 								oldLayer
@@ -639,7 +665,10 @@ function resolveForegroundState(
 						addCommands(
 							diffCmds,
 							addContext(
-								new AMCP.ClearCommand(options as any),
+								literal<AMCPCommand>({
+									command: Commands.Clear,
+									params: { ...options }
+								}),
 								`No new content (${newLayer.content})`,
 								oldLayer
 							)
@@ -650,11 +679,12 @@ function resolveForegroundState(
 					addCommands(
 						diffCmds,
 						addContext(
-							new AMCP.CustomCommand({
-								layer: oldLayer.layerNo,
-								channel: oldChannel.channelNo,
-								command: 'REMOVE ' + oldChannel.channelNo + ' FILE',
-								customCommand: 'remove file'
+							literal<AMCPCommand>({
+								command: Commands.Remove,
+								params: {
+									channel: oldChannel.channelNo,
+									consumer: 'FILE'
+								}
 							}),
 							`No new content (${newLayer.content})`,
 							oldLayer
@@ -678,12 +708,14 @@ function resolveForegroundState(
 					addCommands(
 						diffCmds,
 						addContext(
-							new AMCP.CGUpdateCommand(
-								_.extend(options, {
-									flashLayer: 1,
-									data: nl.templateData || undefined
-								})
-							),
+							literal<AMCPCommand>({
+								command: Commands.CgUpdate,
+								params: {
+									...options,
+									cgLayer: 1,
+									data: nl.templateData
+								}
+							}),
 							`Updated templateData`,
 							newLayer
 						)

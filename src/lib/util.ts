@@ -11,8 +11,10 @@ import {
 } from './api'
 import * as _ from 'underscore'
 import { Mixer } from './mixer'
-import { AMCPCommandWithContext, AMCPCommandVOWithContext, DiffCommands } from './casparCGState'
-import { Command as CommandNS } from 'casparcg-connection'
+import { AMCPCommandWithContext, DiffCommands } from './casparCGState'
+// import { Command as CommandNS } from 'casparcg-connection'
+import { AMCPCommand, Commands } from 'casparcg-connection'
+
 import { InternalLayer, InternalState } from './stateObjectStorage'
 
 export function frames2Time(frames: number, fps: number | undefined): number {
@@ -213,30 +215,30 @@ export function compareAttrs<T extends { [key: string]: any }>(
 	}
 	return difference
 }
-export function addContext<T extends CommandNS.IAMCPCommandVO>(
-	cmd: T,
-	context: string,
-	layer: LayerBase | null
-): AMCPCommandVOWithContext
-export function addContext<T extends CommandNS.IAMCPCommand>(
+export function addContext<T extends AMCPCommand>(
 	cmd: T,
 	context: string,
 	layer: LayerBase | null
 ): AMCPCommandWithContext
-export function addContext<T extends CommandNS.IAMCPCommandVO | CommandNS.IAMCPCommand>(
+export function addContext<T extends AMCPCommand>(
 	cmd: T,
 	context: string,
 	layer: LayerBase | null
-): T & { context: AMCPCommandVOWithContext['context'] } {
-	const returnCmd = cmd as T & { context: AMCPCommandVOWithContext['context'] }
+): AMCPCommandWithContext
+export function addContext<T extends AMCPCommand>(
+	cmd: T,
+	context: string,
+	layer: LayerBase | null
+): T & { context: AMCPCommandWithContext['context'] } {
+	const returnCmd = cmd as T & { context: AMCPCommandWithContext['context'] }
 	returnCmd.context = {
 		context,
 		layerId: layer ? layer.id : ''
 	}
 	return returnCmd
 }
-export function isIAMCPCommand(cmd: any): cmd is CommandNS.IAMCPCommand {
-	return cmd && typeof cmd.serialize === 'function'
+export function isIAMCPCommand(cmd: any): cmd is AMCPCommand {
+	return cmd && cmd.command && cmd.command in Commands && cmd.params
 }
 export function setTransition(
 	options: any | null,
@@ -245,7 +247,7 @@ export function setTransition(
 	content: any,
 	isRemove: boolean,
 	isBg?: boolean
-) {
+): void {
 	if (!options) options = {}
 	const comesFromBG = (transitionObj: TransitionObject) => {
 		if (oldLayer.nextUp && _.isObject(oldLayer.nextUp.media)) {
@@ -273,6 +275,47 @@ export function setTransition(
 
 		if (transition) {
 			_.extend(options, transition.getOptions(channel.fps))
+		}
+	}
+
+	return options
+}
+export function setMixerTransition(
+	options: any | null,
+	channel: Channel,
+	oldLayer: LayerBase,
+	content: any,
+	isRemove: boolean
+): void {
+	if (!options) options = {}
+	const comesFromBG = (transitionObj: TransitionObject) => {
+		if (oldLayer.nextUp && _.isObject(oldLayer.nextUp.media)) {
+			const t0 = new Transition(transitionObj)
+			const t1 = new Transition((oldLayer.nextUp.media as TransitionObject).inTransition)
+			return t0.getString() === t1.getString()
+		}
+		return false
+	}
+
+	if (_.isObject(content)) {
+		let transition: Transition | undefined
+
+		if (isRemove) {
+			if (content.outTransition) {
+				transition = new Transition(content.outTransition)
+			}
+		} else {
+			if (oldLayer.playing && content.changeTransition) {
+				transition = new Transition(content.changeTransition)
+			} else if (content.inTransition && !comesFromBG(content.inTransition)) {
+				transition = new Transition(content.inTransition)
+			}
+		}
+
+		if (transition) {
+			const transOpts = transition.getOptions(channel.fps)
+			options.duration = transOpts.transition.duration
+			options.tween = transOpts.transition.tween
 		}
 	}
 
@@ -352,18 +395,19 @@ export function getLayer(state: State | InternalState, channelNo: string, layerN
 		}
 	)
 }
-export function addCommands(
-	diff: DiffCommands,
-	...commands: Array<AMCPCommandWithContext | AMCPCommandVOWithContext>
-): void {
+export function addCommands(diff: DiffCommands, ...commands: Array<AMCPCommandWithContext>): void {
 	for (const cmd of commands) {
 		if (isIAMCPCommand(cmd)) {
 			diff.cmds.push({
-				...cmd.serialize(),
+				...cmd,
 				context: cmd.context
 			})
 		} else {
 			diff.cmds.push(cmd)
 		}
 	}
+}
+
+export function literal<T>(o: T): T {
+	return o
 }

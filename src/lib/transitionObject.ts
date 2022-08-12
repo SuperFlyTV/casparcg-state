@@ -1,3 +1,5 @@
+import { Direction, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
+import { TransitionParameters } from 'casparcg-connection/dist/parameters'
 import * as _ from 'underscore'
 import { TransitionOptions } from './api'
 import { frames2Time, time2Frames } from './util'
@@ -42,10 +44,10 @@ export class TransitionObject {
 }
 
 export class Transition implements TransitionOptions {
-	type = 'mix'
+	type = TransitionType.Mix
 	duration = 0
-	easing = 'linear'
-	direction = 'right'
+	easing = TransitionTween.LINEAR
+	direction = Direction.Right
 
 	maskFile = ''
 	delay = 0
@@ -56,30 +58,30 @@ export class Transition implements TransitionOptions {
 	customOptions: any = undefined
 
 	constructor(
-		typeOrTransition?: string | object,
+		typeOrTransition?: TransitionType | object,
 		durationOrMaskFile?: number | string,
-		easingOrDelay?: string | number,
-		directionOrOverlayFile?: string,
+		easingOrDelay?: TransitionTween | number,
+		directionOrOverlayFile?: Direction | string,
 		audioFadeStart?: number,
 		audioFadeDuration?: number
 	) {
-		let type: string
+		let type: TransitionType
 
 		if (_.isObject(typeOrTransition)) {
 			const t: TransitionOptions = typeOrTransition as TransitionOptions
-			type = t.type as string
+			type = t.type as TransitionType
 
 			const isSting = (type + '').match(/sting/i)
 
 			durationOrMaskFile = isSting ? t.maskFile : t.duration
-			easingOrDelay = isSting ? t.delay : t.easing
+			easingOrDelay = isSting ? (t.delay as number) : (t.easing as TransitionTween)
 			directionOrOverlayFile = isSting ? t.overlayFile : t.direction
 			audioFadeStart = isSting ? t.audioFadeStart : undefined
 			audioFadeDuration = isSting ? t.audioFadeDuration : undefined
 
 			this.customOptions = t.customOptions
 		} else {
-			type = typeOrTransition as string
+			type = typeOrTransition as TransitionType
 		}
 
 		// @todo: for all: string literal
@@ -107,47 +109,44 @@ export class Transition implements TransitionOptions {
 				this.duration = durationOrMaskFile as number
 			}
 			if (easingOrDelay) {
-				this.easing = easingOrDelay as string
+				this.easing = easingOrDelay as TransitionTween
 			}
 			if (directionOrOverlayFile) {
-				this.direction = directionOrOverlayFile
+				this.direction = directionOrOverlayFile as Direction
 			}
 		}
 	}
 
-	getOptions(fps?: number) {
+	getOptions(fps?: number): { transition: TransitionParameters } {
 		if ((this.type + '').match(/sting/i)) {
-			if (this.audioFadeStart || this.audioFadeDuration) {
-				return {
-					transition: 'sting',
-					stingTransitionProperties: {
-						maskFile: this.maskFile,
-						delay: this.time2Frames(this.delay || 0, fps),
-						overlayFile: this.overlayFile,
-						audioFadeStart: this.audioFadeStart
-							? this.time2Frames(this.audioFadeStart, fps)
-							: undefined,
-						audioFadeDuration: this.audioFadeDuration
-							? this.time2Frames(this.audioFadeDuration, fps)
-							: undefined
-					}
+			const stingProperties: TransitionParameters['stingProperties'] = {
+				maskFile: this.maskFile
+			}
+
+			if (this.delay) stingProperties.delay = this.time2Frames(this.delay, fps)
+			if (this.audioFadeStart) {
+				stingProperties.audioFadeStart = this.time2Frames(this.audioFadeStart, fps)
+			}
+			if (this.audioFadeDuration) {
+				stingProperties.audioFadeDuration = this.time2Frames(this.audioFadeDuration, fps)
+			}
+
+			return {
+				transition: {
+					transitionType: TransitionType.Sting,
+					duration: 0,
+					stingProperties
 				}
 			}
-			return {
-				transition: 'sting',
-				stingMaskFilename: this.maskFile,
-				stingDelay: this.time2Frames(this.delay || 0, fps),
-				stingOverlayFilename: this.overlayFile
-			}
 		} else {
-			const o: any = {
-				transition: this.type,
-				transitionDuration: this.time2Frames(this.duration || 0, fps),
-				transitionEasing: this.easing,
-				transitionDirection: this.direction
+			const o: TransitionParameters = {
+				transitionType: this.type as TransitionType,
+				duration: this.time2Frames(this.duration || 0, fps),
+				tween: this.easing as TransitionTween,
+				direction: this.direction as Direction
 			}
-			if (this.customOptions) o['customOptions'] = this.customOptions
-			return o
+			// if (this.customOptions) o['customOptions'] = this.customOptions
+			return { transition: o }
 		}
 	}
 
@@ -187,7 +186,7 @@ export class Transition implements TransitionOptions {
 	fromCommand(command: any, fps?: number): Transition {
 		if (command._objectParams) {
 			if ((command._objectParams.transition + '').match(/sting/i)) {
-				this.type = 'sting'
+				this.type = TransitionType.Sting
 				if (command._objectParams.stingMaskFilename) {
 					this.maskFile = command._objectParams.stingMaskFilename
 				}

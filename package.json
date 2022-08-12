@@ -2,7 +2,7 @@
 	"name": "casparcg-state",
 	"version": "2.1.1",
 	"engines": {
-		"node": ">= 10.10"
+		"node": ">= 14.18"
 	},
 	"description": "Node.js Javascript/Typescript library for keeping and resolving a given state of CasparCG into commands for casparcg-connection.",
 	"main": "dist/index.js",
@@ -110,7 +110,7 @@
 		"resolve"
 	],
 	"dependencies": {
-		"casparcg-connection": "^5.1.0",
+		"casparcg-connection": "6.0.0-nightly-feat-rewrite-20220809-084227-737e2c00.0",
 		"fast-clone": "^1.5.13",
 		"underscore": "^1.13.2"
 	},

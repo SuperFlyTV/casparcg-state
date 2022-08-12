@@ -4,7 +4,6 @@ import {
 	LayerContentType,
 	MediaLayer,
 	NextUp,
-	HtmlPageLayer,
 	InputLayer,
 	RouteLayer,
 	TransitionObject,
@@ -20,11 +19,13 @@ import {
 	calculatePlayAttributes,
 	fixPlayCommandInput,
 	time2FramesChannel,
-	addCommands
+	addCommands,
+	literal
 } from '../util'
 import { OptionsInterface, DiffCommands } from '../casparCGState'
-import { AMCP } from 'casparcg-connection'
-import _ = require('underscore')
+import { AMCPCommand, Commands, LoadbgRouteCommand } from 'casparcg-connection'
+// import _ = require('underscore')
+import { RouteMode } from 'casparcg-connection/dist/enums'
 
 export { diffBackground, resolveBackgroundState }
 
@@ -123,8 +124,7 @@ function resolveBackgroundState(
 	if (bgDiff) {
 		const options: OptionsInterface = {
 			channel: newChannel.channelNo,
-			layer: newLayer.layerNo,
-			noClear: !!newLayer.noClear
+			layer: newLayer.layerNo
 		}
 		if (newLayer.nextUp) {
 			// make sure the layer is empty before trying to load something new
@@ -133,10 +133,13 @@ function resolveBackgroundState(
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.LoadbgCommand({
-							channel: newChannel.channelNo,
-							layer: newLayer.layerNo,
-							clip: 'EMPTY'
+						literal<AMCPCommand>({
+							command: Commands.Loadbg,
+							params: {
+								channel: newChannel.channelNo,
+								layer: newLayer.layerNo,
+								clip: 'EMPTY'
+							}
 						}),
 						`Old nextUp was set, clear it first (${oldLayer.nextUp.media})`,
 						newLayer
@@ -153,45 +156,45 @@ function resolveBackgroundState(
 					inPointFrames,
 					lengthFrames,
 					seekFrames,
-					looping,
-					channelLayout
+					looping
+					// channelLayout
 				} = calculatePlayAttributes(0, layer, newChannel, oldChannel)
 
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.LoadbgCommand(
-							_.extend(
-								options,
-								fixPlayCommandInput({
-									auto: layer.auto,
-									clip: (newLayer.nextUp.media || '').toString(),
-									in: inPointFrames,
-									seek: seekFrames,
-									length: lengthFrames || undefined,
-									loop: !!looping,
-									channelLayout: channelLayout,
-									clearOn404: layer.clearOn404,
-									afilter: layer.afilter,
-									vfilter: layer.vfilter
-								})
-							)
-						),
+						literal<AMCPCommand>({
+							command: Commands.Loadbg,
+							params: fixPlayCommandInput({
+								...options,
+								auto: layer.auto,
+								clip: (newLayer.nextUp.media || '').toString(),
+								in: inPointFrames,
+								seek: seekFrames,
+								length: lengthFrames || undefined,
+								loop: !!looping,
+								// channelLayout: channelLayout,
+								clearOn404: layer.clearOn404,
+								aFilter: layer.afilter,
+								vFilter: layer.vfilter
+							})
+						}),
 						`Nextup media (${newLayer.nextUp.media})`,
 						newLayer
 					)
 				)
 			} else if (newLayer.nextUp.content === LayerContentType.HTMLPAGE) {
-				const layer = newLayer.nextUp as HtmlPageLayer & NextUp
+				// const layer = newLayer.nextUp as HtmlPageLayer & NextUp
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.LoadHtmlPageBgCommand(
-							_.extend(options, {
-								auto: layer.auto,
+						literal<AMCPCommand>({
+							command: Commands.LoadbgHtml,
+							params: {
+								...options,
 								url: (newLayer.nextUp.media || '').toString()
-							})
-						),
+							}
+						}),
 						`Nextup HTML (${newLayer.nextUp.media})`,
 						newLayer
 					)
@@ -201,17 +204,18 @@ function resolveBackgroundState(
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.LoadDecklinkBgCommand(
-							_.extend(options, {
-								auto: layer.auto,
+						literal<AMCPCommand>({
+							command: Commands.LoadbgDecklink,
+							params: {
+								...options,
 								device: layer.input.device,
-								format: layer.input.format,
-								filter: layer.filter,
-								channelLayout: layer.input.channelLayout,
-								afilter: layer.afilter,
-								vfilter: layer.vfilter
-							})
-						),
+								// format: layer.input.format,
+								// filter: layer.filter,
+								// channelLayout: layer.input.channelLayout,
+								aFilter: layer.afilter,
+								vFilter: layer.vfilter
+							}
+						}),
 						`Nextup Decklink (${layer.input.device})`,
 						newLayer
 					)
@@ -221,18 +225,21 @@ function resolveBackgroundState(
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.LoadRouteBgCommand(
-							_.extend(options, {
-								route: layer.route,
-								mode: layer.mode,
-								channelLayout: layer.route ? layer.route.channelLayout : undefined,
+						literal<AMCPCommand>({
+							command: Commands.LoadbgRoute,
+							params: {
+								...options,
+
+								route: layer.route as LoadbgRouteCommand['params']['route'],
+								mode: layer.mode as RouteMode,
+								// channelLayout: layer.route ? layer.route.channelLayout : undefined,
 								framesDelay: layer.delay
 									? Math.floor(time2FramesChannel(layer.delay, newChannel, oldChannel))
 									: undefined,
-								afilter: layer.afilter,
-								vfilter: layer.vfilter
-							})
-						),
+								aFilter: layer.afilter,
+								vFilter: layer.vfilter
+							}
+						}),
 						`Nextup Route (${layer.route})`,
 						newLayer
 					)

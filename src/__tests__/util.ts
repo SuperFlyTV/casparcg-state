@@ -1,6 +1,5 @@
 import { CasparCGState, State } from '../'
 import * as _ from 'underscore'
-import { AMCP } from 'casparcg-connection'
 import { DiffCommandGroups } from '../lib/casparCGState'
 
 export interface CGState {

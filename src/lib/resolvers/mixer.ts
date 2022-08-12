@@ -4,14 +4,34 @@ import { AMCPCommandWithContext, DiffCommands } from '../casparCGState'
 import { Mixer } from '../mixer'
 import {
 	compareMixerValues,
-	setTransition,
 	addContext,
 	getChannel,
 	getLayer,
-	addCommands
+	addCommands,
+	setMixerTransition
 } from '../util'
 import _ = require('underscore')
-import { Command as CommandNS, AMCP } from 'casparcg-connection'
+import {
+	AMCPCommand,
+	Commands,
+	MixerAnchorCommand,
+	MixerBlendCommand,
+	MixerBrightnessCommand,
+	MixerChromaCommand,
+	MixerClipCommand,
+	MixerContrastCommand,
+	MixerCropCommand,
+	MixerFillCommand,
+	MixerKeyerCommand,
+	MixerLevelsCommand,
+	MixerMastervolumeCommand,
+	MixerOpacityCommand,
+	MixerPerspectiveCommand,
+	MixerRotationCommand,
+	MixerSaturationCommand,
+	MixerStraightAlphaOutputCommand,
+	MixerVolumeCommand
+} from 'casparcg-connection'
 
 export function resolveMixerState(
 	oldState: InternalState,
@@ -33,12 +53,16 @@ export function resolveMixerState(
 	if (!newLayer.mixer) newLayer.mixer = new Mixer()
 	if (!oldLayer.mixer) oldLayer.mixer = new Mixer()
 
-	const pushMixerCommand = (attr: string, Command: any, subValue?: Array<string> | string) => {
+	const pushMixerCommand = <T extends AMCPCommand>(
+		attr: string,
+		command: T['command'],
+		subValue?: Array<keyof T['params']> | keyof T['params']
+	): void => {
 		const diff = compareMixerValues(
 			newLayer,
 			oldLayer,
 			attr,
-			_.isArray(subValue) ? subValue : undefined
+			_.isArray(subValue) ? (subValue as string[]) : undefined
 		)
 		if (diff) {
 			const options: any = {}
@@ -49,11 +73,10 @@ export function resolveMixerState(
 
 			let o: any = Mixer.getValue((newLayer.mixer || {})[attr])
 			if (newLayer.mixer && _.has(newLayer.mixer, attr) && !_.isUndefined(o)) {
-				setTransition(options, newChannel, oldLayer, newLayer.mixer, false)
+				setMixerTransition(options, newChannel, oldLayer, newLayer.mixer, false)
 			} else {
-				setTransition(options, newChannel, oldLayer, newLayer.mixer, true)
+				setMixerTransition(options, newChannel, oldLayer, newLayer.mixer, true)
 				o = Mixer.getDefaultValues(attr)
-				options._defaultOptions = true // this is used in ApplyCommands to set state to "default", and not use the mixer values
 			}
 			if (_.isArray(subValue)) {
 				_.each(subValue, (sv) => {
@@ -67,39 +90,45 @@ export function resolveMixerState(
 				}
 			}
 			if (newLayer && newLayer.mixer && newLayer.mixer.bundleWithCommands) {
-				options['bundleWithCommands'] = newLayer.mixer.bundleWithCommands
+				// options['bundleWithCommands'] = newLayer.mixer.bundleWithCommands
 				const key = newLayer.mixer.bundleWithCommands + ''
 				if (!bundledCmds[key]) bundledCmds[key] = []
 
 				options['defer'] = true
 
 				bundledCmds[key].push(
-					addContext(new Command(options) as CommandNS.IAMCPCommand, `Bundle: ${diff}`, newLayer)
+					addContext({ command, params: options } as T, `Bundle: ${diff}`, newLayer)
 				)
 			} else {
 				addCommands(
 					diffCmds,
-					addContext(
-						new Command(options) as CommandNS.IAMCPCommand,
-						`Mixer: ${diff}`,
-						newLayer || oldLayer
-					)
+					addContext({ command, params: options } as T, `Mixer: ${diff}`, newLayer || oldLayer)
 				)
 			}
 		}
 	}
 
-	pushMixerCommand('anchor', AMCP.MixerAnchorCommand, ['x', 'y'])
-	pushMixerCommand('blendmode', AMCP.MixerBlendCommand, 'blendmode')
-	pushMixerCommand('brightness', AMCP.MixerBrightnessCommand, 'brightness')
-	pushMixerCommand('chroma', AMCP.MixerChromaCommand, ['keyer', 'threshold', 'softness', 'spill'])
-	pushMixerCommand('clip', AMCP.MixerClipCommand, ['x', 'y', 'width', 'height'])
-	pushMixerCommand('contrast', AMCP.MixerContrastCommand, 'contrast')
-	pushMixerCommand('crop', AMCP.MixerCropCommand, ['left', 'top', 'right', 'bottom'])
-	pushMixerCommand('fill', AMCP.MixerFillCommand, ['x', 'y', 'xScale', 'yScale'])
+	pushMixerCommand<MixerAnchorCommand>('anchor', Commands.MixerAnchor, ['x', 'y'])
+	pushMixerCommand<MixerBlendCommand>('blendmode', Commands.MixerBlend, 'value')
+	pushMixerCommand<MixerBrightnessCommand>('brightness', Commands.MixerBrightness, 'value')
+	pushMixerCommand<MixerChromaCommand>('chroma', Commands.MixerChroma, [
+		'enable',
+		'targetHue',
+		'hueWidth',
+		'minSaturation',
+		'minBrightness',
+		'softness',
+		'spillSuppress',
+		'spillSuppressSaturation',
+		'showMask'
+	])
+	pushMixerCommand<MixerClipCommand>('clip', Commands.MixerClip, ['x', 'y', 'width', 'height'])
+	pushMixerCommand<MixerContrastCommand>('contrast', Commands.MixerContrast, 'value')
+	pushMixerCommand<MixerCropCommand>('crop', Commands.MixerCrop, ['left', 'top', 'right', 'bottom'])
+	pushMixerCommand<MixerFillCommand>('fill', Commands.MixerFill, ['x', 'y', 'xScale', 'yScale'])
 	// grid
-	pushMixerCommand('keyer', AMCP.MixerKeyerCommand, 'keyer')
-	pushMixerCommand('levels', AMCP.MixerLevelsCommand, [
+	pushMixerCommand<MixerKeyerCommand>('keyer', Commands.MixerKeyer, 'keyer')
+	pushMixerCommand<MixerLevelsCommand>('levels', Commands.MixerLevels, [
 		'minInput',
 		'maxInput',
 		'gamma',
@@ -107,11 +136,11 @@ export function resolveMixerState(
 		'maxOutput'
 	])
 	if (newLayer.layerNo === -1) {
-		pushMixerCommand('mastervolume', AMCP.MixerMastervolumeCommand, 'mastervolume')
+		pushMixerCommand<MixerMastervolumeCommand>('mastervolume', Commands.MixerMastervolume, 'value')
 	}
 	// mipmap
-	pushMixerCommand('opacity', AMCP.MixerOpacityCommand, 'opacity')
-	pushMixerCommand('perspective', AMCP.MixerPerspectiveCommand, [
+	pushMixerCommand<MixerOpacityCommand>('opacity', Commands.MixerOpacity, 'value')
+	pushMixerCommand<MixerPerspectiveCommand>('perspective', Commands.MixerPerspective, [
 		'topLeftX',
 		'topLeftY',
 		'topRightX',
@@ -121,12 +150,16 @@ export function resolveMixerState(
 		'bottomLeftX',
 		'bottomLeftY'
 	])
-	pushMixerCommand('rotation', AMCP.MixerRotationCommand, 'rotation')
-	pushMixerCommand('saturation', AMCP.MixerSaturationCommand, 'saturation')
+	pushMixerCommand<MixerRotationCommand>('rotation', Commands.MixerRotation, 'value')
+	pushMixerCommand<MixerSaturationCommand>('saturation', Commands.MixerSaturation, 'value')
 	if (newLayer.layerNo === -1) {
-		pushMixerCommand('straightAlpha', AMCP.MixerStraightAlphaOutputCommand, 'straight_alpha_output')
+		pushMixerCommand<MixerStraightAlphaOutputCommand>(
+			'straightAlpha',
+			Commands.MixerStraightAlphaOutput,
+			'value'
+		)
 	}
-	pushMixerCommand('volume', AMCP.MixerVolumeCommand, 'volume')
+	pushMixerCommand<MixerVolumeCommand>('volume', Commands.MixerVolume, 'value')
 
 	return { commands: diffCmds, bundledCmds }
 }

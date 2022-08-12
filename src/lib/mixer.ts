@@ -4,10 +4,15 @@ import { TransitionObject } from './transitionObject'
 import { TransitionOptions } from './api'
 
 export interface Chroma {
-	keyer: CCGEnum.Chroma
-	threshold: number
+	enable: boolean
+	targetHue: number
+	hueWidth: number
+	minSaturation: number
+	minBrightness: number
 	softness: number
-	spill: number
+	spillSuppress: number
+	spillSuppressSaturation: number
+	showMask: boolean
 }
 export interface Perspective {
 	topLeftX: number
@@ -78,7 +83,9 @@ export class Mixer {
 		]
 	}
 
-	public static getDefaultValues(attr: string): Record<string, any> | number | boolean | null {
+	public static getDefaultValues(
+		attr: string
+	): Record<string, unknown> | number | boolean | string | null {
 		// this is a temporary function, to replaced by some logic from ccg-connection
 		switch (attr) {
 			case 'anchor':
@@ -89,17 +96,22 @@ export class Mixer {
 				}
 
 			case 'blendmode':
-				return CCGEnum.BlendMode.NORMAL
+				return CCGEnum.BlendMode.Normal
 			case 'brightness':
 				return 1
 
 			case 'chroma':
 				return {
 					_spread: true,
-					keyer: CCGEnum.Chroma.NONE,
-					threshold: 0,
+					enable: false,
+					targetHue: 0,
+					hueWidth: 0,
+					minSaturation: 0,
+					minBrightness: 0,
 					softness: 0,
-					spill: 0
+					spillSuppress: 0,
+					spillSuppressSaturation: 0,
+					showMask: false
 				}
 
 			case 'clip':
