@@ -2,18 +2,18 @@ import { Direction, TransitionTween, TransitionType } from 'casparcg-connection/
 import { TransitionParameters } from 'casparcg-connection/dist/parameters'
 import * as _ from 'underscore'
 import { TransitionOptions } from './api'
-import { frames2Time, time2Frames } from './util'
+import { time2Frames } from './util'
 
 export class TransitionObject {
 	_transition: true
-	_value: string | number | boolean
-	inTransition: TransitionOptions
-	changeTransition: TransitionOptions
-	outTransition: TransitionOptions
+	_value?: string | number | boolean
+	inTransition?: TransitionOptions
+	changeTransition?: TransitionOptions
+	outTransition?: TransitionOptions
 
 	/** */
 	constructor(
-		value?: any,
+		value?: string | number | boolean,
 		options?: {
 			inTransition?: TransitionOptions
 			changeTransition?: TransitionOptions
@@ -33,7 +33,7 @@ export class TransitionObject {
 
 	/** */
 	valueOf(): string | number | boolean {
-		return this._value
+		return this._value ?? 'Transition Object'
 	}
 
 	/** */
@@ -120,7 +120,7 @@ export class Transition implements TransitionOptions {
 	getOptions(fps?: number): { transition: TransitionParameters } {
 		if ((this.type + '').match(/sting/i)) {
 			const stingProperties: TransitionParameters['stingProperties'] = {
-				maskFile: this.maskFile
+				maskFile: this.maskFile,
 			}
 
 			if (this.delay) stingProperties.delay = this.time2Frames(this.delay, fps)
@@ -135,15 +135,15 @@ export class Transition implements TransitionOptions {
 				transition: {
 					transitionType: TransitionType.Sting,
 					duration: 0,
-					stingProperties
-				}
+					stingProperties,
+				},
 			}
 		} else {
 			const o: TransitionParameters = {
-				transitionType: this.type as TransitionType,
+				transitionType: this.type,
 				duration: this.time2Frames(this.duration || 0, fps),
-				tween: this.easing as TransitionTween,
-				direction: this.direction as Direction
+				tween: this.easing,
+				direction: this.direction,
 			}
 			// if (this.customOptions) o['customOptions'] = this.customOptions
 			return { transition: o }
@@ -158,71 +158,19 @@ export class Transition implements TransitionOptions {
 				if (this.maskFile) str += `MASK="${this.maskFile}" `
 				if (this.overlayFile) str += `OVERLAY="${this.overlayFile}" `
 				if (this.delay) str += `TRIGGER_POINT="${this.time2Frames(this.delay, fps)}" `
-				if (this.audioFadeStart)
-					str += `AUDIO_FADE_START="${this.time2Frames(this.audioFadeStart, fps)}" `
-				if (this.audioFadeDuration)
-					str += `AUDIO_FADE_DURATION="${this.time2Frames(this.audioFadeDuration, fps)}" `
+				if (this.audioFadeStart) str += `AUDIO_FADE_START="${this.time2Frames(this.audioFadeStart, fps)}" `
+				if (this.audioFadeDuration) str += `AUDIO_FADE_DURATION="${this.time2Frames(this.audioFadeDuration, fps)}" `
 
 				str = str.substr(0, str.length - 1) + ')'
 
 				return str
 			}
-			return [
-				'STING',
-				this.maskFile,
-				this.time2Frames(this.delay || 0, fps),
-				this.overlayFile
-			].join(' ')
+			return ['STING', this.maskFile, this.time2Frames(this.delay || 0, fps), this.overlayFile].join(' ')
 		} else {
-			return [
-				this.type,
-				this.time2Frames(this.duration || 0, fps),
-				this.easing,
-				this.direction
-			].join(' ')
+			return [this.type, this.time2Frames(this.duration || 0, fps), this.easing, this.direction].join(' ')
 		}
 	}
 
-	fromCommand(command: any, fps?: number): Transition {
-		if (command._objectParams) {
-			if ((command._objectParams.transition + '').match(/sting/i)) {
-				this.type = TransitionType.Sting
-				if (command._objectParams.stingMaskFilename) {
-					this.maskFile = command._objectParams.stingMaskFilename
-				}
-				if (command._objectParams.stingDelay) {
-					this.delay = this.frames2Time(command._objectParams.stingDelay, fps)
-				}
-				if (command._objectParams.stingOverlayFilename) {
-					this.overlayFile = command._objectParams.stingOverlayFilename
-				}
-				if (command._objectParams.audioFadeStart) {
-					this.audioFadeStart = this.frames2Time(command._objectParams.audioFadeStart, fps)
-				}
-				if (command._objectParams.audioFadeDuration) {
-					this.audioFadeDuration = this.frames2Time(command._objectParams.audioFadeDuration, fps)
-				}
-			} else {
-				if (command._objectParams.transition) {
-					this.type = command._objectParams.transition
-				}
-				if (command._objectParams.transitionDuration) {
-					this.duration = this.frames2Time(command._objectParams.transitionDuration, fps)
-				}
-				if (command._objectParams.transitionEasing) {
-					this.easing = command._objectParams.transitionEasing
-				}
-				if (command._objectParams.transitionDirection) {
-					this.direction = command._objectParams.transitionDirection
-				}
-			}
-		}
-		return this
-	}
-
-	private frames2Time(frames: number, fps?: number): number {
-		return frames2Time(frames, fps)
-	}
 	private time2Frames(time: number, fps?: number): number {
 		return time2Frames(time, fps)
 	}

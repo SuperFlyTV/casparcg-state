@@ -1,13 +1,5 @@
 import { CGState, getCasparCGState, initState, getDiff, stripContext } from './util'
-import {
-	State,
-	MediaLayer,
-	EmptyLayer,
-	Channel,
-	LayerContentType,
-	LayerBase,
-	AMCPCommandWithContext
-} from '../'
+import { State, MediaLayer, EmptyLayer, Channel, LayerContentType, LayerBase, AMCPCommandWithContext } from '../'
 import { InternalLayer } from '../lib/stateObjectStorage'
 import { AMCPCommand, Commands, Enum } from 'casparcg-connection'
 import { Mixer } from '../lib/mixer'
@@ -36,33 +28,35 @@ describe('MixerCommands', () => {
 			media: 'AMB',
 			playing: true,
 			playTime: 1000,
-			seek: 0
+			seek: 0,
 		}
 		layerMinus1 = {
 			id: 'l1',
 			content: LayerContentType.NOTHING,
 			playing: false,
-			layerNo: -1
+			layerNo: -1,
 		}
 		channel1 = { channelNo: 1, layers: { '10': layer10, '-1': layerMinus1 } }
 
 		targetState = { channels: { '1': channel1 } }
 		cc = getDiff(c, targetState, false)
-		expect(cc).toHaveLength(2)
-		expect(cc[0].cmds).toHaveLength(1)
-		expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(
-			literal<AMCPCommand>({
-				command: Commands.Play,
-				params: {
-					channel: 1,
-					layer: 10,
-					clip: 'AMB',
-					loop: false,
-					seek: 0
-				}
-			})
-		)
-		expect(cc[1].cmds).toHaveLength(0)
+		test('A play command to be generated', () => {
+			expect(cc).toHaveLength(2)
+			expect(cc[0].cmds).toHaveLength(1)
+			expect(stripContext(cc[0].cmds[0])).toEqual(
+				literal<AMCPCommand>({
+					command: Commands.Play,
+					params: {
+						channel: 1,
+						layer: 10,
+						clip: 'AMB',
+						loop: false,
+						seek: 0,
+					},
+				})
+			)
+			expect(cc[1].cmds).toHaveLength(0)
+		})
 	})
 	test('Mixer Anchor', () => {
 		testMixerEffect(
@@ -76,8 +70,8 @@ describe('MixerCommands', () => {
 					channel: 1,
 					layer: 10,
 					x: 100,
-					y: 132
-				}
+					y: 132,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerAnchor,
@@ -85,8 +79,8 @@ describe('MixerCommands', () => {
 					channel: 1,
 					layer: 10,
 					x: 0,
-					y: 0
-				}
+					y: 0,
+				},
 			})
 		)
 	})
@@ -101,16 +95,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					value: Enum.BlendMode.ColorBurn
-				}
+					value: Enum.BlendMode.ColorBurn,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerBlend,
 				params: {
 					channel: 1,
 					layer: 10,
-					value: Enum.BlendMode.Normal
-				}
+					value: Enum.BlendMode.Normal,
+				},
 			})
 		)
 	})
@@ -125,16 +119,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 1.5
-				}
+					value: 1.5,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerBrightness,
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 1
-				}
+					value: 1,
+				},
 			})
 		)
 	})
@@ -153,8 +147,8 @@ describe('MixerCommands', () => {
 					softness: 0.7,
 					spillSuppress: 0.8,
 					spillSuppressSaturation: 0.9,
-					showMask: false
-				}
+					showMask: false,
+				},
 			},
 			literal<AMCPCommand>({
 				command: Commands.MixerChroma,
@@ -169,8 +163,8 @@ describe('MixerCommands', () => {
 					softness: 0.7,
 					spillSuppress: 0.8,
 					spillSuppressSaturation: 0.9,
-					showMask: false
-				}
+					showMask: false,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerChroma,
@@ -185,8 +179,8 @@ describe('MixerCommands', () => {
 					softness: 0,
 					spillSuppress: 0,
 					spillSuppressSaturation: 0,
-					showMask: false
-				}
+					showMask: false,
+				},
 			})
 		)
 	})
@@ -200,8 +194,8 @@ describe('MixerCommands', () => {
 					x: 0.5,
 					y: 0.5,
 					width: 0.25,
-					height: 0.25
-				}
+					height: 0.25,
+				},
 			},
 			literal<AMCPCommand>({
 				command: Commands.MixerClip,
@@ -211,8 +205,8 @@ describe('MixerCommands', () => {
 					x: 0.5,
 					y: 0.5,
 					width: 0.25,
-					height: 0.25
-				}
+					height: 0.25,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerClip,
@@ -222,8 +216,8 @@ describe('MixerCommands', () => {
 					x: 0,
 					y: 0,
 					width: 1,
-					height: 1
-				}
+					height: 1,
+				},
 			})
 		)
 	})
@@ -238,16 +232,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 1.5
-				}
+					value: 1.5,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerContrast,
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 1
-				}
+					value: 1,
+				},
 			})
 		)
 	})
@@ -261,8 +255,8 @@ describe('MixerCommands', () => {
 					left: 0.25,
 					top: 0.25,
 					right: 0.33,
-					bottom: 0.34
-				}
+					bottom: 0.34,
+				},
 			},
 			literal<AMCPCommand>({
 				command: Commands.MixerCrop,
@@ -272,8 +266,8 @@ describe('MixerCommands', () => {
 					left: 0.25,
 					top: 0.25,
 					right: 0.33,
-					bottom: 0.34
-				}
+					bottom: 0.34,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerCrop,
@@ -283,8 +277,8 @@ describe('MixerCommands', () => {
 					left: 0,
 					top: 0,
 					right: 0,
-					bottom: 0
-				}
+					bottom: 0,
+				},
 			})
 		)
 	})
@@ -298,8 +292,8 @@ describe('MixerCommands', () => {
 					x: 0.1,
 					y: 0.2,
 					xScale: 0.9,
-					yScale: 0.85
-				}
+					yScale: 0.85,
+				},
 			},
 			literal<AMCPCommand>({
 				command: Commands.MixerFill,
@@ -309,8 +303,8 @@ describe('MixerCommands', () => {
 					x: 0.1,
 					y: 0.2,
 					xScale: 0.9,
-					yScale: 0.85
-				}
+					yScale: 0.85,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerFill,
@@ -320,8 +314,8 @@ describe('MixerCommands', () => {
 					x: 0,
 					y: 0,
 					xScale: 1,
-					yScale: 1
-				}
+					yScale: 1,
+				},
 			})
 		)
 	})
@@ -336,16 +330,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					keyer: true
-				}
+					keyer: true,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerKeyer,
 				params: {
 					channel: 1,
 					layer: 10,
-					keyer: false
-				}
+					keyer: false,
+				},
 			})
 		)
 	})
@@ -360,8 +354,8 @@ describe('MixerCommands', () => {
 					maxInput: 0.9,
 					gamma: 1.1,
 					minOutput: 0.2,
-					maxOutput: 0.99
-				}
+					maxOutput: 0.99,
+				},
 			},
 			literal<AMCPCommand>({
 				command: Commands.MixerLevels,
@@ -372,8 +366,8 @@ describe('MixerCommands', () => {
 					maxInput: 0.9,
 					gamma: 1.1,
 					minOutput: 0.2,
-					maxOutput: 0.99
-				}
+					maxOutput: 0.99,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerLevels,
@@ -384,8 +378,8 @@ describe('MixerCommands', () => {
 					maxInput: 1,
 					gamma: 1,
 					minOutput: 0,
-					maxOutput: 1
-				}
+					maxOutput: 1,
+				},
 			})
 		)
 	})
@@ -399,15 +393,15 @@ describe('MixerCommands', () => {
 				command: Commands.MixerMastervolume,
 				params: {
 					channel: 1,
-					value: 0.9
-				}
+					value: 0.9,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerMastervolume,
 				params: {
 					channel: 1,
-					value: 1
-				}
+					value: 1,
+				},
 			})
 		)
 	})
@@ -422,16 +416,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 0.9
-				}
+					value: 0.9,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerOpacity,
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 1
-				}
+					value: 1,
+				},
 			})
 		)
 	})
@@ -449,8 +443,8 @@ describe('MixerCommands', () => {
 					bottomRightX: 1.2,
 					bottomRightY: 0.9,
 					bottomLeftX: 0.12,
-					bottomLeftY: 1.01
-				}
+					bottomLeftY: 1.01,
+				},
 			},
 			literal<AMCPCommand>({
 				command: Commands.MixerPerspective,
@@ -464,8 +458,8 @@ describe('MixerCommands', () => {
 					bottomRightX: 1.2,
 					bottomRightY: 0.9,
 					bottomLeftX: 0.12,
-					bottomLeftY: 1.01
-				}
+					bottomLeftY: 1.01,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerPerspective,
@@ -479,8 +473,8 @@ describe('MixerCommands', () => {
 					bottomRightX: 1,
 					bottomRightY: 1,
 					bottomLeftX: 0,
-					bottomLeftY: 1
-				}
+					bottomLeftY: 1,
+				},
 			})
 		)
 	})
@@ -495,16 +489,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 16
-				}
+					value: 16,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerRotation,
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 0
-				}
+					value: 0,
+				},
 			})
 		)
 	})
@@ -519,16 +513,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 0.5
-				}
+					value: 0.5,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerSaturation,
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 1
-				}
+					value: 1,
+				},
 			})
 		)
 	})
@@ -542,15 +536,15 @@ describe('MixerCommands', () => {
 				command: Commands.MixerStraightAlphaOutput,
 				params: {
 					channel: 1,
-					value: true
-				}
+					value: true,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerStraightAlphaOutput,
 				params: {
 					channel: 1,
-					value: false
-				}
+					value: false,
+				},
 			})
 		)
 	})
@@ -565,16 +559,16 @@ describe('MixerCommands', () => {
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 0.45
-				}
+					value: 0.45,
+				},
 			}),
 			literal<AMCPCommand>({
 				command: Commands.MixerVolume,
 				params: {
 					channel: 1,
 					layer: 10,
-					value: 1
-				}
+					value: 1,
+				},
 			})
 		)
 	})

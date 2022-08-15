@@ -6,17 +6,12 @@ import {
 	PlayCommand,
 	PlayDecklinkCommand,
 	PlayRouteCommand,
-	PlayHtmlCommand
+	PlayHtmlCommand,
 } from 'casparcg-connection'
 // eslint-disable-next-line
 const clone = require('fast-clone')
 
-import {
-	StateObjectStorage,
-	InternalLayer,
-	InternalState,
-	InternalChannel
-} from './stateObjectStorage'
+import { StateObjectStorage, InternalLayer, InternalState, InternalChannel } from './stateObjectStorage'
 import { ChannelInfo, State } from './api'
 import { addContext, addCommands, literal } from './util'
 import { resolveEmptyState } from './resolvers/empty'
@@ -65,7 +60,7 @@ export class CasparCGState0 {
 	protected _currentStateStorage: StateObjectStorage = new StateObjectStorage()
 
 	// private _getMediaDuration: (clip: string, channelNo: number, layerNo: number) => void
-	private _isInitialised: boolean
+	private _isInitialised = false
 	// private _externalLog?: (...args: Array<any>) => void
 
 	/** */
@@ -107,7 +102,7 @@ export class CasparCGState0 {
 	 * Initializes the state by using channel info
 	 * @param {any} channels [description]
 	 */
-	initStateFromChannelInfo(channels: Array<ChannelInfo>, currentTime: number) {
+	initStateFromChannelInfo(channels: Array<ChannelInfo>, currentTime: number): void {
 		const currentState = this._currentStateStorage.fetchState()
 		_.each(channels, (channel: ChannelInfo, i: number) => {
 			if (!channel.videoMode) {
@@ -126,7 +121,7 @@ export class CasparCGState0 {
 					channelNo: i + 1,
 					videoMode: channel.videoMode,
 					fps: channel.fps,
-					layers: {}
+					layers: {},
 				}
 				currentState.channels[existingChannel.channelNo] = existingChannel
 			}
@@ -219,14 +214,12 @@ export class CasparCGState0 {
 					layer.cmds.splice(i, 1)
 					i-- // next entry now has the same index as this one.
 				} else if (
-					(layer.cmds[i].command === Commands.Play &&
-						(layer.cmds[i].params as PlayCommand['params']).clip) ||
+					(layer.cmds[i].command === Commands.Play && (layer.cmds[i].params as PlayCommand['params']).clip) ||
 					(layer.cmds[i].command === Commands.PlayDecklink &&
 						(layer.cmds[i].params as PlayDecklinkCommand['params']).device) ||
 					(layer.cmds[i].command === Commands.PlayRoute &&
 						(layer.cmds[i].params as PlayRouteCommand['params']).route) ||
-					(layer.cmds[i].command === Commands.PlayHtml &&
-						(layer.cmds[i].params as PlayHtmlCommand['params']).url) ||
+					(layer.cmds[i].command === Commands.PlayHtml && (layer.cmds[i].params as PlayHtmlCommand['params']).url) ||
 					layer.cmds[i].command === Commands.Load // ||
 					// layer.cmds[i].command === 'LoadDecklinkCommand' ||
 					// layer.cmds[i].command === 'LoadRouteCommand' ||
@@ -270,22 +263,12 @@ export class CasparCGState0 {
 					currentTime,
 					minTimeSincePlay
 				)
-				const bgChanges = resolveBackgroundState(
-					oldState,
-					newState,
-					channelKey,
-					layerKey,
-					fgChanges.bgCleared
-				)
+				const bgChanges = resolveBackgroundState(oldState, newState, channelKey, layerKey, fgChanges.bgCleared)
 				const mixerChanges = resolveMixerState(oldState, newState, channelKey, layerKey)
 
 				const diffCmds: DiffCommands = {
-					cmds: [
-						...fgChanges.commands.cmds,
-						...bgChanges.commands.cmds,
-						...mixerChanges.commands.cmds
-					],
-					additionalLayerState: newLayer
+					cmds: [...fgChanges.commands.cmds, ...bgChanges.commands.cmds, ...mixerChanges.commands.cmds],
+					additionalLayerState: newLayer,
 				}
 				commands.push(diffCmds)
 
@@ -313,8 +296,8 @@ export class CasparCGState0 {
 						literal<AMCPCommand>({
 							command: Commands.MixerCommit,
 							params: {
-								channel: Number(channel)
-							}
+								channel: Number(channel),
+							},
 						}),
 						`Bundle commit`,
 						null
@@ -323,7 +306,7 @@ export class CasparCGState0 {
 			})
 
 			const diffCmds: DiffCommands = {
-				cmds: []
+				cmds: [],
 			}
 			addCommands(diffCmds, ...bundle)
 			commands.push(diffCmds)
@@ -345,7 +328,7 @@ export class CasparCGState0 {
 	}
 
 	/** */
-	public setIsInitialised(initialised: boolean, _currentTime: number) {
+	public setIsInitialised(initialised: boolean, _currentTime: number): void {
 		if (this._isInitialised !== initialised) {
 			this._isInitialised = initialised
 		}

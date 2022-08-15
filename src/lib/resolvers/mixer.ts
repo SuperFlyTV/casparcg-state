@@ -2,14 +2,7 @@ import { InternalState } from '../stateObjectStorage'
 import { State } from '../api'
 import { AMCPCommandWithContext, DiffCommands } from '../casparCGState'
 import { Mixer } from '../mixer'
-import {
-	compareMixerValues,
-	addContext,
-	getChannel,
-	getLayer,
-	addCommands,
-	setMixerTransition
-} from '../util'
+import { compareMixerValues, addContext, getChannel, getLayer, addCommands, setMixerTransition } from '../util'
 import _ = require('underscore')
 import {
 	AMCPCommand,
@@ -30,7 +23,7 @@ import {
 	MixerRotationCommand,
 	MixerSaturationCommand,
 	MixerStraightAlphaOutputCommand,
-	MixerVolumeCommand
+	MixerVolumeCommand,
 } from 'casparcg-connection'
 
 export function resolveMixerState(
@@ -38,13 +31,13 @@ export function resolveMixerState(
 	newState: State,
 	channel: string,
 	layer: string
-) {
+): { commands: DiffCommands; bundledCmds: Record<string, Array<AMCPCommandWithContext>> } {
 	const newChannel = getChannel(newState, channel)
 	const oldLayer = getLayer(oldState, channel, layer)
 	const newLayer = getLayer(newState, channel, layer)
 
 	const diffCmds: DiffCommands = {
-		cmds: []
+		cmds: [],
 	}
 	const bundledCmds: {
 		[bundleGroup: string]: Array<AMCPCommandWithContext>
@@ -58,12 +51,7 @@ export function resolveMixerState(
 		command: T['command'],
 		subValue?: Array<keyof T['params']> | keyof T['params']
 	): void => {
-		const diff = compareMixerValues(
-			newLayer,
-			oldLayer,
-			attr,
-			_.isArray(subValue) ? (subValue as string[]) : undefined
-		)
+		const diff = compareMixerValues(newLayer, oldLayer, attr, _.isArray(subValue) ? (subValue as string[]) : undefined)
 		if (diff) {
 			const options: any = {}
 			options.channel = newChannel.channelNo
@@ -96,14 +84,9 @@ export function resolveMixerState(
 
 				options['defer'] = true
 
-				bundledCmds[key].push(
-					addContext({ command, params: options } as T, `Bundle: ${diff}`, newLayer)
-				)
+				bundledCmds[key].push(addContext({ command, params: options } as T, `Bundle: ${diff}`, newLayer))
 			} else {
-				addCommands(
-					diffCmds,
-					addContext({ command, params: options } as T, `Mixer: ${diff}`, newLayer || oldLayer)
-				)
+				addCommands(diffCmds, addContext({ command, params: options } as T, `Mixer: ${diff}`, newLayer || oldLayer))
 			}
 		}
 	}
@@ -120,7 +103,7 @@ export function resolveMixerState(
 		'softness',
 		'spillSuppress',
 		'spillSuppressSaturation',
-		'showMask'
+		'showMask',
 	])
 	pushMixerCommand<MixerClipCommand>('clip', Commands.MixerClip, ['x', 'y', 'width', 'height'])
 	pushMixerCommand<MixerContrastCommand>('contrast', Commands.MixerContrast, 'value')
@@ -133,7 +116,7 @@ export function resolveMixerState(
 		'maxInput',
 		'gamma',
 		'minOutput',
-		'maxOutput'
+		'maxOutput',
 	])
 	if (newLayer.layerNo === -1) {
 		pushMixerCommand<MixerMastervolumeCommand>('mastervolume', Commands.MixerMastervolume, 'value')
@@ -148,16 +131,12 @@ export function resolveMixerState(
 		'bottomRightX',
 		'bottomRightY',
 		'bottomLeftX',
-		'bottomLeftY'
+		'bottomLeftY',
 	])
 	pushMixerCommand<MixerRotationCommand>('rotation', Commands.MixerRotation, 'value')
 	pushMixerCommand<MixerSaturationCommand>('saturation', Commands.MixerSaturation, 'value')
 	if (newLayer.layerNo === -1) {
-		pushMixerCommand<MixerStraightAlphaOutputCommand>(
-			'straightAlpha',
-			Commands.MixerStraightAlphaOutput,
-			'value'
-		)
+		pushMixerCommand<MixerStraightAlphaOutputCommand>('straightAlpha', Commands.MixerStraightAlphaOutput, 'value')
 	}
 	pushMixerCommand<MixerVolumeCommand>('volume', Commands.MixerVolume, 'value')
 

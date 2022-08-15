@@ -9,7 +9,7 @@ import {
 	Transition,
 	InputLayer,
 	RouteLayerBase,
-	RouteLayer
+	RouteLayer,
 } from '../'
 import { AMCPCommand, Commands } from 'casparcg-connection'
 import * as _ from 'underscore'
@@ -31,7 +31,7 @@ test('Load a video, then play it', () => {
 		media: 'AMB',
 		playing: false,
 		playTime: 1000,
-		pauseTime: 1000
+		pauseTime: 1000,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -47,8 +47,8 @@ test('Load a video, then play it', () => {
 				layer: 10,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -62,8 +62,8 @@ test('Load a video, then play it', () => {
 			command: Commands.Resume,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 
@@ -78,8 +78,8 @@ test('Load a video, then play it', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -101,8 +101,8 @@ test('Loadbg a video, then play it', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -119,8 +119,8 @@ test('Loadbg a video, then play it', () => {
 				auto: false,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -131,7 +131,7 @@ test('Loadbg a video, then play it', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		layerNo: 10
+		layerNo: 10,
 	}
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -141,8 +141,8 @@ test('Loadbg a video, then play it', () => {
 			command: Commands.Play,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 
@@ -157,8 +157,8 @@ test('Loadbg a video, then play it', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -180,8 +180,8 @@ test('Loadbg a video, then remove it', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -198,8 +198,8 @@ test('Loadbg a video, then remove it', () => {
 				auto: false,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -219,8 +219,8 @@ test('Loadbg a video, then remove it', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				clip: 'EMPTY'
-			}
+				clip: 'EMPTY',
+			},
 		})
 	)
 
@@ -243,8 +243,8 @@ test('Loadbg a video, then remove it', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				clip: 'EMPTY'
-			}
+				clip: 'EMPTY',
+			},
 		})
 	)
 })
@@ -266,8 +266,8 @@ test('Loadbg a video, then loadbg another', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -284,8 +284,8 @@ test('Loadbg a video, then loadbg another', () => {
 				auto: false,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -300,8 +300,8 @@ test('Loadbg a video, then loadbg another', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				clip: 'EMPTY'
-			}
+				clip: 'EMPTY',
+			},
 		})
 	)
 	expect(stripContext(cc[0].cmds[1])).toEqual(
@@ -313,8 +313,8 @@ test('Loadbg a video, then loadbg another', () => {
 				auto: false,
 				clip: 'go1080p25',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -330,8 +330,8 @@ test('Loadbg a video, then loadbg another', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				clip: 'EMPTY'
-			}
+				clip: 'EMPTY',
+			},
 		})
 	)
 })
@@ -353,10 +353,10 @@ test('Loadbg a video with a transition, then play it', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: new TransitionObject('AMB', {
-				inTransition: new Transition(TransitionType.Sting, 'mask_file')
+				inTransition: new Transition(TransitionType.Sting, 'mask_file'),
 			}),
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -376,12 +376,12 @@ test('Loadbg a video with a transition, then play it', () => {
 					transitionType: TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
-						maskFile: 'mask_file'
-					}
+						maskFile: 'mask_file',
+					},
 				},
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -390,11 +390,11 @@ test('Loadbg a video with a transition, then play it', () => {
 		id: 'l1',
 		content: LayerContentType.MEDIA,
 		media: new TransitionObject('AMB', {
-			inTransition: new Transition(TransitionType.Sting, 'mask_file')
+			inTransition: new Transition(TransitionType.Sting, 'mask_file'),
 		}),
 		playing: true,
 		playTime: 1000,
-		layerNo: 10
+		layerNo: 10,
 	}
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -404,8 +404,8 @@ test('Loadbg a video with a transition, then play it', () => {
 			command: Commands.Play,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 
@@ -420,8 +420,8 @@ test('Loadbg a video with a transition, then play it', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -443,8 +443,8 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -461,8 +461,8 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 				auto: false,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -471,11 +471,11 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 		id: 'v0',
 		content: LayerContentType.MEDIA,
 		media: new TransitionObject('AMB', {
-			inTransition: new Transition(TransitionType.Sting, 'mask_file')
+			inTransition: new Transition(TransitionType.Sting, 'mask_file'),
 		}),
 		playing: true,
 		playTime: 1000,
-		layerNo: 10
+		layerNo: 10,
 	}
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -491,12 +491,12 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 					transitionType: TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
-						maskFile: 'mask_file'
-					}
+						maskFile: 'mask_file',
+					},
 				},
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -511,8 +511,8 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -529,7 +529,7 @@ test('Play a video, stop and loadbg another video', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		seek: 0
+		seek: 0,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -544,8 +544,8 @@ test('Play a video, stop and loadbg another video', () => {
 				layer: 10,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -561,8 +561,8 @@ test('Play a video, stop and loadbg another video', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 
 	channel1.layers['10'] = newLayer10
@@ -576,8 +576,8 @@ test('Play a video, stop and loadbg another video', () => {
 			command: Commands.Stop,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 	expect(stripContext(cc[0].cmds[1])).toEqual(
@@ -589,8 +589,8 @@ test('Play a video, stop and loadbg another video', () => {
 				auto: false,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -601,7 +601,7 @@ test('Play a video, stop and loadbg another video', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		layerNo: 10
+		layerNo: 10,
 	}
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
@@ -611,8 +611,8 @@ test('Play a video, stop and loadbg another video', () => {
 			command: Commands.Play,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 
@@ -627,8 +627,8 @@ test('Play a video, stop and loadbg another video', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -650,8 +650,8 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -668,8 +668,8 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 				auto: false,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -680,7 +680,7 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 		playTime: null,
 		playing: true,
 		layerNo: 10,
-		nextUp: layer10.nextUp
+		nextUp: layer10.nextUp,
 	}
 	channel1.layers['10'] = newLayer10
 	cc = getDiff(c, targetState)
@@ -694,8 +694,8 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 				layer: 10,
 				clip: 'CG1080i50',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 	expect(stripContext(cc[0].cmds[1])).toEqual(
@@ -704,8 +704,8 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				clip: 'EMPTY'
-			}
+				clip: 'EMPTY',
+			},
 		})
 	)
 	expect(stripContext(cc[0].cmds[2])).toEqual(
@@ -717,8 +717,8 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 				auto: false,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -733,8 +733,8 @@ test('Loadbg a video, then play another video maintaining the bg', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -757,8 +757,8 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -774,8 +774,8 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 				layer: 10,
 				clip: 'CG1080i50',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 	expect(stripContext(cc[0].cmds[1])).toEqual(
@@ -787,8 +787,8 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 				clip: 'AMB',
 				loop: false,
 				seek: 0,
-				auto: false
-			}
+				auto: false,
+			},
 		})
 	)
 
@@ -798,7 +798,7 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 		media: '',
 		playing: false,
 		layerNo: 10,
-		nextUp: layer10.nextUp
+		nextUp: layer10.nextUp,
 	}
 	channel1.layers['10'] = newLayer10
 	cc = getDiff(c, targetState)
@@ -809,8 +809,8 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 			command: Commands.Stop,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 
@@ -826,8 +826,8 @@ test('Loadbg a video and play another video. stop the foreground while maintaini
 			params: {
 				channel: 1,
 				layer: 10,
-				clip: 'EMPTY'
-			}
+				clip: 'EMPTY',
+			},
 		})
 	)
 })
@@ -850,9 +850,9 @@ test('Loadbg a html-page, then play it', () => {
 			auto: false,
 			content: LayerContentType.HTMLPAGE,
 			media: 'http://superfly.tv',
-			playing: true
+			playing: true,
 			// playTime: 990 // 10s ago
-		}
+		},
 	}
 
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
@@ -867,8 +867,8 @@ test('Loadbg a html-page, then play it', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				url: 'http://superfly.tv'
-			}
+				url: 'http://superfly.tv',
+			},
 		})
 	)
 
@@ -878,7 +878,7 @@ test('Loadbg a html-page, then play it', () => {
 		content: LayerContentType.HTMLPAGE,
 		layerNo: 10,
 		media: 'http://superfly.tv',
-		playTime: 1000
+		playTime: 1000,
 	}
 
 	cc = getDiff(c, targetState)
@@ -890,8 +890,8 @@ test('Loadbg a html-page, then play it', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				url: 'http://superfly.tv'
-			}
+				url: 'http://superfly.tv',
+			},
 		})
 	)
 
@@ -906,8 +906,8 @@ test('Loadbg a html-page, then play it', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -933,12 +933,12 @@ test('Loadbg an input, then play it', () => {
 			input: {
 				device: 1,
 				format: '720p5000',
-				channelLayout: 'stereo'
+				channelLayout: 'stereo',
 			},
-			auto: false
+			auto: false,
 		},
 
-		playTime: null
+		playTime: null,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -953,9 +953,9 @@ test('Loadbg an input, then play it', () => {
 				channel: 1,
 				layer: 10,
 				// channelLayout: 'stereo',
-				device: 1
+				device: 1,
 				// format: '720p5000',
-			}
+			},
 		})
 	)
 
@@ -971,8 +971,8 @@ test('Loadbg an input, then play it', () => {
 		input: {
 			device: 1,
 			format: '720p5000',
-			channelLayout: 'stereo'
-		}
+			channelLayout: 'stereo',
+		},
 	}
 
 	channel1.layers['10'] = newLayer10
@@ -987,9 +987,9 @@ test('Loadbg an input, then play it', () => {
 				channel: 1,
 				layer: 10,
 				// channelLayout: 'stereo',
-				device: 1
+				device: 1,
 				// format: '720p5000',
-			}
+			},
 		})
 	)
 
@@ -1004,8 +1004,8 @@ test('Loadbg an input, then play it', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })
@@ -1033,11 +1033,11 @@ test('Loadbg a Route, then change it', () => {
 
 			route: {
 				channel: 2,
-				layer: 15
+				layer: 15,
 			},
-			auto: false
+			auto: false,
 		},
-		playTime: null // playtime is null because it is irrelevant
+		playTime: null, // playtime is null because it is irrelevant
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -1053,21 +1053,19 @@ test('Loadbg a Route, then change it', () => {
 				layer: 10,
 				route: {
 					channel: 2,
-					layer: 15
+					layer: 15,
 				},
 				// channelLayout: undefined,
-				mode: undefined
+				mode: undefined,
 				// noClear: false
-			}
+			},
 		})
 	)
 
 	expect(c.ccgState.getState().channels['1'].layers['10'].nextUp).toBeTruthy()
-	expect(
-		(c.ccgState.getState().channels['1'].layers['10'].nextUp! as RouteLayerBase).route
-	).toMatchObject({
+	expect((c.ccgState.getState().channels['1'].layers['10'].nextUp! as RouteLayerBase).route).toMatchObject({
 		channel: 2,
-		layer: 15
+		layer: 15,
 	})
 	;(layer10.nextUp! as RouteLayerBase).route!.layer = 20
 
@@ -1082,12 +1080,12 @@ test('Loadbg a Route, then change it', () => {
 				layer: 10,
 				route: {
 					channel: 2,
-					layer: 20
+					layer: 20,
 				},
 				// channelLayout: undefined,
-				mode: undefined
+				mode: undefined,
 				// noClear: false
-			}
+			},
 		})
 	)
 })
@@ -1113,12 +1111,12 @@ test('Loadbg a Route, then play it', () => {
 
 			route: {
 				channel: 2,
-				layer: 15
+				layer: 15,
 			},
 			delay: 100,
-			auto: false
+			auto: false,
 		},
-		playTime: null // playtime is null because it is irrelevant
+		playTime: null, // playtime is null because it is irrelevant
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -1134,13 +1132,13 @@ test('Loadbg a Route, then play it', () => {
 				layer: 10,
 				route: {
 					channel: 2,
-					layer: 15
+					layer: 15,
 				},
 				// channelLayout: undefined,
 				mode: undefined,
-				framesDelay: 5
+				framesDelay: 5,
 				// noClear: false
-			}
+			},
 		})
 	)
 
@@ -1155,10 +1153,10 @@ test('Loadbg a Route, then play it', () => {
 
 		route: {
 			channel: 2,
-			layer: 15
+			layer: 15,
 		},
 		delay: 100,
-		playTime: null
+		playTime: null,
 	}
 	channel1.layers['10'] = playLayer10
 	cc = getDiff(c, targetState)
@@ -1169,8 +1167,8 @@ test('Loadbg a Route, then play it', () => {
 			command: Commands.Play,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 
@@ -1185,8 +1183,8 @@ test('Loadbg a Route, then play it', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })

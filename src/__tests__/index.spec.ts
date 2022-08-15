@@ -12,7 +12,7 @@ import {
 	EmptyLayer,
 	RecordLayer,
 	// FunctionLayer,
-	Mixer
+	Mixer,
 } from '../'
 import { getCasparCGState, initState, getDiff, initStateMS, stripContext } from './util'
 
@@ -105,7 +105,7 @@ test('Record to a file', () => {
 		media: 'OUTPUT.mp4',
 		playing: true,
 		encoderOptions: '--fastdecode',
-		playTime: -4000
+		playTime: -4000,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -119,8 +119,8 @@ test('Record to a file', () => {
 			params: {
 				channel: 1,
 				consumer: 'FILE',
-				parameters: 'OUTPUT.mp4 --fastdecode'
-			}
+				parameters: 'OUTPUT.mp4 --fastdecode',
+			},
 		})
 	)
 
@@ -137,8 +137,8 @@ test('Record to a file', () => {
 			params: {
 				channel: 1,
 				consumer: 'FILE',
-				parameters: 'OUTPUT.mp4 --fastdecode'
-			}
+				parameters: 'OUTPUT.mp4 --fastdecode',
+			},
 		})
 	)
 
@@ -153,8 +153,8 @@ test('Record to a file', () => {
 			command: Commands.Remove,
 			params: {
 				channel: 1,
-				consumer: 'FILE'
-			}
+				consumer: 'FILE',
+			},
 		})
 	)
 })
@@ -236,12 +236,12 @@ test('Bundle commands', () => {
 		[
 			{
 				videoMode: 'PAL',
-				fps: 50
+				fps: 50,
 			},
 			{
 				videoMode: 'PAL',
-				fps: 50
-			}
+				fps: 50,
+			},
 		],
 		c.time
 	)
@@ -257,7 +257,7 @@ test('Bundle commands', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		seek: 0
+		seek: 0,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer110 } }
 	const layer210: MediaLayer = {
@@ -267,7 +267,7 @@ test('Bundle commands', () => {
 		media: 'AMB2',
 		playing: true,
 		playTime: 1000,
-		seek: 0
+		seek: 0,
 	}
 	const channel2: Channel = { channelNo: 2, layers: { '10': layer210 } }
 	const targetState: State = { channels: { '1': channel1, '2': channel2 } }
@@ -284,8 +284,8 @@ test('Bundle commands', () => {
 				layer: 10,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 	expect(cc[1].cmds).toHaveLength(1)
@@ -297,8 +297,8 @@ test('Bundle commands', () => {
 				layer: 10,
 				clip: 'AMB2',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -312,15 +312,15 @@ test('Bundle commands', () => {
 			bottomRightX: 1,
 			bottomRightY: 1,
 			bottomLeftX: 0,
-			bottomLeftY: 1
+			bottomLeftY: 1,
 		},
-		bundleWithCommands: 1234
+		bundleWithCommands: 1234,
 	}
 	layer110.mixer = mixer110
 
 	const mixer210: Mixer = {
 		saturation: 0.5,
-		bundleWithCommands: 1234
+		bundleWithCommands: 1234,
 	}
 	layer210.mixer = mixer210
 	cc = getDiff(c, targetState)
@@ -342,9 +342,9 @@ test('Bundle commands', () => {
 				bottomRightY: 1,
 				bottomLeftX: 0,
 				bottomLeftY: 1,
-				defer: true
+				defer: true,
 				// bundleWithCommands: 1234
-			}
+			},
 		})
 	),
 		expect(stripContext(cc[2].cmds[1])).toEqual(
@@ -354,25 +354,25 @@ test('Bundle commands', () => {
 					channel: 2,
 					layer: 10,
 					value: 0.5,
-					defer: true
+					defer: true,
 					// bundleWithCommands: 1234
-				}
+				},
 			})
 		),
 		expect(stripContext(cc[2].cmds[2])).toEqual(
 			literal<AMCPCommand>({
 				command: Commands.MixerCommit,
 				params: {
-					channel: 1
-				}
+					channel: 1,
+				},
 			})
 		)
 	expect(stripContext(cc[2].cmds[3])).toEqual(
 		literal<AMCPCommand>({
 			command: Commands.MixerCommit,
 			params: {
-				channel: 2
-			}
+				channel: 2,
+			},
 		})
 	)
 })
@@ -392,8 +392,8 @@ test('Prioritize commands', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -411,8 +411,8 @@ test('Prioritize commands', () => {
 				clip: 'AMB',
 				// noClear: false,
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -428,8 +428,8 @@ test('Prioritize commands', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	channel1.layers['8'] = layer8
 	// Then play a new video:
@@ -440,7 +440,7 @@ test('Prioritize commands', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		seek: 0
+		seek: 0,
 	}
 	channel1.layers['9'] = layer9
 	// Start playing the preloaded video:
@@ -450,7 +450,7 @@ test('Prioritize commands', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		layerNo: 10
+		layerNo: 10,
 	}
 	cmds = CasparCGState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	// Note that the order should be reversed: first play 1-10, then play 1-9 amb, then loadbg 1-8 amb
@@ -460,8 +460,8 @@ test('Prioritize commands', () => {
 			command: Commands.Play,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 	expect(stripContext(cmds[1])).toEqual(
@@ -472,8 +472,8 @@ test('Prioritize commands', () => {
 				layer: 9,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 	expect(stripContext(cmds[2])).toEqual(
@@ -486,8 +486,8 @@ test('Prioritize commands', () => {
 				clip: 'AMB',
 				// noClear: false,
 				loop: false,
-				seek: 0
-			}
+				seek: 0,
+			},
 		})
 	)
 
@@ -502,8 +502,8 @@ test('Prioritize commands', () => {
 			command: Commands.Clear,
 			params: {
 				channel: 1,
-				layer: 10
-			}
+				layer: 10,
+			},
 		})
 	)
 })

@@ -11,7 +11,7 @@ import {
 	fixPlayCommandInput,
 	time2FramesChannel,
 	addCommands,
-	literal
+	literal,
 } from '../util'
 import { InternalState } from '../stateObjectStorage'
 import {
@@ -26,8 +26,7 @@ import {
 	FunctionLayer,
 	NextUp,
 	Transition,
-	TransitionObject,
-	MediaLayerBase
+	MediaLayerBase,
 } from '../api'
 import { OptionsInterface, DiffCommands } from '../casparCGState'
 import { AMCPCommand, CallCommand, Commands, PlayCommand, ResumeCommand } from 'casparcg-connection'
@@ -67,7 +66,7 @@ function diffForeground(
 				'playing',
 				'channelLayout',
 				'vfilter',
-				'afilter'
+				'afilter',
 			]
 			// Only diff playTime if the new state cares about the value
 			if (nl.playTime !== null) attrs.push('playTime')
@@ -135,14 +134,14 @@ function resolveForegroundState(
 	layer: string,
 	currentTime: number,
 	minTimeSincePlay: number
-) {
+): { commands: DiffCommands; bgCleared: boolean } {
 	const oldChannel = getChannel(oldState, channel)
 	const newChannel = getChannel(newState, channel)
 	const oldLayer = getLayer(oldState, channel, layer)
 	const newLayer = getLayer(newState, channel, layer)
 
 	const diffCmds: DiffCommands = {
-		cmds: []
+		cmds: [],
 	}
 	let bgCleared = false
 
@@ -154,7 +153,7 @@ function resolveForegroundState(
 
 			const options: OptionsInterface = {
 				channel: newChannel.channelNo,
-				layer: newLayer.layerNo
+				layer: newLayer.layerNo,
 			}
 
 			setTransition(options, newChannel, oldLayer, newLayer.media, false)
@@ -175,34 +174,28 @@ function resolveForegroundState(
 						? ol.nextUp
 						: ol
 
-				const oldTimeSincePlay =
-					ol.nextUp && !diffMediaFromBg ? 0 : getTimeSincePlay(ol, currentTime, minTimeSincePlay)
+				const oldTimeSincePlay = ol.nextUp && !diffMediaFromBg ? 0 : getTimeSincePlay(ol, currentTime, minTimeSincePlay)
 
-				const {
-					inPointFrames,
-					lengthFrames,
-					seekFrames,
-					looping,
-					channelLayout
-				} = calculatePlayAttributes(timeSincePlay, nl, newChannel, oldChannel)
+				const { inPointFrames, lengthFrames, seekFrames, looping, channelLayout } = calculatePlayAttributes(
+					timeSincePlay,
+					nl,
+					newChannel,
+					oldChannel
+				)
 
 				const {
 					inPointFrames: oldInPointFrames,
 					lengthFrames: oldLengthFrames,
 					seekFrames: oldSeekFrames,
 					looping: oldLooping,
-					channelLayout: oldChannelLayout
+					channelLayout: oldChannelLayout,
 				} = calculatePlayAttributes(oldTimeSincePlay, oldUseLayer, newChannel, oldChannel)
 
 				if (nl.playing) {
 					nl.pauseTime = 0
 
 					const newMedia = compareAttrs(nl, ol, ['media'])
-					const seekDiff = frames2TimeChannel(
-						Math.abs(oldSeekFrames - seekFrames),
-						newChannel,
-						oldChannel
-					)
+					const seekDiff = frames2TimeChannel(Math.abs(oldSeekFrames - seekFrames), newChannel, oldChannel)
 
 					const seekIsSmall: boolean = seekDiff < minTimeSincePlay
 
@@ -213,8 +206,8 @@ function resolveForegroundState(
 								literal<AMCPCommand>({
 									command: Commands.Resume,
 									params: {
-										...options
-									}
+										...options,
+									},
 								}),
 								`Seek is small (${seekDiff})`,
 								nl
@@ -264,8 +257,8 @@ function resolveForegroundState(
 											// channelLayout: nl.channelLayout,
 											clearOn404: nl.clearOn404,
 											afilter: nl.afilter,
-											vfilter: nl.vfilter
-										})
+											vfilter: nl.vfilter,
+										}),
 									}),
 									context,
 									nl
@@ -278,7 +271,7 @@ function resolveForegroundState(
 								addContext(
 									literal<PlayCommand>({
 										command: Commands.Play,
-										params: { ...options }
+										params: { ...options },
 									}),
 									`No Media diff from bg (${nl.media})`,
 									nl
@@ -300,7 +293,7 @@ function resolveForegroundState(
 									addContext(
 										literal<CallCommand>({
 											command: Commands.Call,
-											params: { ...options, param: 'SEEK', value: seekFrames }
+											params: { ...options, param: 'SEEK', value: seekFrames },
 										}),
 										`Seek diff (${seekFrames}, ${oldSeekFrames})`,
 										nl
@@ -313,7 +306,7 @@ function resolveForegroundState(
 									addContext(
 										literal<CallCommand>({
 											command: Commands.Call,
-											params: { ...options, param: 'LOOP', value: nl.looping ? 1 : 0 }
+											params: { ...options, param: 'LOOP', value: nl.looping ? 1 : 0 },
 										}),
 										`Loop diff (${nl.looping}, ${ol.looping})`,
 										nl
@@ -352,10 +345,10 @@ function resolveForegroundState(
 								literal<AMCPCommand>({
 									command: Commands.Pause,
 									params: {
-										...options
+										...options,
 										// todo: missing param - where is this used?
 										// pauseTime: nl.pauseTime
-									}
+									},
 								}),
 								context,
 								nl
@@ -381,8 +374,8 @@ function resolveForegroundState(
 											clearOn404: nl.clearOn404,
 
 											aFilter: nl.afilter,
-											vFilter: nl.vfilter
-										}
+											vFilter: nl.vfilter,
+										},
 									}),
 									`Load / Pause otherwise (${diff})`,
 									nl
@@ -398,8 +391,8 @@ function resolveForegroundState(
 											...options,
 
 											aFilter: nl.afilter,
-											vFilter: nl.vfilter
-										}
+											vFilter: nl.vfilter,
+										},
 									}),
 									`No Media diff from bg (${nl.media})`,
 									nl
@@ -424,11 +417,11 @@ function resolveForegroundState(
 								template: (nl.media || '').toString(),
 								cgLayer: 1,
 								playOnLoad: nl.playing,
-								data: nl.templateData || undefined
+								data: nl.templateData || undefined,
 
 								// cgStop: nl.cgStop,
 								// templateType: nl.templateType
-							}
+							},
 						}),
 						`Add Template (${diff})`,
 						nl
@@ -446,8 +439,8 @@ function resolveForegroundState(
 							command: Commands.PlayHtml,
 							params: {
 								...options,
-								url: (nl.media || '').toString()
-							}
+								url: (nl.media || '').toString(),
+							},
 						}),
 						`Add HTML page (${diff})`,
 						nl
@@ -458,8 +451,7 @@ function resolveForegroundState(
 				const nl: InputLayer = newLayer as InputLayer
 				// let ol: CasparCG.IInputLayer = oldLayer as CasparCG.IInputLayer
 
-				const inputType: string =
-					(nl.input && nl.media && (nl.media || '').toString()) || 'decklink'
+				const inputType: string = (nl.input && nl.media && (nl.media || '').toString()) || 'decklink'
 				const device: number | null = nl.input && nl.input.device
 				// const format: string | null = (nl.input && nl.input.format) || null
 				// const channelLayout: string | null = (nl.input && nl.input.channelLayout) || null
@@ -477,8 +469,8 @@ function resolveForegroundState(
 									// filter: nl.filter,
 									// channelLayout: channelLayout || undefined,
 									aFilter: nl.afilter,
-									vFilter: nl.vfilter
-								}
+									vFilter: nl.vfilter,
+								},
 							}),
 							`Add decklink (${diff})`,
 							nl
@@ -517,14 +509,14 @@ function resolveForegroundState(
 
 										route: {
 											channel: nl.route.channel,
-											layer: nl.route.layer === null ? undefined : nl.route.layer // todo - replace with "?? undefined"
+											layer: nl.route.layer === null ? undefined : nl.route.layer, // todo - replace with "?? undefined"
 										},
 										mode: mode as RouteMode,
 										framesDelay,
 
 										aFilter: nl.afilter,
-										vFilter: nl.vfilter
-									}
+										vFilter: nl.vfilter,
+									},
 								}),
 								`Route: diffMediaFromBg (${diff})`,
 								nl
@@ -537,8 +529,8 @@ function resolveForegroundState(
 								literal<AMCPCommand>({
 									command: Commands.Play,
 									params: {
-										...options
-									}
+										...options,
+									},
 								}),
 								`Route: no diffMediaFromBg (${diff})`,
 								nl
@@ -563,9 +555,9 @@ function resolveForegroundState(
 							params: {
 								channel: options.channel,
 								consumer: 'FILE',
-								parameters: media + ' ' + encoderOptions
+								parameters: media + ' ' + encoderOptions,
 								// playTime
-							}
+							},
 						}),
 						`Record (${diff})`,
 						nl
@@ -609,7 +601,7 @@ function resolveForegroundState(
 					oldLayer.content === LayerContentType.ROUTE
 					// || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
 				) {
-					if (_.isObject(oldLayer.media) && (oldLayer.media as TransitionObject).outTransition) {
+					if (_.isObject(oldLayer.media) && oldLayer.media.outTransition) {
 						addCommands(
 							diffCmds,
 							addContext(
@@ -619,10 +611,8 @@ function resolveForegroundState(
 										channel: oldChannel.channelNo,
 										layer: oldLayer.layerNo,
 										clip: 'empty',
-										...new Transition(
-											(oldLayer.media as TransitionObject).outTransition
-										).getOptions(oldChannel.fps)
-									}
+										...new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps),
+									},
 								}),
 								`No new content, but old outTransition (${newLayer.content})`,
 								oldLayer
@@ -636,8 +626,8 @@ function resolveForegroundState(
 								literal<AMCPCommand>({
 									command: Commands.Stop,
 									params: {
-										...options
-									}
+										...options,
+									},
 								}),
 								`No new content (${newLayer.content})`,
 								oldLayer
@@ -654,8 +644,8 @@ function resolveForegroundState(
 									command: Commands.CgStop,
 									params: {
 										...options,
-										cgLayer: 1
-									}
+										cgLayer: 1,
+									},
 								}),
 								`No new content, but old cgCgStop (${newLayer.content})`,
 								oldLayer
@@ -667,7 +657,7 @@ function resolveForegroundState(
 							addContext(
 								literal<AMCPCommand>({
 									command: Commands.Clear,
-									params: { ...options }
+									params: { ...options },
 								}),
 								`No new content (${newLayer.content})`,
 								oldLayer
@@ -683,8 +673,8 @@ function resolveForegroundState(
 								command: Commands.Remove,
 								params: {
 									channel: oldChannel.channelNo,
-									consumer: 'FILE'
-								}
+									consumer: 'FILE',
+								},
 							}),
 							`No new content (${newLayer.content})`,
 							oldLayer
@@ -713,8 +703,8 @@ function resolveForegroundState(
 								params: {
 									...options,
 									cgLayer: 1,
-									data: nl.templateData
-								}
+									data: nl.templateData,
+								},
 							}),
 							`Updated templateData`,
 							newLayer
@@ -727,6 +717,6 @@ function resolveForegroundState(
 
 	return {
 		commands: diffCmds,
-		bgCleared
+		bgCleared,
 	}
 }

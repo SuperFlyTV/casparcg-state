@@ -12,13 +12,13 @@ function resolveEmptyState(
 	newState: State,
 	channel: string,
 	layer: string
-) {
+): { commands: DiffCommands } {
 	const oldChannel = getChannel(oldState, channel)
 	const oldLayer = getLayer(oldState, channel, layer)
 	const newLayer = getLayer(newState, channel, layer)
 
 	const diffCmds: DiffCommands = {
-		cmds: []
+		cmds: [],
 	}
 
 	if (
@@ -38,8 +38,8 @@ function resolveEmptyState(
 						command: Commands.Remove,
 						params: {
 							channel: oldChannel.channelNo,
-							consumer: 'FILE'
-						}
+							consumer: 'FILE',
+						},
 					}),
 					`Old was recording`,
 					oldLayer
@@ -53,8 +53,8 @@ function resolveEmptyState(
 								channel: oldChannel.channelNo,
 								layer: oldLayer.layerNo,
 								clip: 'empty',
-								...new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps)
-							}
+								...new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps),
+							},
 						}),
 						`Old was media and has outTransition`,
 						oldLayer
@@ -73,8 +73,8 @@ function resolveEmptyState(
 								params: {
 									channel: oldChannel.channelNo,
 									layer: oldLayer.layerNo,
-									cgLayer: 1
-								}
+									cgLayer: 1,
+								},
 							}),
 							`Old was template and had cgStop`,
 							oldLayer
@@ -105,8 +105,8 @@ function resolveEmptyState(
 							command: Commands.Clear,
 							params: {
 								channel: oldChannel.channelNo,
-								layer: oldLayer.layerNo
-							}
+								layer: oldLayer.layerNo,
+							},
 						}),
 						`Clear old stuff`,
 						oldLayer
@@ -127,8 +127,8 @@ function resolveEmptyState(
 							command: Commands.MixerClear,
 							params: {
 								channel: oldChannel.channelNo,
-								layer: oldLayer.layerNo
-							}
+								layer: oldLayer.layerNo,
+							},
 						}),
 						`Clear mixer after clearing foreground`,
 						oldLayer
@@ -137,11 +137,7 @@ function resolveEmptyState(
 			}
 		}
 	}
-	if (
-		oldLayer.nextUp &&
-		!newLayer.nextUp &&
-		compareAttrs<any>(oldLayer.nextUp, newLayer, ['media'])
-	) {
+	if (oldLayer.nextUp && !newLayer.nextUp && compareAttrs<any>(oldLayer.nextUp, newLayer, ['media'])) {
 		const prevClearCommand = _.find(diffCmds.cmds, (cmd) => {
 			return cmd.command === Commands.Clear
 		})
@@ -156,8 +152,8 @@ function resolveEmptyState(
 						params: {
 							channel: oldChannel.channelNo,
 							layer: oldLayer.layerNo,
-							clip: 'EMPTY'
-						}
+							clip: 'EMPTY',
+						},
 					}),
 					`Clear only old nextUp`,
 					oldLayer

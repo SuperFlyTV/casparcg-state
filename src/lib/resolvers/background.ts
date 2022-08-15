@@ -7,7 +7,7 @@ import {
 	InputLayer,
 	RouteLayer,
 	TransitionObject,
-	NextUpMedia
+	NextUpMedia,
 } from '../api'
 import {
 	getLayer,
@@ -20,7 +20,7 @@ import {
 	fixPlayCommandInput,
 	time2FramesChannel,
 	addCommands,
-	literal
+	literal,
 } from '../util'
 import { OptionsInterface, DiffCommands } from '../casparCGState'
 import { AMCPCommand, Commands, LoadbgRouteCommand } from 'casparcg-connection'
@@ -29,7 +29,12 @@ import { RouteMode } from 'casparcg-connection/dist/enums'
 
 export { diffBackground, resolveBackgroundState }
 
-function diffBackground(oldState: InternalState, newState: State, channel: string, layer: string) {
+function diffBackground(
+	oldState: InternalState,
+	newState: State,
+	channel: string,
+	layer: string
+): { bgDiff: string | null; noClear: boolean } {
 	const oldLayer = getLayer(oldState, channel, layer)
 	const newLayer = getLayer(newState, channel, layer)
 
@@ -82,13 +87,7 @@ function diffBackground(oldState: InternalState, newState: State, channel: strin
 			bgDiff = compareAttrs(nMedia, oMedia, ['inTransition', 'outTransition', 'changeTransition'])
 		}
 
-		if (
-			!bgDiff &&
-			newLayer.nextUp &&
-			'route' in newLayer.nextUp &&
-			oldLayer.nextUp &&
-			'route' in oldLayer.nextUp
-		) {
+		if (!bgDiff && newLayer.nextUp && 'route' in newLayer.nextUp && oldLayer.nextUp && 'route' in oldLayer.nextUp) {
 			const nRoute = newLayer.nextUp.route
 			const oRoute = oldLayer.nextUp.route
 
@@ -106,14 +105,16 @@ function resolveBackgroundState(
 	channel: string,
 	layer: string,
 	forceDiff = false
-) {
+): {
+	commands: DiffCommands
+} {
 	const oldChannel = getChannel(oldState, channel)
 	const newChannel = getChannel(newState, channel)
 	const oldLayer = getLayer(oldState, channel, layer)
 	const newLayer = getLayer(newState, channel, layer)
 
 	const diffCmds: DiffCommands = {
-		cmds: []
+		cmds: [],
 	}
 
 	const diff = diffBackground(oldState, newState, channel, layer)
@@ -124,7 +125,7 @@ function resolveBackgroundState(
 	if (bgDiff) {
 		const options: OptionsInterface = {
 			channel: newChannel.channelNo,
-			layer: newLayer.layerNo
+			layer: newLayer.layerNo,
 		}
 		if (newLayer.nextUp) {
 			// make sure the layer is empty before trying to load something new
@@ -138,8 +139,8 @@ function resolveBackgroundState(
 							params: {
 								channel: newChannel.channelNo,
 								layer: newLayer.layerNo,
-								clip: 'EMPTY'
-							}
+								clip: 'EMPTY',
+							},
 						}),
 						`Old nextUp was set, clear it first (${oldLayer.nextUp.media})`,
 						newLayer
@@ -156,7 +157,7 @@ function resolveBackgroundState(
 					inPointFrames,
 					lengthFrames,
 					seekFrames,
-					looping
+					looping,
 					// channelLayout
 				} = calculatePlayAttributes(0, layer, newChannel, oldChannel)
 
@@ -176,8 +177,8 @@ function resolveBackgroundState(
 								// channelLayout: channelLayout,
 								clearOn404: layer.clearOn404,
 								aFilter: layer.afilter,
-								vFilter: layer.vfilter
-							})
+								vFilter: layer.vfilter,
+							}),
 						}),
 						`Nextup media (${newLayer.nextUp.media})`,
 						newLayer
@@ -192,8 +193,8 @@ function resolveBackgroundState(
 							command: Commands.LoadbgHtml,
 							params: {
 								...options,
-								url: (newLayer.nextUp.media || '').toString()
-							}
+								url: (newLayer.nextUp.media || '').toString(),
+							},
 						}),
 						`Nextup HTML (${newLayer.nextUp.media})`,
 						newLayer
@@ -213,8 +214,8 @@ function resolveBackgroundState(
 								// filter: layer.filter,
 								// channelLayout: layer.input.channelLayout,
 								aFilter: layer.afilter,
-								vFilter: layer.vfilter
-							}
+								vFilter: layer.vfilter,
+							},
 						}),
 						`Nextup Decklink (${layer.input.device})`,
 						newLayer
@@ -237,8 +238,8 @@ function resolveBackgroundState(
 									? Math.floor(time2FramesChannel(layer.delay, newChannel, oldChannel))
 									: undefined,
 								aFilter: layer.afilter,
-								vFilter: layer.vfilter
-							}
+								vFilter: layer.vfilter,
+							},
 						}),
 						`Nextup Route (${layer.route})`,
 						newLayer
@@ -257,6 +258,6 @@ function resolveBackgroundState(
 	}
 
 	return {
-		commands: diffCmds
+		commands: diffCmds,
 	}
 }
