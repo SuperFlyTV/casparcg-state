@@ -80,6 +80,74 @@ test('Load a video, then play it', () => {
 		).serialize()
 	)
 })
+test('Load a video when inPoint is 0', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	const layer10: MediaLayer = {
+		id: 'l0',
+		content: LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: false,
+		seek: 10000,
+		inPoint: 0,
+		length: 20000
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 }, fps: 25 }
+	const targetState: State = { channels: { '1': channel1 } }
+
+	const cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 250,
+				in: 0,
+				length: 500
+			})
+		).serialize()
+	)
+})
+test('Load a video when inPoint is greater than 0', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	const layer10: MediaLayer = {
+		id: 'l0',
+		content: LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: false,
+		seek: 10000,
+		inPoint: 1000,
+		length: 20000
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 }, fps: 25 }
+	const targetState: State = { channels: { '1': channel1 } }
+
+	const cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		fixCommand(
+			new AMCP.LoadCommand({
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 250,
+				in: 25,
+				length: 500
+			})
+		).serialize()
+	)
+})
 test('Loadbg a video, then play it', () => {
 	const c = getCasparCGState()
 	initState(c)
