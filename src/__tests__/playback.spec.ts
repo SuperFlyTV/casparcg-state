@@ -74,7 +74,7 @@ test('Play a video, then stop it', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(
+	expect(stripContext(cc[0].cmds[0])).toEqual(
 		literal<AMCPCommand>({
 			command: Commands.Play,
 			params: {
@@ -1339,7 +1339,7 @@ test('Play a video, then play the same one again', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(stripContext(stripContext(cc[0].cmds[0]))).toEqual(
+	expect(stripContext(cc[0].cmds[0])).toEqual(
 		literal<AMCPCommand>({
 			command: Commands.Play,
 			params: {

@@ -53,7 +53,7 @@ test('externalStorage', () => {
 	const sos = new StateObjectStorage()
 
 	let myExternalStorage: any = {}
-	const fcn = jest.fn((action: string, data: Record<string, any> | null) => {
+	const fcn = jest.fn((action: string, data?: Record<string, any> | null) => {
 		if (action === 'store') {
 			myExternalStorage = data
 		} else if (action === 'fetch') {
