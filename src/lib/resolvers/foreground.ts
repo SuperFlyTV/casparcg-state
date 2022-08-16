@@ -364,6 +364,7 @@ function resolveForegroundState(
 										params: {
 											...options,
 											clip: (nl.media || '').toString(),
+											inPoint: nl.inPoint,
 											seek: seekFrames,
 											length: lengthFrames || undefined,
 											loop: !!nl.looping,

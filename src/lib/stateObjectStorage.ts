@@ -9,10 +9,10 @@ export class StateObjectStorage {
 	private _internalState: InternalState = {
 		channels: {},
 	}
-	private _externalStorage: ((action: string, data?: Record<string, any> | null) => InternalState) | null
+	private _externalStorage?: ((action: string, data?: Record<string, any> | null) => InternalState) | null = null
 
-	assignExternalStorage(fcn: (action: string, data: Record<string, any> | null) => InternalState): void {
-		this._externalStorage = fcn
+	assignExternalStorage(fcn: (action: string, data?: Record<string, any> | null) => InternalState): void {
+		this._externalStorage = fcn ?? null
 	}
 
 	fetchState(): InternalState {

@@ -171,7 +171,7 @@ export function compareAttrs<T extends { [key: string]: any }>(
 						diff1 = diff1.slice(0, 20) + '...'
 					}
 
-					difference = a + ': ' + diff0 + '!==' + diff1
+					difference = a.toString() + ': ' + diff0 + '!==' + diff1
 				}
 			})
 		} else {
@@ -187,7 +187,7 @@ export function compareAttrs<T extends { [key: string]: any }>(
 						diff1 = diff1.slice(0, 20) + '...'
 					}
 
-					difference = a + ': ' + diff0 + '!=' + diff1
+					difference = a.toString() + ': ' + diff0 + '!=' + diff1
 				}
 			})
 		}

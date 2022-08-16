@@ -66,7 +66,7 @@ export class CasparCGState0 {
 	/** */
 	constructor(config?: {
 		getMediaDurationCallback?: (clip: string, callback: (duration: number) => void) => void
-		externalStorage?: (action: string, data: Record<string, any> | null) => InternalState
+		externalStorage?: (action: string, data?: Record<string, any> | null) => InternalState
 		// externalLog?: (arg0?: any, arg1?: any, arg2?: any, arg3?: any) => void;
 	}) {
 		// set the callback for handling media duration query
