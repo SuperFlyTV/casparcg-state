@@ -34,7 +34,7 @@
 		"lint:raw": "eslint --ext .ts --ext .js --ext .tsx --ext .jsx --ignore-pattern dist",
 		"lint": "yarn lint:raw .",
 		"lint-fix": "yarn lint --fix",
-		"license-validate": "yarn sofie-licensecheck --allowPackages \"caniuse-lite@1.0.30001374\""
+		"license-validate": "yarn sofie-licensecheck --allowPackages \"caniuse-lite@1.0.30001374;caniuse-lite@1.0.30001377\""
 	},
 	"scripts-info": {
 		"info": "Display information about the scripts",
