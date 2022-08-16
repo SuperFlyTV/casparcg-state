@@ -111,7 +111,7 @@
 		"resolve"
 	],
 	"dependencies": {
-		"casparcg-connection": "6.0.0-nightly-feat-rewrite-20220809-084227-737e2c00.0",
+		"casparcg-connection": "6.0.0-nightly-feat-rewrite-20220812-123155-68c998a4.0",
 		"fast-clone": "^1.5.13",
 		"underscore": "^1.13.2"
 	},
