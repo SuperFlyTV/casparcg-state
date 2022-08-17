@@ -71,7 +71,7 @@ jobs:
       - name: Check docs generation
         if: matrix.node-version == '16.x'
         run: |
-          yarn docs:test
+          yarn docs
         env:
           CI: true
 
