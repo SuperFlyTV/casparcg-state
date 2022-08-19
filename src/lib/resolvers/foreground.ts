@@ -352,6 +352,7 @@ function resolveForegroundState(
 									new AMCP.LoadCommand(
 										_.extend(options, {
 											clip: (nl.media || '').toString(),
+											in: inPointFrames,
 											seek: seekFrames,
 											length: lengthFrames || undefined,
 											loop: !!nl.looping,
