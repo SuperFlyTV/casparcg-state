@@ -29,7 +29,7 @@ test('bad initializations', () => {
 			],
 			1000
 		)
-	}).toThrowError(/missing.*fps/i)
+	}).toThrow(/missing.*fps/i)
 	expect(() => {
 		const ccgState = new CasparCGState()
 		ccgState.initStateFromChannelInfo(
@@ -40,7 +40,7 @@ test('bad initializations', () => {
 			],
 			1000
 		)
-	}).toThrowError(/missing.*videoMode/i)
+	}).toThrow(/missing.*videoMode/i)
 	expect(() => {
 		const ccgState = new CasparCGState()
 		ccgState.initStateFromChannelInfo(
@@ -52,7 +52,7 @@ test('bad initializations', () => {
 			],
 			1000
 		)
-	}).toThrowError(/fps/i)
+	}).toThrow(/fps/i)
 })
 test('Play a video, then stop it', () => {
 	const c = getCasparCGState()
