@@ -20,7 +20,7 @@
 		"cov-open": "open-cli coverage/lcov-report/index.html",
 		"send-coverage": "codecov",
 		"docs": "yarn typedoc ./src/index.ts",
-		"changelog": "standard-version",
+		"changelog": "sofie-version",
 		"release": "yarn reset && yarn changelog",
 		"release.old": "yarn reset && yarn docs:publish && yarn changelog",
 		"reset": "git clean -dfx && git reset --hard && yarn",
