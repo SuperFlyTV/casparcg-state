@@ -153,13 +153,12 @@ function resolveBackgroundState(
 			if (newLayer.nextUp.content === LayerContentType.MEDIA) {
 				const layer = newLayer.nextUp as MediaLayer & NextUp
 
-				const {
-					inPointFrames,
-					lengthFrames,
-					seekFrames,
-					looping,
-					// channelLayout
-				} = calculatePlayAttributes(0, layer, newChannel, oldChannel)
+				const { inPointFrames, lengthFrames, seekFrames, looping, channelLayout } = calculatePlayAttributes(
+					0,
+					layer,
+					newChannel,
+					oldChannel
+				)
 
 				addCommands(
 					diffCmds,
@@ -174,7 +173,7 @@ function resolveBackgroundState(
 								seek: seekFrames,
 								length: lengthFrames || undefined,
 								loop: !!looping,
-								// channelLayout: channelLayout,
+								channelLayout: channelLayout,
 								clearOn404: layer.clearOn404,
 								aFilter: layer.afilter,
 								vFilter: layer.vfilter,
@@ -210,9 +209,9 @@ function resolveBackgroundState(
 							params: {
 								...options,
 								device: layer.input.device,
-								// format: layer.input.format,
+								format: layer.input.format,
 								// filter: layer.filter,
-								// channelLayout: layer.input.channelLayout,
+								channelLayout: layer.input.channelLayout,
 								aFilter: layer.afilter,
 								vFilter: layer.vfilter,
 							},
@@ -233,7 +232,7 @@ function resolveBackgroundState(
 
 								route: layer.route as LoadbgRouteCommand['params']['route'],
 								mode: layer.mode as RouteMode,
-								// channelLayout: layer.route ? layer.route.channelLayout : undefined,
+								channelLayout: layer.route ? layer.route.channelLayout : undefined,
 								framesDelay: layer.delay
 									? Math.floor(time2FramesChannel(layer.delay, newChannel, oldChannel))
 									: undefined,

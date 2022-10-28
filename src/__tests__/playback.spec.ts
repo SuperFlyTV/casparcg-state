@@ -151,7 +151,7 @@ test('Play a video with the right channelLayout, then stop it', () => {
 				layer: 10,
 				clip: 'AMB',
 				loop: false,
-				// channelLayout: 'TEST_LAYOUT',
+				channelLayout: 'TEST_LAYOUT',
 				seek: 0,
 			},
 		})
@@ -170,7 +170,7 @@ test('Play a video with the right channelLayout, then stop it', () => {
 				layer: 10,
 				clip: 'AMB2',
 				loop: false,
-				// channelLayout: 'TEST_LAYOUT',
+				channelLayout: 'TEST_LAYOUT',
 				seek: 0,
 			},
 		})
@@ -658,6 +658,7 @@ test('Play an input', () => {
 		},
 
 		playTime: null,
+		afilter: 'pan=stereo',
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -671,9 +672,10 @@ test('Play an input', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				// channelLayout: 'stereo',
+				channelLayout: 'stereo',
+				aFilter: 'pan=stereo',
 				device: 1,
-				// format: '720p5000'
+				format: '720p5000',
 			},
 		})
 	)
@@ -1261,7 +1263,7 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 		input: {
 			device: 1,
 			format: '720p5000',
-			// channelLayout: 'stereo'
+			channelLayout: 'stereo',
 		},
 		playing: true,
 		playTime: null,
@@ -1277,9 +1279,9 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 			params: {
 				channel: 1,
 				layer: 10,
-				// channelLayout: undefined,
+				channelLayout: 'stereo',
 				device: 1,
-				// format: '720p5000',
+				format: '720p5000',
 				transition: {
 					transitionType: TransitionType.Mix,
 					direction: Direction.Right,

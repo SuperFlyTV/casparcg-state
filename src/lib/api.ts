@@ -133,7 +133,6 @@ export interface InputLayerBase {
 		format?: string
 		channelLayout?: string
 	}
-	filter?: string
 	afilter?: string
 	vfilter?: string
 	playing: true

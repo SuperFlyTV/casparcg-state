@@ -90,7 +90,7 @@ function diffForeground(
 			const nl: InputLayer = newLayer as InputLayer
 			const ol: InputLayer = oldLayer as InputLayer
 
-			diff = compareAttrs(nl, ol, ['media', 'filter', 'vfilter', 'afilter'])
+			diff = compareAttrs(nl, ol, ['media'])
 
 			setDefaultValue([nl.input, ol.input], ['device', 'format', 'channelLayout'], '')
 
@@ -101,7 +101,7 @@ function diffForeground(
 			const nl: RouteLayer = newLayer as RouteLayer
 			const ol: RouteLayer = oldLayer as RouteLayer
 
-			diff = compareAttrs(nl, ol, ['vfilter', 'afilter'])
+			diff = compareAttrs(nl, ol, [])
 
 			setDefaultValue([nl.route, ol.route], ['channel', 'layer'], 0)
 
@@ -254,7 +254,7 @@ function resolveForegroundState(
 											seek: seekFrames,
 											length: lengthFrames || undefined,
 											loop: !!nl.looping,
-											// channelLayout: nl.channelLayout,
+											channelLayout: nl.channelLayout,
 											clearOn404: nl.clearOn404,
 											afilter: nl.afilter,
 											vfilter: nl.vfilter,
@@ -313,21 +313,23 @@ function resolveForegroundState(
 									)
 								)
 							}
-							// TODO - should we have channel layout anymore?
-							// if (ol.channelLayout !== nl.channelLayout) {
-							// 	addCommands(
-							// 		diffCmds,
-							// 		addContext(
-							// 			new AMCP.CallCommand(
-							// 				_.extend(options, {
-							// 					channelLayout: !!nl.channelLayout
-							// 				})
-							// 			),
-							// 			`ChannelLayout diff (${nl.channelLayout}, ${ol.channelLayout})`,
-							// 			nl
-							// 		)
-							// 	)
-							// }
+							if (ol.channelLayout !== nl.channelLayout) {
+								addCommands(
+									diffCmds,
+									addContext(
+										{
+											command: Commands.Call,
+											params: {
+												...options,
+												param: 'channelLayout',
+												value: nl.channelLayout + '',
+											},
+										},
+										`ChannelLayout diff (${nl.channelLayout}, ${ol.channelLayout})`,
+										nl
+									)
+								)
+							}
 						}
 					}
 				} else {
@@ -371,7 +373,7 @@ function resolveForegroundState(
 
 											// todo - missing params
 											// pauseTime: nl.pauseTime,
-											// channelLayout: nl.channelLayout,
+											channelLayout: nl.channelLayout,
 											clearOn404: nl.clearOn404,
 
 											aFilter: nl.afilter,
@@ -454,8 +456,9 @@ function resolveForegroundState(
 
 				const inputType: string = (nl.input && nl.media && (nl.media || '').toString()) || 'decklink'
 				const device: number | null = nl.input && nl.input.device
-				// const format: string | null = (nl.input && nl.input.format) || null
-				// const channelLayout: string | null = (nl.input && nl.input.channelLayout) || null
+				const format: string | null = (nl.input && nl.input.format) || null
+				console.log('format', format)
+				const channelLayout: string | null = (nl.input && nl.input.channelLayout) || null
 
 				if (inputType === 'decklink') {
 					addCommands(
@@ -466,9 +469,9 @@ function resolveForegroundState(
 								params: {
 									...options,
 									device: device,
-									// format: format || undefined,
+									format: format || undefined,
 									// filter: nl.filter,
-									// channelLayout: channelLayout || undefined,
+									channelLayout: channelLayout || undefined,
 									aFilter: nl.afilter,
 									vFilter: nl.vfilter,
 								},

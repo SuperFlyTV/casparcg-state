@@ -952,9 +952,9 @@ test('Loadbg an input, then play it', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				// channelLayout: 'stereo',
+				channelLayout: 'stereo',
 				device: 1,
-				// format: '720p5000',
+				format: '720p5000',
 			},
 		})
 	)
@@ -986,9 +986,9 @@ test('Loadbg an input, then play it', () => {
 			params: {
 				channel: 1,
 				layer: 10,
-				// channelLayout: 'stereo',
+				channelLayout: 'stereo',
 				device: 1,
-				// format: '720p5000',
+				format: '720p5000',
 			},
 		})
 	)
