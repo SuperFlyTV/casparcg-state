@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.2](https://github.com/SuperFlyTV/casparcg-state/compare/2.1.1...2.1.2) (2022-10-28)
+
+### Bug Fixes
+
+- pass `in` to LoadCommand ([c8da760](https://github.com/SuperFlyTV/casparcg-state/commit/c8da760ba42eba132cbf42bc6b39a31f46da48b6))
+
 ### [2.1.1](https://github.com/SuperFlyTV/casparcg-state/compare/2.1.0...2.1.1) (2022-04-19)
 
 ### Bug Fixes
