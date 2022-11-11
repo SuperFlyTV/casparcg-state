@@ -6,6 +6,7 @@ on:
       - '**'
     tags:
       - '[0-9]+.[0-9]+.[0-9]+*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
 
 jobs:
@@ -17,10 +18,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 14.x
+      - name: Use Node.js 16.x
         uses: actions/setup-node@v1
         with:
-          node-version: 14.x
+          node-version: 16.x
       - name: Prepare Environment
         run: |
           yarn install
@@ -41,12 +42,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [14.x, 16.x, 18.x]
 
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
       - name: Prepare Environment
@@ -64,14 +65,14 @@ jobs:
           CI: true
       - name: Send coverage
         uses: codecov/codecov-action@v2
-        if: matrix.node-version == '14.x'
+        if: matrix.node-version == '16.x'
         with:
           fail_ci_if_error: true
           # name: codecov-umbrella
       - name: Check docs generation
-        if: matrix.node-version == '14.x'
+        if: matrix.node-version == '16.x'
         run: |
-          yarn docs:test
+          yarn docs
         env:
           CI: true
 
@@ -134,6 +135,7 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
           NEW_VERSION=$(node -p "require('./package.json').version")
           yarn publish --access=public --new-version=$NEW_VERSION --network-timeout 100000 --tag ${{ steps.do-publish.outputs.tag }}
+          echo "**Published:** $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
         env:
           CI: true
       - name: Generate docs

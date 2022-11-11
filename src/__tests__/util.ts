@@ -1,6 +1,5 @@
 import { CasparCGState, State } from '../'
 import * as _ from 'underscore'
-import { AMCP } from 'casparcg-connection'
 import { DiffCommandGroups } from '../lib/casparCGState'
 
 export interface CGState {
@@ -28,7 +27,7 @@ export function getCasparCGState(): CGState {
 		},
 		ccgState: new CasparCGState({
 			// externalLog: externalLog
-		})
+		}),
 	}
 }
 export function initState(c: CGState): void {
@@ -36,8 +35,8 @@ export function initState(c: CGState): void {
 		[
 			{
 				videoMode: 'PAL',
-				fps: 50
-			}
+				fps: 50,
+			},
 		],
 		c.time
 	)
@@ -47,17 +46,13 @@ export function initStateMS(c: CGState): void {
 		[
 			{
 				videoMode: 'PAL',
-				fps: 50
-			}
+				fps: 50,
+			},
 		],
 		c.time
 	)
 }
-export function getDiff(
-	c: CGState,
-	targetState: State,
-	_loggingAfter?: boolean
-): DiffCommandGroups {
+export function getDiff(c: CGState, targetState: State, _loggingAfter?: boolean): DiffCommandGroups {
 	const cc = c.ccgState.getDiff(targetState, c.time)
 
 	const s = c.ccgState.getState()
@@ -90,26 +85,6 @@ export function getDiff(
 	// if (loggingAfter) c.log = false
 	return cc
 }
-export function stripContext(c: any) {
+export function stripContext<T extends { context: any }>(c: T): _._Omit<T, 'context'> {
 	return _.omit(c, 'context')
-}
-export function fixCommand(c: any, options?: any) {
-	options = options || {}
-	// @ts-ignore access _objectParams
-	if (c instanceof AMCP.PlayCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
-	if (c instanceof AMCP.LoadCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
-	if (c instanceof AMCP.PauseCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
-	if (c instanceof AMCP.CGAddCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
-	if (c instanceof AMCP.PlayDecklinkCommand) c._objectParams.noClear = !!options.noClear
-	// @ts-ignore access _objectParams
-	if (c instanceof AMCP.PlayHtmlPageCommand) c._objectParams.noClear = !!options.noClear
-
-	_.each(options, (val, key) => {
-		c['_objectParams'][key] = val
-	})
-	return c
 }

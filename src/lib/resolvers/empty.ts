@@ -1,8 +1,8 @@
-import { getChannel, getLayer, addContext, compareAttrs, addCommands } from '../util'
+import { getChannel, getLayer, addContext, compareAttrs, addCommands, literal } from '../util'
 import { InternalState } from '../stateObjectStorage'
 import { State, LayerContentType, Transition, TemplateLayer } from '../api'
 import { AMCPCommandWithContext, DiffCommands } from '../casparCGState'
-import { AMCP } from 'casparcg-connection'
+import { AMCPCommand, Commands } from 'casparcg-connection'
 import _ = require('underscore')
 
 export { resolveEmptyState }
@@ -12,13 +12,13 @@ function resolveEmptyState(
 	newState: State,
 	channel: string,
 	layer: string
-) {
+): { commands: DiffCommands } {
 	const oldChannel = getChannel(oldState, channel)
 	const oldLayer = getLayer(oldState, channel, layer)
 	const newLayer = getLayer(newState, channel, layer)
 
 	const diffCmds: DiffCommands = {
-		cmds: []
+		cmds: [],
 	}
 
 	if (
@@ -34,11 +34,12 @@ function resolveEmptyState(
 
 			if (oldLayer.content === LayerContentType.RECORD) {
 				cmd = addContext(
-					new AMCP.CustomCommand({
-						layer: oldLayer.layerNo,
-						channel: oldChannel.channelNo,
-						command: 'REMOVE ' + oldChannel.channelNo + ' FILE',
-						customCommand: 'remove file'
+					literal<AMCPCommand>({
+						command: Commands.Remove,
+						params: {
+							channel: oldChannel.channelNo,
+							consumer: 'FILE',
+						},
 					}),
 					`Old was recording`,
 					oldLayer
@@ -46,11 +47,14 @@ function resolveEmptyState(
 			} else if (typeof oldLayer.media === 'object' && oldLayer.media !== null) {
 				if (oldLayer.media.outTransition) {
 					cmd = addContext(
-						new AMCP.PlayCommand({
-							channel: oldChannel.channelNo,
-							layer: oldLayer.layerNo,
-							clip: 'empty',
-							...new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps)
+						literal<AMCPCommand>({
+							command: Commands.Play,
+							params: {
+								channel: oldChannel.channelNo,
+								layer: oldLayer.layerNo,
+								clip: 'empty',
+								...new Transition(oldLayer.media.outTransition).getOptions(oldChannel.fps),
+							},
 						}),
 						`Old was media and has outTransition`,
 						oldLayer
@@ -64,10 +68,13 @@ function resolveEmptyState(
 
 					if (ol.cgStop) {
 						cmd = addContext(
-							new AMCP.CGStopCommand({
-								channel: oldChannel.channelNo,
-								layer: oldLayer.layerNo,
-								flashLayer: 1
+							literal<AMCPCommand>({
+								command: Commands.CgStop,
+								params: {
+									channel: oldChannel.channelNo,
+									layer: oldLayer.layerNo,
+									cgLayer: 1,
+								},
 							}),
 							`Old was template and had cgStop`,
 							oldLayer
@@ -94,9 +101,12 @@ function resolveEmptyState(
 				if (!cmd) {
 					// ClearCommand:
 					cmd = addContext(
-						new AMCP.ClearCommand({
-							channel: oldChannel.channelNo,
-							layer: oldLayer.layerNo
+						literal<AMCPCommand>({
+							command: Commands.Clear,
+							params: {
+								channel: oldChannel.channelNo,
+								layer: oldLayer.layerNo,
+							},
 						}),
 						`Clear old stuff`,
 						oldLayer
@@ -113,9 +123,12 @@ function resolveEmptyState(
 				addCommands(
 					diffCmds,
 					addContext(
-						new AMCP.MixerClearCommand({
-							channel: oldChannel.channelNo,
-							layer: oldLayer.layerNo
+						literal<AMCPCommand>({
+							command: Commands.MixerClear,
+							params: {
+								channel: oldChannel.channelNo,
+								layer: oldLayer.layerNo,
+							},
 						}),
 						`Clear mixer after clearing foreground`,
 						oldLayer
@@ -124,13 +137,9 @@ function resolveEmptyState(
 			}
 		}
 	}
-	if (
-		oldLayer.nextUp &&
-		!newLayer.nextUp &&
-		compareAttrs<any>(oldLayer.nextUp, newLayer, ['media'])
-	) {
+	if (oldLayer.nextUp && !newLayer.nextUp && compareAttrs<any>(oldLayer.nextUp, newLayer, ['media'])) {
 		const prevClearCommand = _.find(diffCmds.cmds, (cmd) => {
-			return !!(cmd instanceof AMCP.ClearCommand) || cmd._commandName === 'ClearCommand'
+			return cmd.command === Commands.Clear
 		})
 		if (!prevClearCommand) {
 			// if ClearCommand is run, it clears bg too
@@ -138,10 +147,13 @@ function resolveEmptyState(
 			addCommands(
 				diffCmds,
 				addContext(
-					new AMCP.LoadbgCommand({
-						channel: oldChannel.channelNo,
-						layer: oldLayer.layerNo,
-						clip: 'EMPTY'
+					literal<AMCPCommand>({
+						command: Commands.Loadbg,
+						params: {
+							channel: oldChannel.channelNo,
+							layer: oldLayer.layerNo,
+							clip: 'EMPTY',
+						},
 					}),
 					`Clear only old nextUp`,
 					oldLayer

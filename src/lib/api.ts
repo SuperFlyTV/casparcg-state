@@ -64,7 +64,7 @@ export enum LayerContentType {
 	INPUT = 'input',
 	ROUTE = 'route',
 	RECORD = 'record',
-	FUNCTION = 'function'
+	FUNCTION = 'function',
 }
 export interface MediaLayerBase {
 	/** Media clip name. Could be a filename, a path, or even a color */
@@ -133,7 +133,6 @@ export interface InputLayerBase {
 		format?: string
 		channelLayout?: string
 	}
-	filter?: string
 	afilter?: string
 	vfilter?: string
 	playing: true
@@ -183,11 +182,11 @@ export interface FunctionLayerBase {
 	oscDevice?: number
 	inMessage?: {
 		url: string
-		args?: {}
+		args?: Record<string, unknown>
 	} | null
 	outMessage?: {
 		url: string
-		args?: {}
+		args?: Record<string, unknown>
 	} | null
 }
 export interface FunctionLayer extends LayerBase, FunctionLayerBase {
@@ -204,11 +203,7 @@ export interface EmptyLayer extends LayerBase, EmptyLayerBase {
 
 export type NextUp = NextUpMedia | NextUpHTML | NextUpInput | NextUpRoute
 export interface NextUpBase {
-	content:
-		| LayerContentType.MEDIA
-		| LayerContentType.HTMLPAGE
-		| LayerContentType.INPUT
-		| LayerContentType.ROUTE
+	content: LayerContentType.MEDIA | LayerContentType.HTMLPAGE | LayerContentType.INPUT | LayerContentType.ROUTE
 	id: string
 	mode?: 'BACKGROUND' | 'NEXT'
 }

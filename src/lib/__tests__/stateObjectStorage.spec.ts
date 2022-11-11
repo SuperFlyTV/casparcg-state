@@ -1,7 +1,7 @@
 import { StateObjectStorage, InternalState } from '../stateObjectStorage'
 import { LayerContentType } from '../api'
 
-test('test StateObjectStorage', () => {
+test('StateObjectStorage', () => {
 	const sos = new StateObjectStorage()
 
 	const state0: InternalState = {
@@ -14,11 +14,11 @@ test('test StateObjectStorage', () => {
 					'10': {
 						id: 'abc',
 						layerNo: 1,
-						content: LayerContentType.NOTHING
-					}
-				}
-			}
-		}
+						content: LayerContentType.NOTHING,
+					},
+				},
+			},
+		},
 	}
 
 	sos.storeState(state0)
@@ -27,13 +27,13 @@ test('test StateObjectStorage', () => {
 
 	sos.clearState()
 	const empty: InternalState = {
-		channels: {}
+		channels: {},
 	}
 
 	expect(sos.fetchState()).toMatchObject(empty)
 })
 
-test('test externalStorage', () => {
+test('externalStorage', () => {
 	const state0: InternalState = {
 		channels: {
 			'2': {
@@ -44,16 +44,16 @@ test('test externalStorage', () => {
 					'55': {
 						id: 'abc',
 						layerNo: 1,
-						content: LayerContentType.NOTHING
-					}
-				}
-			}
-		}
+						content: LayerContentType.NOTHING,
+					},
+				},
+			},
+		},
 	}
 	const sos = new StateObjectStorage()
 
 	let myExternalStorage: any = {}
-	const fcn = jest.fn((action: string, data: Record<string, any> | null) => {
+	const fcn = jest.fn((action: string, data?: Record<string, any> | null) => {
 		if (action === 'store') {
 			myExternalStorage = data
 		} else if (action === 'fetch') {

@@ -7,16 +7,12 @@ import { State, Channel, LayerBase } from './api'
  */
 export class StateObjectStorage {
 	private _internalState: InternalState = {
-		channels: {}
+		channels: {},
 	}
-	private _externalStorage:
-		| ((action: string, data?: Record<string, any> | null) => InternalState)
-		| null
+	private _externalStorage?: ((action: string, data?: Record<string, any> | null) => InternalState) | null = null
 
-	assignExternalStorage(
-		fcn: (action: string, data: Record<string, any> | null) => InternalState
-	): void {
-		this._externalStorage = fcn
+	assignExternalStorage(fcn: (action: string, data?: Record<string, any> | null) => InternalState): void {
+		this._externalStorage = fcn ?? null
 	}
 
 	fetchState(): InternalState {
@@ -38,7 +34,7 @@ export class StateObjectStorage {
 			this._externalStorage('clear')
 		} else {
 			this._internalState = {
-				channels: {}
+				channels: {},
 			}
 		}
 	}

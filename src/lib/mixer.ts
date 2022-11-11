@@ -4,10 +4,15 @@ import { TransitionObject } from './transitionObject'
 import { TransitionOptions } from './api'
 
 export interface Chroma {
-	keyer: CCGEnum.Chroma
-	threshold: number
+	enable: boolean
+	targetHue: number
+	hueWidth: number
+	minSaturation: number
+	minBrightness: number
 	softness: number
-	spill: number
+	spillSuppress: number
+	spillSuppressSaturation: number
+	showMask: boolean
 }
 export interface Perspective {
 	topLeftX: number
@@ -51,7 +56,7 @@ export class Mixer {
 
 	bundleWithCommands?: number // special function: bundle and DEFER with other mixer-commands
 
-	public static getValue(val: any) {
+	public static getValue(val: unknown): unknown {
 		if (_.isObject(val) && val.valueOf) return val.valueOf()
 		return val
 	}
@@ -74,32 +79,37 @@ export class Mixer {
 			'saturation',
 			'straightAlpha',
 			'volume',
-			'bundleWithCommands'
+			'bundleWithCommands',
 		]
 	}
 
-	public static getDefaultValues(attr: string): Record<string, any> | number | boolean | null {
+	public static getDefaultValues(attr: string): Record<string, unknown> | number | boolean | string | null {
 		// this is a temporary function, to replaced by some logic from ccg-connection
 		switch (attr) {
 			case 'anchor':
 				return {
 					_spread: true,
 					x: 0,
-					y: 0
+					y: 0,
 				}
 
 			case 'blendmode':
-				return CCGEnum.BlendMode.NORMAL
+				return CCGEnum.BlendMode.Normal
 			case 'brightness':
 				return 1
 
 			case 'chroma':
 				return {
 					_spread: true,
-					keyer: CCGEnum.Chroma.NONE,
-					threshold: 0,
+					enable: false,
+					targetHue: 0,
+					hueWidth: 0,
+					minSaturation: 0,
+					minBrightness: 0,
 					softness: 0,
-					spill: 0
+					spillSuppress: 0,
+					spillSuppressSaturation: 0,
+					showMask: false,
 				}
 
 			case 'clip':
@@ -108,7 +118,7 @@ export class Mixer {
 					x: 0,
 					y: 0,
 					width: 1,
-					height: 1
+					height: 1,
 				}
 			case 'contrast':
 				return 1
@@ -118,7 +128,7 @@ export class Mixer {
 					left: 0,
 					top: 0,
 					right: 0,
-					bottom: 0
+					bottom: 0,
 				}
 			case 'fill':
 				return {
@@ -126,7 +136,7 @@ export class Mixer {
 					x: 0,
 					y: 0,
 					xScale: 1,
-					yScale: 1
+					yScale: 1,
 				}
 			// grid
 			case 'keyer': // Layer mask
@@ -138,7 +148,7 @@ export class Mixer {
 					maxInput: 1,
 					gamma: 1,
 					minOutput: 0,
-					maxOutput: 1
+					maxOutput: 1,
 				}
 			case 'mastervolume':
 				return 1
@@ -155,7 +165,7 @@ export class Mixer {
 					bottomRightX: 1,
 					bottomRightY: 1,
 					bottomLeftX: 0,
-					bottomLeftY: 1
+					bottomLeftY: 1,
 				}
 			case 'rotation':
 				return 0

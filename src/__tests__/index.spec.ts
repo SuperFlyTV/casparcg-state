@@ -1,4 +1,5 @@
-import { AMCP } from 'casparcg-connection'
+import { AMCPCommand, Commands } from 'casparcg-connection'
+import { literal } from '../lib/util'
 
 import {
 	CasparCGState,
@@ -10,10 +11,10 @@ import {
 	Channel,
 	EmptyLayer,
 	RecordLayer,
-	FunctionLayer,
-	Mixer
+	// FunctionLayer,
+	Mixer,
 } from '../'
-import { getCasparCGState, initState, getDiff, initStateMS, stripContext, fixCommand } from './util'
+import { getCasparCGState, initState, getDiff, initStateMS, stripContext } from './util'
 
 // function initState0 (s: CasparCGState, time: number) {
 // 	s.initStateFromChannelInfo([{
@@ -104,7 +105,7 @@ test('Record to a file', () => {
 		media: 'OUTPUT.mp4',
 		playing: true,
 		encoderOptions: '--fastdecode',
-		playTime: -4000
+		playTime: -4000,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -112,7 +113,16 @@ test('Record to a file', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('ADD 1 FILE OUTPUT.mp4 --fastdecode')
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Add,
+			params: {
+				channel: 1,
+				consumer: 'FILE',
+				parameters: 'OUTPUT.mp4 --fastdecode',
+			},
+		})
+	)
 
 	// Start a new recording:
 	c.time = 1010 // Advance the time
@@ -121,7 +131,16 @@ test('Record to a file', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('ADD 1 FILE OUTPUT.mp4 --fastdecode')
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Add,
+			params: {
+				channel: 1,
+				consumer: 'FILE',
+				parameters: 'OUTPUT.mp4 --fastdecode',
+			},
+		})
+	)
 
 	// Remove the layer
 	delete channel1.layers['10']
@@ -129,45 +148,53 @@ test('Record to a file', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]._objectParams.command).toEqual('REMOVE 1 FILE')
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Remove,
+			params: {
+				channel: 1,
+				consumer: 'FILE',
+			},
+		})
+	)
 })
-test('Run a function', () => {
-	const c = getCasparCGState()
-	initState(c)
+// test('Run a function', () => {
+// 	const c = getCasparCGState()
+// 	initState(c)
 
-	let cc: ReturnType<typeof getDiff>
+// 	let cc: ReturnType<typeof getDiff>
 
-	// Play a template file:
+// 	// Play a template file:
 
-	const layer10: FunctionLayer = {
-		id: 'fcn0',
-		content: LayerContentType.FUNCTION,
-		layerNo: 10,
-		media: 'myFunction',
-		executeFcn: 'myFunction', // name of function to execute
-		executeData: 'my cool data',
-		playTime: 995
-	}
-	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
-	const targetState: State = { channels: { '1': channel1 } }
+// 	const layer10: FunctionLayer = {
+// 		id: 'fcn0',
+// 		content: LayerContentType.FUNCTION,
+// 		layerNo: 10,
+// 		media: 'myFunction',
+// 		executeFcn: 'myFunction', // name of function to execute
+// 		executeData: 'my cool data',
+// 		playTime: 995
+// 	}
+// 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+// 	const targetState: State = { channels: { '1': channel1 } }
 
-	cc = getDiff(c, targetState)
-	expect(cc).toHaveLength(1)
-	expect(cc[0].cmds).toHaveLength(1)
-	expect(cc[0].cmds[0]).toMatchObject({
-		_commandName: 'executeFunction',
-		channel: 1,
-		layer: 10,
-		functionName: 'myFunction',
-		functionData: 'my cool data'
-	})
+// 	cc = getDiff(c, targetState)
+// 	expect(cc).toHaveLength(1)
+// 	expect(cc[0].cmds).toHaveLength(1)
+// 	expect(cc[0].cmds[0]).toMatchObject({
+// 		_commandName: 'executeFunction',
+// 		channel: 1,
+// 		layer: 10,
+// 		functionName: 'myFunction',
+// 		functionData: 'my cool data'
+// 	})
 
-	// Remove the layer
-	delete channel1.layers['10']
+// 	// Remove the layer
+// 	delete channel1.layers['10']
 
-	cc = getDiff(c, targetState)
-	expect(cc).toHaveLength(0)
-})
+// 	cc = getDiff(c, targetState)
+// 	expect(cc).toHaveLength(0)
+// })
 // test('Apply commands before init', () => {
 // 	let c = getCasparCGState()
 // 	initState(c)
@@ -209,12 +236,12 @@ test('Bundle commands', () => {
 		[
 			{
 				videoMode: 'PAL',
-				fps: 50
+				fps: 50,
 			},
 			{
 				videoMode: 'PAL',
-				fps: 50
-			}
+				fps: 50,
+			},
 		],
 		c.time
 	)
@@ -230,7 +257,7 @@ test('Bundle commands', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		seek: 0
+		seek: 0,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer110 } }
 	const layer210: MediaLayer = {
@@ -240,7 +267,7 @@ test('Bundle commands', () => {
 		media: 'AMB2',
 		playing: true,
 		playTime: 1000,
-		seek: 0
+		seek: 0,
 	}
 	const channel2: Channel = { channelNo: 2, layers: { '10': layer210 } }
 	const targetState: State = { channels: { '1': channel1, '2': channel2 } }
@@ -248,28 +275,31 @@ test('Bundle commands', () => {
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(2)
 	expect(cc[0].cmds).toHaveLength(1)
+
 	expect(stripContext(cc[0].cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.PlayCommand({
+		literal<AMCPCommand>({
+			command: Commands.Play,
+			params: {
 				channel: 1,
 				layer: 10,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			})
-		).serialize()
+				seek: 0,
+			},
+		})
 	)
 	expect(cc[1].cmds).toHaveLength(1)
 	expect(stripContext(cc[1].cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.PlayCommand({
+		literal<AMCPCommand>({
+			command: Commands.Play,
+			params: {
 				channel: 2,
 				layer: 10,
 				clip: 'AMB2',
 				loop: false,
-				seek: 0
-			})
-		).serialize()
+				seek: 0,
+			},
+		})
 	)
 
 	// change the perspective of video1, and the saturation of video 2 at the same time
@@ -282,15 +312,15 @@ test('Bundle commands', () => {
 			bottomRightX: 1,
 			bottomRightY: 1,
 			bottomLeftX: 0,
-			bottomLeftY: 1
+			bottomLeftY: 1,
 		},
-		bundleWithCommands: 1234
+		bundleWithCommands: 1234,
 	}
 	layer110.mixer = mixer110
 
 	const mixer210: Mixer = {
 		saturation: 0.5,
-		bundleWithCommands: 1234
+		bundleWithCommands: 1234,
 	}
 	layer210.mixer = mixer210
 	cc = getDiff(c, targetState)
@@ -299,8 +329,9 @@ test('Bundle commands', () => {
 	expect(cc[1].cmds).toHaveLength(0)
 	expect(cc[2].cmds).toHaveLength(4)
 	expect(stripContext(cc[2].cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.MixerPerspectiveCommand({
+		literal<AMCPCommand>({
+			command: Commands.MixerPerspective,
+			params: {
 				channel: 1,
 				layer: 10,
 				topLeftX: 0.3,
@@ -312,34 +343,37 @@ test('Bundle commands', () => {
 				bottomLeftX: 0,
 				bottomLeftY: 1,
 				defer: true,
-				bundleWithCommands: 1234
-			})
-		).serialize()
+				// bundleWithCommands: 1234
+			},
+		})
 	),
 		expect(stripContext(cc[2].cmds[1])).toEqual(
-			fixCommand(
-				new AMCP.MixerSaturationCommand({
+			literal<AMCPCommand>({
+				command: Commands.MixerSaturation,
+				params: {
 					channel: 2,
 					layer: 10,
-					saturation: 0.5,
+					value: 0.5,
 					defer: true,
-					bundleWithCommands: 1234
-				})
-			).serialize()
+					// bundleWithCommands: 1234
+				},
+			})
 		),
 		expect(stripContext(cc[2].cmds[2])).toEqual(
-			fixCommand(
-				new AMCP.MixerCommitCommand({
-					channel: 1
-				})
-			).serialize()
+			literal<AMCPCommand>({
+				command: Commands.MixerCommit,
+				params: {
+					channel: 1,
+				},
+			})
 		)
 	expect(stripContext(cc[2].cmds[3])).toEqual(
-		fixCommand(
-			new AMCP.MixerCommitCommand({
-				channel: 2
-			})
-		).serialize()
+		literal<AMCPCommand>({
+			command: Commands.MixerCommit,
+			params: {
+				channel: 2,
+			},
+		})
 	)
 })
 
@@ -358,8 +392,8 @@ test('Prioritize commands', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	const channel1: Channel = { channelNo: 1, fps: 50, layers: { '10': layer10 } }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -368,17 +402,18 @@ test('Prioritize commands', () => {
 
 	expect(cmds).toHaveLength(1)
 	expect(stripContext(cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.LoadbgCommand({
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
 				channel: 1,
 				layer: 10,
 				auto: false,
 				clip: 'AMB',
-				noClear: false,
+				// noClear: false,
 				loop: false,
-				seek: 0
-			})
-		).serialize()
+				seek: 0,
+			},
+		})
 	)
 
 	let oldState = JSON.parse(JSON.stringify(targetState))
@@ -393,8 +428,8 @@ test('Prioritize commands', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
-			auto: false
-		}
+			auto: false,
+		},
 	}
 	channel1.layers['8'] = layer8
 	// Then play a new video:
@@ -405,7 +440,7 @@ test('Prioritize commands', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		seek: 0
+		seek: 0,
 	}
 	channel1.layers['9'] = layer9
 	// Start playing the preloaded video:
@@ -415,42 +450,45 @@ test('Prioritize commands', () => {
 		media: 'AMB',
 		playing: true,
 		playTime: 1000,
-		layerNo: 10
+		layerNo: 10,
 	}
 	cmds = CasparCGState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	// Note that the order should be reversed: first play 1-10, then play 1-9 amb, then loadbg 1-8 amb
 	expect(cmds).toHaveLength(3)
 	expect(stripContext(cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.PlayCommand({
+		literal<AMCPCommand>({
+			command: Commands.Play,
+			params: {
 				channel: 1,
-				layer: 10
-			})
-		).serialize()
+				layer: 10,
+			},
+		})
 	)
 	expect(stripContext(cmds[1])).toEqual(
-		fixCommand(
-			new AMCP.PlayCommand({
+		literal<AMCPCommand>({
+			command: Commands.Play,
+			params: {
 				channel: 1,
 				layer: 9,
 				clip: 'AMB',
 				loop: false,
-				seek: 0
-			})
-		).serialize()
+				seek: 0,
+			},
+		})
 	)
 	expect(stripContext(cmds[2])).toEqual(
-		fixCommand(
-			new AMCP.LoadbgCommand({
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
 				channel: 1,
 				layer: 8,
 				auto: false,
 				clip: 'AMB',
-				noClear: false,
+				// noClear: false,
 				loop: false,
-				seek: 0
-			})
-		).serialize()
+				seek: 0,
+			},
+		})
 	)
 
 	// Remove the video
@@ -460,11 +498,12 @@ test('Prioritize commands', () => {
 	cmds = CasparCGState.diffStatesOrderedCommands(oldState, targetState, c.time)
 	expect(cmds).toHaveLength(1)
 	expect(stripContext(cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.ClearCommand({
+		literal<AMCPCommand>({
+			command: Commands.Clear,
+			params: {
 				channel: 1,
-				layer: 10
-			})
-		).serialize()
+				layer: 10,
+			},
+		})
 	)
 })
