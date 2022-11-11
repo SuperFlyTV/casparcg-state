@@ -11,7 +11,7 @@ import {
 	RouteLayerBase,
 	RouteLayer,
 } from '../'
-import { AMCPCommand, Commands } from 'casparcg-connection'
+import { AMCPCommand, Commands, LoadCommand } from 'casparcg-connection'
 import * as _ from 'underscore'
 import { literal } from '../lib/util'
 import { TransitionType } from 'casparcg-connection/dist/enums'
@@ -95,7 +95,7 @@ test('Load a video when inPoint is 0', () => {
 		playing: false,
 		seek: 10000,
 		inPoint: 0,
-		length: 20000
+		length: 20000,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 }, fps: 25 }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -104,17 +104,18 @@ test('Load a video when inPoint is 0', () => {
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 	expect(stripContext(cc[0].cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.LoadCommand({
+		literal<LoadCommand>({
+			command: Commands.Load,
+			params: {
 				channel: 1,
 				layer: 10,
 				clip: 'AMB',
 				loop: false,
 				seek: 250,
-				in: 0,
-				length: 500
-			})
-		).serialize()
+				inPoint: 0,
+				length: 500,
+			},
+		})
 	)
 })
 test('Load a video when inPoint is greater than 0', () => {
@@ -129,7 +130,7 @@ test('Load a video when inPoint is greater than 0', () => {
 		playing: false,
 		seek: 10000,
 		inPoint: 1000,
-		length: 20000
+		length: 20000,
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 }, fps: 25 }
 	const targetState: State = { channels: { '1': channel1 } }
@@ -138,17 +139,18 @@ test('Load a video when inPoint is greater than 0', () => {
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 	expect(stripContext(cc[0].cmds[0])).toEqual(
-		fixCommand(
-			new AMCP.LoadCommand({
+		literal<LoadCommand>({
+			command: Commands.Load,
+			params: {
 				channel: 1,
 				layer: 10,
 				clip: 'AMB',
 				loop: false,
 				seek: 250,
-				in: 25,
-				length: 500
-			})
-		).serialize()
+				inPoint: 25,
+				length: 500,
+			},
+		})
 	)
 })
 test('Loadbg a video, then play it', () => {
