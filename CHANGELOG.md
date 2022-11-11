@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
+## [3.0.1](http://superfly.tv/compare/v3.0.0...v3.0.1) (Fri Nov 11 2022)
+
+
 ## [3.0.0](http://superfly.tv/compare/2.1.2...v3.0.0) (Fri Nov 11 2022)
 
 ## Breaking changes
