@@ -1334,10 +1334,10 @@ caniuse-lite@^1.0.30001370:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001377.tgz#fa446cef27f25decb0c7420759c9ea17a2221a70"
   integrity sha512-I5XeHI1x/mRSGl96LFOaSk528LA/yZG3m3iQgImGujjO8gotd/DL8QaI1R1h1dg5ATeI2jqPblMpKq4Tr5iKfQ==
 
-casparcg-connection@5.2.0-nightly-feat-rewrite-20221028-094226-a95a5509.0:
-  version "5.2.0-nightly-feat-rewrite-20221028-094226-a95a5509.0"
-  resolved "https://registry.yarnpkg.com/casparcg-connection/-/casparcg-connection-5.2.0-nightly-feat-rewrite-20221028-094226-a95a5509.0.tgz#463c2bad1f7691d6728ff764690005bb09118289"
-  integrity sha512-CAR3zXoAb7ohPLo63/7Ae9EKwgSzpRQB2VrE3LUNGAbYFxc6SnSHEgcwG+dwJGvefxQq8BkvWxONdTAjfFeeTw==
+casparcg-connection@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/casparcg-connection/-/casparcg-connection-6.0.0.tgz#a8739ed5a970414ad4a2b801d24be56a9bcadee1"
+  integrity sha512-eiQd60bkgDNyZnj6qrDWATCNRbABRuQw/kLLO7ax6mOHI6WVbaXh4N22vuNEujJF+6xmXqb9T6Abs4KqJ0UMSQ==
   dependencies:
     eventemitter3 "^4.0.7"
     tslib "^2.4.0"
