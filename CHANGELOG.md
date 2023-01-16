@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.3](https://github.com/SuperFlyTV/casparcg-state/compare/2.1.2...2.1.3) (2023-01-16)
+
+
+### Bug Fixes
+
+* filters from background trigger command ([0fe11d7](https://github.com/SuperFlyTV/casparcg-state/commit/0fe11d72c2ed3a3080e890b60f6712fc6bc8b763))
+
 ### [2.1.2](https://github.com/SuperFlyTV/casparcg-state/compare/2.1.1...2.1.2) (2022-10-28)
 
 ### Bug Fixes
