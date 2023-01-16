@@ -230,10 +230,10 @@ function resolveForegroundState(
 						if (channelLayout !== oldChannelLayout) {
 							context = `ChannelLayout diff (${channelLayout}, ${oldChannelLayout})`
 						} // temporary, until CallCommand with channelLayout is implemented in ccg-conn (& casparcg?)
-						if (ol.afilter !== nl.afilter) {
+						if (oldUseLayer.content !== LayerContentType.MEDIA || oldUseLayer.afilter !== nl.afilter) {
 							context = `AFilter diff ("${ol.afilter}", "${nl.afilter}")`
 						}
-						if (ol.vfilter !== nl.vfilter) {
+						if (oldUseLayer.content !== LayerContentType.MEDIA || oldUseLayer.vfilter !== nl.vfilter) {
 							context = `VFilter diff ("${ol.vfilter}", "${nl.vfilter}")`
 						}
 						if (context) {
