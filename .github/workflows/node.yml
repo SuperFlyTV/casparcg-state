@@ -17,9 +17,9 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js 16.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 16.x
       - name: Prepare Environment
@@ -45,7 +45,7 @@ jobs:
         node-version: [14.x, 16.x, 18.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -66,9 +66,6 @@ jobs:
       - name: Send coverage
         uses: codecov/codecov-action@v2
         if: matrix.node-version == '16.x'
-        with:
-          fail_ci_if_error: true
-          # name: codecov-umbrella
       - name: Check docs generation
         if: matrix.node-version == '16.x'
         run: |
@@ -88,11 +85,11 @@ jobs:
       - test
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Use Node.js 14.x
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: 14.x
       - name: Check release is desired
