@@ -191,3 +191,4 @@ jobs:
         run: |
           yarn validate:dev-dependencies
         env:
+          CI: true
