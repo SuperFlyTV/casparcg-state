@@ -1230,10 +1230,10 @@ caniuse-lite@^1.0.30001449:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001453.tgz#6d3a1501622bf424a3cee5ad9550e640b0de3de8"
   integrity sha512-R9o/uySW38VViaTrOtwfbFEiBFUh7ST3uIG4OEymIG3/uKdHDO4xk/FaqfUw0d+irSUyFPy3dZszf9VvSTPnsA==
 
-casparcg-connection@6.2.0-nightly-master-20240102-111829-2fe75295.0:
-  version "6.2.0-nightly-master-20240102-111829-2fe75295.0"
-  resolved "https://registry.yarnpkg.com/casparcg-connection/-/casparcg-connection-6.2.0-nightly-master-20240102-111829-2fe75295.0.tgz#3262f89cd7b50b57aad13616b2e2a119f0f6289a"
-  integrity sha512-+RLEEaxXA0qVj5XT3iv89X1WIJs8UgyDH/RCL/YB9OhvHv1LPxn9mMLH+6atuAmU77HWZwyZ4Q27sQCuu9U9LA==
+casparcg-connection@6.2.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/casparcg-connection/-/casparcg-connection-6.2.0.tgz#592d45ff5338f99585a873ea863ec014fe36e992"
+  integrity sha512-iFVmaU2BgCiZlClP3j6tVPuab3CUrhXi9ZYz3U1ENDNa6HQBtWfclwdRqdJWhCwrZc+YAFxR31sovuQ+BznVlQ==
   dependencies:
     eventemitter3 "^5.0.1"
     tslib "^2.5.0"

@@ -80,7 +80,7 @@
 		"resolve"
 	],
 	"dependencies": {
-		"casparcg-connection": "6.2.0-nightly-master-20240102-111829-2fe75295.0",
+		"casparcg-connection": "6.2.0",
 		"fast-clone": "^1.5.13",
 		"underscore": "^1.13.6"
 	},
