@@ -107,7 +107,7 @@ export interface TemplateLayerBase {
 }
 export interface TemplateLayer extends LayerBase, TemplateLayerBase {
 	content: LayerContentType.TEMPLATE
-	media: TemplateLayerBase['media']
+	media: string | null
 
 	/** [timestamp] If set, at what point in time the object started playing */
 	playTime: number | null
