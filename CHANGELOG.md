@@ -2,18 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
 
-## [3.0.3](http://superfly.tv/compare/v3.0.2...v3.0.3) (Tue Jan 02 2024)
-
-
-## [3.0.2](http://superfly.tv/compare/v3.0.1...v3.0.2) (Mon Jan 16 2023)
-
+## [3.0.4](http://superfly.tv/compare/v3.0.3...v3.0.4) (Thu Oct 23 2025)
 
 ### Fixes
 
-* filters from background trigger command [f8f66ea](http://superfly.tv/commit/f8f66ea4455eba11c1eb2f29602e8404279a150a)
+- loadBg inPoint not set correctly [568639d](http://superfly.tv/commit/568639d153655f83af045587a7bc1e0a22f4f02b)
+- Foreground play command uses correct audio- and video filter parameter names. (#91) [ca087ef](http://superfly.tv/commit/ca087ef6f3f2c4260f46f65e065385b78e57ecf5)
+
+## [3.0.3](http://superfly.tv/compare/v3.0.2...v3.0.3) (Tue Jan 02 2024)
+
+## [3.0.2](http://superfly.tv/compare/v3.0.1...v3.0.2) (Mon Jan 16 2023)
+
+### Fixes
+
+- filters from background trigger command [f8f66ea](http://superfly.tv/commit/f8f66ea4455eba11c1eb2f29602e8404279a150a)
 
 ## [3.0.1](http://superfly.tv/compare/v3.0.0...v3.0.1) (Fri Nov 11 2022)
-
 
 ## [3.0.0](http://superfly.tv/compare/2.1.2...v3.0.0) (Fri Nov 11 2022)
 
@@ -21,7 +25,7 @@ All notable changes to this project will be documented in this file. See [Conven
 
 ### Features
 
-* **!** adjust for casparcg-connection rewrite [74dbe01](http://superfly.tv/commit/74dbe012ec5ec9a3ef5dd298632998993229f77f)
+- **!** adjust for casparcg-connection rewrite [74dbe01](http://superfly.tv/commit/74dbe012ec5ec9a3ef5dd298632998993229f77f)
 
 ### [2.1.2](https://github.com/SuperFlyTV/casparcg-state/compare/2.1.1...2.1.2) (2022-10-28)
 
