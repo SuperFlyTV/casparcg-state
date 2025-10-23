@@ -29,7 +29,7 @@ import {
 	MediaLayerBase,
 } from '../api'
 import { OptionsInterface, DiffCommands } from '../casparCGState'
-import { AMCPCommand, CallCommand, Commands, PlayCommand, ResumeCommand } from 'casparcg-connection'
+import { AMCPCommand, CallCommand, Commands, PlayCommand, PlayParameters, ResumeCommand } from 'casparcg-connection'
 import _ = require('underscore')
 import { RouteMode } from 'casparcg-connection/dist/enums'
 
@@ -247,7 +247,7 @@ function resolveForegroundState(
 								addContext(
 									literal<PlayCommand>({
 										command: Commands.Play,
-										params: fixPlayCommandInput({
+										params: fixPlayCommandInput<PlayParameters>({
 											...options,
 											clip: (nl.media || '').toString(),
 											inPoint: inPointFrames,

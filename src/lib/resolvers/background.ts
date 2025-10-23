@@ -23,7 +23,7 @@ import {
 	literal,
 } from '../util'
 import { OptionsInterface, DiffCommands } from '../casparCGState'
-import { AMCPCommand, Commands, LoadbgRouteCommand } from 'casparcg-connection'
+import { AMCPCommand, Commands, LoadbgParameters, LoadbgRouteCommand } from 'casparcg-connection'
 // import _ = require('underscore')
 import { RouteMode } from 'casparcg-connection/dist/enums'
 
@@ -165,11 +165,11 @@ function resolveBackgroundState(
 					addContext(
 						literal<AMCPCommand>({
 							command: Commands.Loadbg,
-							params: fixPlayCommandInput({
+							params: fixPlayCommandInput<LoadbgParameters>({
 								...options,
 								auto: layer.auto,
 								clip: (newLayer.nextUp.media || '').toString(),
-								in: inPointFrames,
+								inPoint: inPointFrames,
 								seek: seekFrames,
 								length: lengthFrames || undefined,
 								loop: !!looping,

@@ -125,6 +125,9 @@ export function getTimeSincePlay(layer: MediaLayer, currentTime: number, minTime
 	}
 	return timeSincePlay
 }
+/**
+ * Remove any undefined values from the returned object
+ */
 export function fixPlayCommandInput<T extends object>(o: T): T {
 	const o2: any = {}
 	for (const key of Object.keys(o)) {
