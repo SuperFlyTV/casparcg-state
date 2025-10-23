@@ -636,7 +636,7 @@ test('Play a video, stop and loadbg another video', () => {
 	}
 
 	channel1.layers['10'] = newLayer10
-	console.log('-----------')
+
 	c.log = true
 	cc = getDiff(c, targetState, true)
 	expect(cc).toHaveLength(1)

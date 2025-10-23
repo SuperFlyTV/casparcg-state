@@ -547,13 +547,12 @@ test('Play a template, update the data & cgstop', () => {
 	)
 
 	// update, with the same data
-	;(layer10.templateData = { var0: 'one' }),
-		// try again, to ensure no new commands are sent:
-		console.log('---------------------------------')
+	layer10.templateData = { var0: 'one' }
+	// try again, to ensure no new commands are sent:
+
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(0)
-	console.log('==================================')
 
 	// Update the data:
 	;(layer10.templateData = { var0: 'two' }), (cc = getDiff(c, targetState))

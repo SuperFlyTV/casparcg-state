@@ -457,7 +457,6 @@ function resolveForegroundState(
 				const inputType: string = (nl.input && nl.media && (nl.media || '').toString()) || 'decklink'
 				const device: number | null = nl.input && nl.input.device
 				const format: string | null = (nl.input && nl.input.format) || null
-				console.log('format', format)
 				const channelLayout: string | null = (nl.input && nl.input.channelLayout) || null
 
 				if (inputType === 'decklink') {
