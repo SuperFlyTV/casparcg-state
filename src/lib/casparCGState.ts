@@ -1,4 +1,3 @@
-import * as _ from 'underscore'
 import {
 	AMCPCommand,
 	Command,
@@ -104,13 +103,13 @@ export class CasparCGState0 {
 	 */
 	initStateFromChannelInfo(channels: Array<ChannelInfo>, currentTime: number): void {
 		const currentState = this._currentStateStorage.fetchState()
-		_.each(channels, (channel: ChannelInfo, i: number) => {
+		channels.forEach((channel: ChannelInfo, i: number) => {
 			if (!channel.videoMode) {
 				throw Error('State: Missing channel.videoMode!')
 			}
 			if (!channel.fps) throw Error('State: Missing channel.fps!')
 
-			if (!(_.isNumber(channel.fps) && channel.fps > 0)) {
+			if (!(typeof channel.fps === 'number' && channel.fps > 0)) {
 				throw Error('State:Bad channel.fps, it should be a number > 0 (got ' + channel.fps + ')!')
 			}
 
@@ -167,9 +166,9 @@ export class CasparCGState0 {
 	 */
 	softClearState(): void {
 		const currentState = this._currentStateStorage.fetchState()
-		_.each(currentState.channels, (channel) => {
+		for (const channel of Object.values(currentState.channels)) {
 			channel.layers = {}
-		})
+		}
 		// Save new state:
 		this._currentStateStorage.storeState(currentState)
 	}
@@ -286,11 +285,12 @@ export class CasparCGState0 {
 		}
 
 		// bundled commands:
-		_.each(bundledCmds, (bundle) => {
-			const channels = _.uniq(bundle.map((c) => (c.params as any).channel))
-			// const channels = _.uniq(_.pluck(bundle, 'channel'))
+		for (const bundle of Object.values(bundledCmds)) {
+			const channels = new Set(bundle.map((c) => Number((c.params as any).channel)))
 
-			_.each(channels, (channel) => {
+			for (const channel of channels) {
+				if (isNaN(channel)) continue
+
 				bundle.push(
 					addContext(
 						literal<AMCPCommand>({
@@ -303,14 +303,14 @@ export class CasparCGState0 {
 						null
 					)
 				)
-			})
+			}
 
 			const diffCmds: DiffCommands = {
 				cmds: [],
 			}
 			addCommands(diffCmds, ...bundle)
 			commands.push(diffCmds)
-		})
+		}
 
 		return commands
 	}

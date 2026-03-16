@@ -1,5 +1,4 @@
 import { CasparCGState, State } from '../'
-import * as _ from 'underscore'
 import { DiffCommandGroups } from '../lib/casparCGState'
 
 export interface CGState {
@@ -85,6 +84,8 @@ export function getDiff(c: CGState, targetState: State, _loggingAfter?: boolean)
 	// if (loggingAfter) c.log = false
 	return cc
 }
-export function stripContext<T extends { context: any }>(c: T): _._Omit<T, 'context'> {
-	return _.omit(c, 'context')
+export function stripContext<T extends { context: any }>(c: T): Omit<T, 'context'> {
+	const cloned = { ...c }
+	delete cloned.context
+	return cloned as Omit<T, 'context'>
 }

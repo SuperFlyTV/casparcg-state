@@ -30,7 +30,6 @@ import {
 } from '../api'
 import { OptionsInterface, DiffCommands } from '../casparCGState'
 import { AMCPCommand, CallCommand, Commands, PlayCommand, PlayParameters, ResumeCommand } from 'casparcg-connection'
-import _ = require('underscore')
 import { RouteMode } from 'casparcg-connection/dist/enums'
 
 export { resolveForegroundState, diffForeground }
@@ -334,7 +333,7 @@ function resolveForegroundState(
 					}
 				} else {
 					let context = ''
-					if (_.isNull(timeSincePlay)) {
+					if (timeSincePlay === null) {
 						context = `TimeSincePlay is null (${diff})`
 					}
 					if (nl.pauseTime && timeSincePlay! > minTimeSincePlay) {
@@ -580,13 +579,13 @@ function resolveForegroundState(
 				// 		externalFunction: true
 				// 	}
 				// 	if (nl.executeFcn === 'special_osc') {
-				// 		cmd = _.extend(cmd, {
+				// 		cmd = Object.assign(cmd, {
 				// 			specialFunction: 'osc',
 				// 			oscDevice: nl.oscDevice,
 				// 			message: nl.inMessage
 				// 		})
 				// 	} else {
-				// 		cmd = _.extend(cmd, {
+				// 		cmd = Object.assign(cmd, {
 				// 			functionName: nl.executeFcn,
 				// 			functionData: nl.executeData,
 				// 			functionLayer: nl
@@ -604,7 +603,7 @@ function resolveForegroundState(
 					oldLayer.content === LayerContentType.ROUTE
 					// || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
 				) {
-					if (_.isObject(oldLayer.media) && oldLayer.media.outTransition) {
+					if (oldLayer.media && typeof oldLayer.media === 'object' && oldLayer.media.outTransition) {
 						addCommands(
 							diffCmds,
 							addContext(

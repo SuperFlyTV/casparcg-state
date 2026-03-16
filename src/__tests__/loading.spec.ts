@@ -12,7 +12,6 @@ import {
 	RouteLayer,
 } from '../'
 import { AMCPCommand, Commands, LoadCommand } from 'casparcg-connection'
-import * as _ from 'underscore'
 import { literal } from '../lib/util'
 import { TransitionType } from 'casparcg-connection/dist/enums'
 
@@ -274,7 +273,7 @@ test('Loadbg a video, then remove it', () => {
 	)
 
 	// Remove the nextup
-	const layer10noNext = _.clone(layer10)
+	const layer10noNext = structuredClone(layer10)
 	delete layer10noNext.nextUp
 
 	channel1.layers['10'] = layer10noNext

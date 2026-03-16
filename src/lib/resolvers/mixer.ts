@@ -3,7 +3,6 @@ import { State } from '../api'
 import { AMCPCommandWithContext, DiffCommands } from '../casparCGState'
 import { Mixer } from '../mixer'
 import { compareMixerValues, addContext, getChannel, getLayer, addCommands, setMixerTransition } from '../util'
-import _ = require('underscore')
 import {
 	AMCPCommand,
 	Commands,
@@ -51,7 +50,12 @@ export function resolveMixerState(
 		command: T['command'],
 		subValue?: Array<keyof T['params']> | keyof T['params']
 	): void => {
-		const diff = compareMixerValues(newLayer, oldLayer, attr, _.isArray(subValue) ? (subValue as string[]) : undefined)
+		const diff = compareMixerValues(
+			newLayer,
+			oldLayer,
+			attr,
+			Array.isArray(subValue) ? (subValue as string[]) : undefined
+		)
 		if (diff) {
 			const options: any = {}
 			options.channel = newChannel.channelNo
@@ -60,18 +64,18 @@ export function resolveMixerState(
 			}
 
 			let o: any = Mixer.getValue((newLayer.mixer || {})[attr])
-			if (newLayer.mixer && _.has(newLayer.mixer, attr) && !_.isUndefined(o)) {
+			if (newLayer.mixer && Object.hasOwn(newLayer.mixer, attr) && o !== undefined) {
 				setMixerTransition(options, newChannel, oldLayer, newLayer.mixer, false)
 			} else {
 				setMixerTransition(options, newChannel, oldLayer, newLayer.mixer, true)
 				o = Mixer.getDefaultValues(attr)
 			}
-			if (_.isArray(subValue)) {
-				_.each(subValue, (sv) => {
+			if (Array.isArray(subValue)) {
+				for (const sv of subValue) {
 					options[sv] = o[sv]
-				})
-			} else if (_.isString(subValue)) {
-				if (_.isObject(o) && o._transition) {
+				}
+			} else if (typeof subValue === 'string') {
+				if (o && typeof o === 'object' && o._transition) {
 					options[subValue] = o._value
 				} else {
 					options[subValue] = o

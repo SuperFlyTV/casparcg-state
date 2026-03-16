@@ -10,6 +10,8 @@
 			"casparcg-state": ["./src/index.ts"]
 		},
 		"types": ["node"],
-		"esModuleInterop": true
+		"esModuleInterop": true,
+		"target": "es2022",
+		"lib": ["ES2022"]
 	}
 }

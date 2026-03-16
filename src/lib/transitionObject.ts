@@ -1,6 +1,5 @@
 import { Direction, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
 import { TransitionParameters } from 'casparcg-connection/dist/parameters'
-import * as _ from 'underscore'
 import { TransitionOptions } from './api'
 import { time2Frames } from './util'
 
@@ -21,7 +20,7 @@ export class TransitionObject {
 		}
 	) {
 		this._transition = true
-		if (!_.isUndefined(value)) {
+		if (value !== undefined) {
 			this._value = value
 		}
 		if (options) {
@@ -58,7 +57,7 @@ export class Transition implements TransitionOptions {
 	customOptions: any = undefined
 
 	constructor(
-		typeOrTransition?: TransitionType | object,
+		typeOrTransition?: TransitionType | TransitionOptions,
 		durationOrMaskFile?: number | string,
 		easingOrDelay?: TransitionTween | number,
 		directionOrOverlayFile?: Direction | string,
@@ -67,7 +66,7 @@ export class Transition implements TransitionOptions {
 	) {
 		let type: TransitionType
 
-		if (_.isObject(typeOrTransition)) {
+		if (typeOrTransition && typeof typeOrTransition === 'object') {
 			const t: TransitionOptions = typeOrTransition as TransitionOptions
 			type = t.type as TransitionType
 
