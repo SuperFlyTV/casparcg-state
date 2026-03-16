@@ -15,8 +15,7 @@ import {
 	NextUpMedia,
 } from '../index.js'
 import { getCasparCGState, initState, getDiff, stripContext, initStateMS } from './util.js'
-import { AMCPCommand, Commands } from 'casparcg-connection'
-import { Direction, RouteMode, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
+import { AMCPCommand, Commands, Enum } from 'casparcg-connection'
 import { test, expect } from 'vitest'
 
 test('bad initializations', () => {
@@ -818,7 +817,7 @@ test('Play a BG Route', () => {
 					channel: 2,
 					layer: 15,
 				},
-				mode: RouteMode.Background,
+				mode: Enum.RouteMode.Background,
 			},
 		})
 	)
@@ -991,7 +990,7 @@ test('Play a video, then add mixer attributes', () => {
 				channel: 1,
 				layer: 10,
 				value: 0.62,
-				tween: TransitionTween.LINEAR,
+				tween: Enum.TransitionTween.LINEAR,
 				duration: 25,
 			},
 		})
@@ -1004,7 +1003,7 @@ test('Play a video, then add mixer attributes', () => {
 				layer: 10,
 				value: 2,
 				duration: 25,
-				tween: TransitionTween.LINEAR,
+				tween: Enum.TransitionTween.LINEAR,
 			},
 		})
 	)
@@ -1022,7 +1021,7 @@ test('Play a video, then add mixer attributes', () => {
 				layer: 10,
 				value: 0,
 				duration: 25,
-				tween: TransitionTween.LINEAR,
+				tween: Enum.TransitionTween.LINEAR,
 			},
 		})
 	)
@@ -1042,7 +1041,7 @@ test('Play a video, then add mixer attributes', () => {
 				layer: 10,
 				value: 1,
 				duration: 12,
-				tween: TransitionTween.LINEAR,
+				tween: Enum.TransitionTween.LINEAR,
 			},
 		})
 	)
@@ -1054,7 +1053,7 @@ test('Play a video, then add mixer attributes', () => {
 				layer: 10,
 				value: 1,
 				duration: 12,
-				tween: TransitionTween.LINEAR,
+				tween: Enum.TransitionTween.LINEAR,
 			},
 		})
 	)
@@ -1124,8 +1123,8 @@ test('Play a video with transition, then stop it with transition', () => {
 		content: LayerContentType.MEDIA,
 		layerNo: 10,
 		media: new TransitionObject('AMB', {
-			inTransition: new Transition(TransitionType.Mix, 1000),
-			outTransition: new Transition({ type: TransitionType.Sting, maskFile: 'mask_transition' }),
+			inTransition: new Transition(Enum.TransitionType.Mix, 1000),
+			outTransition: new Transition({ type: Enum.TransitionType.Sting, maskFile: 'mask_transition' }),
 		}),
 		playing: true,
 		playTime: 1000,
@@ -1145,10 +1144,10 @@ test('Play a video with transition, then stop it with transition', () => {
 				loop: false,
 				seek: 0,
 				transition: {
-					transitionType: TransitionType.Mix,
-					direction: Direction.Right,
+					transitionType: Enum.TransitionType.Mix,
+					direction: Enum.Direction.Right,
 					duration: 25,
-					tween: TransitionTween.LINEAR,
+					tween: Enum.TransitionTween.LINEAR,
 				},
 			},
 		})
@@ -1168,7 +1167,7 @@ test('Play a video with transition, then stop it with transition', () => {
 				layer: 10,
 				clip: 'empty',
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask_transition',
@@ -1190,8 +1189,8 @@ test('Play a Route with transition, then stop it with transition', () => {
 		content: LayerContentType.ROUTE,
 		layerNo: 10,
 		media: new TransitionObject('route', {
-			inTransition: new Transition(TransitionType.Mix, 500),
-			outTransition: new Transition(TransitionType.Mix, 1000),
+			inTransition: new Transition(Enum.TransitionType.Mix, 500),
+			outTransition: new Transition(Enum.TransitionType.Mix, 1000),
 		}),
 		route: {
 			channel: 3,
@@ -1214,10 +1213,10 @@ test('Play a Route with transition, then stop it with transition', () => {
 					channel: 3,
 				},
 				transition: {
-					transitionType: TransitionType.Mix,
+					transitionType: Enum.TransitionType.Mix,
 					duration: 12,
-					direction: Direction.Right,
-					tween: TransitionTween.LINEAR,
+					direction: Enum.Direction.Right,
+					tween: Enum.TransitionTween.LINEAR,
 				},
 			},
 		})
@@ -1237,10 +1236,10 @@ test('Play a Route with transition, then stop it with transition', () => {
 				layer: 10,
 				clip: 'empty',
 				transition: {
-					transitionType: TransitionType.Mix,
+					transitionType: Enum.TransitionType.Mix,
 					duration: 50,
-					direction: Direction.Right,
-					tween: TransitionTween.LINEAR,
+					direction: Enum.Direction.Right,
+					tween: Enum.TransitionTween.LINEAR,
 				},
 			},
 		})
@@ -1258,8 +1257,8 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 		content: LayerContentType.INPUT,
 		layerNo: 10,
 		media: new TransitionObject('decklink', {
-			inTransition: new Transition(TransitionType.Mix, 500),
-			outTransition: new Transition(TransitionType.Mix, 1000),
+			inTransition: new Transition(Enum.TransitionType.Mix, 500),
+			outTransition: new Transition(Enum.TransitionType.Mix, 1000),
 		}),
 		input: {
 			device: 1,
@@ -1284,10 +1283,10 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 				device: 1,
 				format: '720p5000',
 				transition: {
-					transitionType: TransitionType.Mix,
-					direction: Direction.Right,
+					transitionType: Enum.TransitionType.Mix,
+					direction: Enum.Direction.Right,
 					duration: 12, // .5 seconds in 50i
-					tween: TransitionTween.LINEAR,
+					tween: Enum.TransitionTween.LINEAR,
 				},
 			},
 		})
@@ -1307,10 +1306,10 @@ test('Play a Decklink-input with transition, then stop it with transition', () =
 				layer: 10,
 				clip: 'empty',
 				transition: {
-					transitionType: TransitionType.Mix,
-					direction: Direction.Right,
+					transitionType: Enum.TransitionType.Mix,
+					direction: Enum.Direction.Right,
 					duration: 50,
-					tween: TransitionTween.LINEAR,
+					tween: Enum.TransitionTween.LINEAR,
 				},
 			},
 		})
@@ -1352,7 +1351,7 @@ test('Play a video, then play the same one again', () => {
 				loop: false,
 				seek: 0,
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask1',
@@ -1383,7 +1382,7 @@ test('Play a video, then play the same one again', () => {
 				loop: false,
 				seek: 0,
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask1',
@@ -1444,7 +1443,7 @@ test('Play a video, then preload and play the same one again', () => {
 				loop: false,
 				seek: 0,
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask1',
@@ -1463,7 +1462,7 @@ test('Play a video, then preload and play the same one again', () => {
 				loop: false,
 				seek: 0,
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask1',

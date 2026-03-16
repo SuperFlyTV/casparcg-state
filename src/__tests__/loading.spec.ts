@@ -12,9 +12,8 @@ import {
 	RouteLayerBase,
 	RouteLayer,
 } from '../index.js'
-import { AMCPCommand, Commands, LoadCommand } from 'casparcg-connection'
+import { AMCPCommand, Commands, LoadCommand, Enum } from 'casparcg-connection'
 import { literal } from '../lib/util.js'
-import { TransitionType } from 'casparcg-connection/dist/enums'
 import { test, expect } from 'vitest'
 
 test('Load a video, then play it', () => {
@@ -424,7 +423,7 @@ test('Loadbg a video with a transition, then play it', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: new TransitionObject('AMB', {
-				inTransition: new Transition(TransitionType.Sting, 'mask_file'),
+				inTransition: new Transition(Enum.TransitionType.Sting, 'mask_file'),
 			}),
 			auto: false,
 		},
@@ -444,7 +443,7 @@ test('Loadbg a video with a transition, then play it', () => {
 				auto: false,
 				clip: 'AMB',
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask_file',
@@ -461,7 +460,7 @@ test('Loadbg a video with a transition, then play it', () => {
 		id: 'l1',
 		content: LayerContentType.MEDIA,
 		media: new TransitionObject('AMB', {
-			inTransition: new Transition(TransitionType.Sting, 'mask_file'),
+			inTransition: new Transition(Enum.TransitionType.Sting, 'mask_file'),
 		}),
 		playing: true,
 		playTime: 1000,
@@ -542,7 +541,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 		id: 'v0',
 		content: LayerContentType.MEDIA,
 		media: new TransitionObject('AMB', {
-			inTransition: new Transition(TransitionType.Sting, 'mask_file'),
+			inTransition: new Transition(Enum.TransitionType.Sting, 'mask_file'),
 		}),
 		playing: true,
 		playTime: 1000,
@@ -559,7 +558,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 				layer: 10,
 				clip: 'AMB',
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask_file',

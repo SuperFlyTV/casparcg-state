@@ -29,8 +29,15 @@ import {
 	MediaLayerBase,
 } from '../api.js'
 import { OptionsInterface, DiffCommands } from '../casparCGState.js'
-import { AMCPCommand, CallCommand, Commands, PlayCommand, PlayParameters, ResumeCommand } from 'casparcg-connection'
-import { RouteMode } from 'casparcg-connection/dist/enums'
+import {
+	AMCPCommand,
+	CallCommand,
+	Commands,
+	PlayCommand,
+	PlayParameters,
+	ResumeCommand,
+	Enum,
+} from 'casparcg-connection'
 
 export { resolveForegroundState, diffForeground }
 
@@ -513,7 +520,7 @@ function resolveForegroundState(
 											channel: nl.route.channel,
 											layer: nl.route.layer === null ? undefined : nl.route.layer, // todo - replace with "?? undefined"
 										},
-										mode: mode as RouteMode,
+										mode: mode as Enum.RouteMode,
 										framesDelay,
 
 										aFilter: nl.afilter,
