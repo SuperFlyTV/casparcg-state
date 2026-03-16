@@ -15,6 +15,7 @@ import {
 import { AMCPCommand, Commands, LoadCommand } from 'casparcg-connection'
 import { literal } from '../lib/util.js'
 import { TransitionType } from 'casparcg-connection/dist/enums'
+import { test, expect } from 'vitest'
 
 test('Load a video, then play it', () => {
 	const c = getCasparCGState()

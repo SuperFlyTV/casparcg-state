@@ -17,6 +17,7 @@ import {
 import { getCasparCGState, initState, getDiff, stripContext, initStateMS } from './util.js'
 import { AMCPCommand, Commands } from 'casparcg-connection'
 import { Direction, RouteMode, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
+import { test, expect } from 'vitest'
 
 test('bad initializations', () => {
 	expect(() => {

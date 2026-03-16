@@ -1,3 +1,5 @@
+/* eslint-disable vitest/expect-expect */
+/* eslint-disable vitest/no-standalone-expect */
 import { CGState, getCasparCGState, initState, getDiff, stripContext } from './util.js'
 import {
 	State,
@@ -12,6 +14,7 @@ import { InternalLayer } from '../lib/stateObjectStorage.js'
 import { AMCPCommand, Commands, Enum } from 'casparcg-connection'
 import { Mixer } from '../lib/mixer.js'
 import { literal } from '../lib/util.js'
+import { describe, test, expect, beforeAll } from 'vitest'
 
 describe('MixerCommands', () => {
 	let c: CGState
@@ -48,21 +51,21 @@ describe('MixerCommands', () => {
 
 		targetState = { channels: { '1': channel1 } }
 		cc = getDiff(c, targetState, false)
-		// expect(cc).toHaveLength(2)
-		// expect(cc[0].cmds).toHaveLength(1)
-		// expect(stripContext(cc[0].cmds[0])).toEqual(
-		// 	literal<AMCPCommand>({
-		// 		command: Commands.Play,
-		// 		params: {
-		// 			channel: 1,
-		// 			layer: 10,
-		// 			clip: 'AMB',
-		// 			loop: false,
-		// 			seek: 0,
-		// 		},
-		// 	})
-		// )
-		// expect(cc[1].cmds).toHaveLength(0)
+		expect(cc).toHaveLength(2)
+		expect(cc[0].cmds).toHaveLength(1)
+		expect(stripContext(cc[0].cmds[0])).toEqual(
+			literal<AMCPCommand>({
+				command: Commands.Play,
+				params: {
+					channel: 1,
+					layer: 10,
+					clip: 'AMB',
+					loop: false,
+					seek: 0,
+				},
+			})
+		)
+		expect(cc[1].cmds).toHaveLength(0)
 	})
 	test('Mixer Anchor', () => {
 		testMixerEffect(
@@ -578,6 +581,7 @@ describe('MixerCommands', () => {
 			})
 		)
 	})
+	// eslint-disable-next-line vitest/no-commented-out-tests
 	// test('Mixer Other transition type', () => {
 	// 	testMixerEffect(
 	// 		c,

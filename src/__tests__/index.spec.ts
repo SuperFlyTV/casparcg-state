@@ -1,5 +1,6 @@
 import { AMCPCommand, Commands } from 'casparcg-connection'
 import { literal } from '../lib/util.js'
+import { test, expect } from 'vitest'
 
 import {
 	CasparCGState,
@@ -45,6 +46,7 @@ test('get version', () => {
 
 	expect(c.ccgState.version).toMatch(/\d+-\d+-\d+ \d+:\d+\d/)
 })
+// eslint-disable-next-line vitest/no-commented-out-tests
 // test('get & set state', () => {
 // 	let c = getCasparCGState()
 // 	initState(c)
@@ -158,6 +160,7 @@ test('Record to a file', () => {
 		})
 	)
 })
+// eslint-disable-next-line vitest/no-commented-out-tests
 // test('Run a function', () => {
 // 	const c = getCasparCGState()
 // 	initState(c)
@@ -195,6 +198,7 @@ test('Record to a file', () => {
 // 	cc = getDiff(c, targetState)
 // 	expect(cc).toHaveLength(0)
 // })
+// eslint-disable-next-line vitest/no-commented-out-tests
 // test('Apply commands before init', () => {
 // 	let c = getCasparCGState()
 // 	initState(c)
