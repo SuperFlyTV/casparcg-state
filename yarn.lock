@@ -2034,11 +2034,12 @@ __metadata:
     "@types/node": "npm:^22.19.15"
     "@types/underscore": "npm:^1.13.0"
     casparcg-connection: "npm:~6.3.3"
-    fast-clone: "npm:^1.5.13"
     jest: "npm:^29.7.0"
     open-cli: "npm:^8.0.0"
+    rfdc: "npm:^1.4.1"
     rimraf: "npm:^6.1.3"
     ts-jest: "npm:^29.4.6"
+    tslib: "npm:^2.8.1"
     typedoc: "npm:^0.23.28"
     typescript: "npm:~4.9.5"
     underscore: "npm:^1.13.8"
@@ -2841,13 +2842,6 @@ __metadata:
   version: 3.1.3
   resolution: "exponential-backoff@npm:3.1.3"
   checksum: 10c0/77e3ae682b7b1f4972f563c6dbcd2b0d54ac679e62d5d32f3e5085feba20483cf28bd505543f520e287a56d4d55a28d7874299941faf637e779a1aa5994d1267
-  languageName: node
-  linkType: hard
-
-"fast-clone@npm:^1.5.13":
-  version: 1.5.13
-  resolution: "fast-clone@npm:1.5.13"
-  checksum: 10c0/8fab639e57b30afa4f28031a9e875d399d3de3a6673bd3ed9dee462d931f2f2309d8079e815f9fe216f8c2ddfd48494883aa495da15e81bdc56e77dc60957140
   languageName: node
   linkType: hard
 
@@ -5458,6 +5452,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rfdc@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "rfdc@npm:1.4.1"
+  checksum: 10c0/4614e4292356cafade0b6031527eea9bc90f2372a22c012313be1dcc69a3b90c7338158b414539be863fa95bfcb2ddcd0587be696841af4e6679d85e62c060c7
+  languageName: node
+  linkType: hard
+
 "rimraf@npm:^3.0.2":
   version: 3.0.2
   resolution: "rimraf@npm:3.0.2"
@@ -6114,7 +6115,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.6.3":
+"tslib@npm:^2.6.3, tslib@npm:^2.8.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62

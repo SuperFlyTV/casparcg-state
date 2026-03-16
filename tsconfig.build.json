@@ -9,6 +9,7 @@
 			"*": ["./node_modules/*"],
 			"casparcg-state": ["./src/index.ts"]
 		},
-		"types": ["node"]
+		"types": ["node"],
+		"esModuleInterop": true
 	}
 }

@@ -8,8 +8,7 @@ import {
 	PlayRouteCommand,
 	PlayHtmlCommand,
 } from 'casparcg-connection'
-// eslint-disable-next-line
-const clone = require('fast-clone')
+import rfdc from 'rfdc'
 
 import { StateObjectStorage, InternalLayer, InternalState, InternalChannel } from './stateObjectStorage'
 import { ChannelInfo, State } from './api'
@@ -19,6 +18,7 @@ import { resolveForegroundState } from './resolvers/foreground'
 import { resolveBackgroundState } from './resolvers/background'
 import { resolveMixerState } from './resolvers/mixer'
 
+const clone = rfdc()
 const MIN_TIME_SINCE_PLAY = 150 // [ms]
 const CasparCGStateVersion = '2017-11-06 19:15'
 
