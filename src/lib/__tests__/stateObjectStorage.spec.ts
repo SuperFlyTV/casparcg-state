@@ -1,5 +1,5 @@
-import { StateObjectStorage, InternalState } from '../stateObjectStorage'
-import { LayerContentType } from '../api'
+import { StateObjectStorage, InternalState } from '../stateObjectStorage.js'
+import { LayerContentType } from '../api.js'
 
 test('StateObjectStorage', () => {
 	const sos = new StateObjectStorage()

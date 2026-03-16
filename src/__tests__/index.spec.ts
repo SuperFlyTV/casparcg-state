@@ -1,5 +1,5 @@
 import { AMCPCommand, Commands } from 'casparcg-connection'
-import { literal } from '../lib/util'
+import { literal } from '../lib/util.js'
 
 import {
 	CasparCGState,
@@ -13,8 +13,8 @@ import {
 	RecordLayer,
 	// FunctionLayer,
 	Mixer,
-} from '../'
-import { getCasparCGState, initState, getDiff, initStateMS, stripContext } from './util'
+} from '../index.js'
+import { getCasparCGState, initState, getDiff, initStateMS, stripContext } from './util.js'
 
 // function initState0 (s: CasparCGState, time: number) {
 // 	s.initStateFromChannelInfo([{
@@ -346,27 +346,27 @@ test('Bundle commands', () => {
 				// bundleWithCommands: 1234
 			},
 		})
-	),
-		expect(stripContext(cc[2].cmds[1])).toEqual(
-			literal<AMCPCommand>({
-				command: Commands.MixerSaturation,
-				params: {
-					channel: 2,
-					layer: 10,
-					value: 0.5,
-					defer: true,
-					// bundleWithCommands: 1234
-				},
-			})
-		),
-		expect(stripContext(cc[2].cmds[2])).toEqual(
-			literal<AMCPCommand>({
-				command: Commands.MixerCommit,
-				params: {
-					channel: 1,
-				},
-			})
-		)
+	)
+	expect(stripContext(cc[2].cmds[1])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.MixerSaturation,
+			params: {
+				channel: 2,
+				layer: 10,
+				value: 0.5,
+				defer: true,
+				// bundleWithCommands: 1234
+			},
+		})
+	)
+	expect(stripContext(cc[2].cmds[2])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.MixerCommit,
+			params: {
+				channel: 1,
+			},
+		})
+	)
 	expect(stripContext(cc[2].cmds[3])).toEqual(
 		literal<AMCPCommand>({
 			command: Commands.MixerCommit,

@@ -12,8 +12,8 @@ import {
 	time2FramesChannel,
 	addCommands,
 	literal,
-} from '../util'
-import { InternalState } from '../stateObjectStorage'
+} from '../util.js'
+import { InternalState } from '../stateObjectStorage.js'
 import {
 	State,
 	LayerContentType,
@@ -27,8 +27,8 @@ import {
 	NextUp,
 	Transition,
 	MediaLayerBase,
-} from '../api'
-import { OptionsInterface, DiffCommands } from '../casparCGState'
+} from '../api.js'
+import { OptionsInterface, DiffCommands } from '../casparCGState.js'
 import { AMCPCommand, CallCommand, Commands, PlayCommand, PlayParameters, ResumeCommand } from 'casparcg-connection'
 import { RouteMode } from 'casparcg-connection/dist/enums'
 
@@ -336,7 +336,7 @@ function resolveForegroundState(
 					if (timeSincePlay === null) {
 						context = `TimeSincePlay is null (${diff})`
 					}
-					if (nl.pauseTime && timeSincePlay! > minTimeSincePlay) {
+					if (nl.pauseTime && typeof timeSincePlay === 'number' && timeSincePlay > minTimeSincePlay) {
 						context = `pauseTime is set (${diff})`
 					}
 					if (context && !compareAttrs(nl, ol, ['media'])) {

@@ -1,8 +1,8 @@
-import { InternalState } from '../stateObjectStorage'
-import { State } from '../api'
-import { AMCPCommandWithContext, DiffCommands } from '../casparCGState'
-import { Mixer } from '../mixer'
-import { compareMixerValues, addContext, getChannel, getLayer, addCommands, setMixerTransition } from '../util'
+import { InternalState } from '../stateObjectStorage.js'
+import { State } from '../api.js'
+import { AMCPCommandWithContext, DiffCommands } from '../casparCGState.js'
+import { Mixer } from '../mixer.js'
+import { compareMixerValues, addContext, getChannel, getLayer, addCommands, setMixerTransition } from '../util.js'
 import {
 	AMCPCommand,
 	Commands,

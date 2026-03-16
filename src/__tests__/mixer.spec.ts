@@ -1,9 +1,17 @@
-import { CGState, getCasparCGState, initState, getDiff, stripContext } from './util'
-import { State, MediaLayer, EmptyLayer, Channel, LayerContentType, LayerBase, AMCPCommandWithContext } from '../'
-import { InternalLayer } from '../lib/stateObjectStorage'
+import { CGState, getCasparCGState, initState, getDiff, stripContext } from './util.js'
+import {
+	State,
+	MediaLayer,
+	EmptyLayer,
+	Channel,
+	LayerContentType,
+	LayerBase,
+	AMCPCommandWithContext,
+} from '../index.js'
+import { InternalLayer } from '../lib/stateObjectStorage.js'
 import { AMCPCommand, Commands, Enum } from 'casparcg-connection'
-import { Mixer } from '../lib/mixer'
-import { literal } from '../lib/util'
+import { Mixer } from '../lib/mixer.js'
+import { literal } from '../lib/util.js'
 
 describe('MixerCommands', () => {
 	let c: CGState
@@ -40,7 +48,6 @@ describe('MixerCommands', () => {
 
 		targetState = { channels: { '1': channel1 } }
 		cc = getDiff(c, targetState, false)
-		cc
 		// expect(cc).toHaveLength(2)
 		// expect(cc[0].cmds).toHaveLength(1)
 		// expect(stripContext(cc[0].cmds[0])).toEqual(

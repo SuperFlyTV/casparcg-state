@@ -1,7 +1,7 @@
-import { getChannel, getLayer, addContext, compareAttrs, addCommands, literal } from '../util'
-import { InternalState } from '../stateObjectStorage'
-import { State, LayerContentType, Transition, TemplateLayer } from '../api'
-import { AMCPCommandWithContext, DiffCommands } from '../casparCGState'
+import { getChannel, getLayer, addContext, compareAttrs, addCommands, literal } from '../util.js'
+import { InternalState } from '../stateObjectStorage.js'
+import { State, LayerContentType, Transition, TemplateLayer } from '../api.js'
+import { AMCPCommandWithContext, DiffCommands } from '../casparCGState.js'
 import { AMCPCommand, Commands } from 'casparcg-connection'
 
 export { resolveEmptyState }
@@ -118,7 +118,7 @@ function resolveEmptyState(
 			}
 
 			const mixerProps = oldLayer.mixer
-			if (mixerProps && Object.values(mixerProps).filter((v) => v !== undefined).length > 0) {
+			if (mixerProps && Object.values<unknown>(mixerProps).filter((v) => v !== undefined).length > 0) {
 				// reset the mixer because otherwise we lose info about the state it is in. (Should the lib user want to keep them, they should use an empty layer)
 				addCommands(
 					diffCmds,

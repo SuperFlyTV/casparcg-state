@@ -1,4 +1,4 @@
-import { State, Channel, LayerBase } from './api'
+import { State, Channel, LayerBase } from './api.js'
 
 /**
  * StateObjectStorage is used for exposing the internal state variable

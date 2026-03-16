@@ -1,4 +1,5 @@
-import { getCasparCGState, initState, getDiff, stripContext } from './util'
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { getCasparCGState, initState, getDiff, stripContext } from './util.js'
 import {
 	MediaLayer,
 	LayerContentType,
@@ -10,9 +11,9 @@ import {
 	InputLayer,
 	RouteLayerBase,
 	RouteLayer,
-} from '../'
+} from '../index.js'
 import { AMCPCommand, Commands, LoadCommand } from 'casparcg-connection'
-import { literal } from '../lib/util'
+import { literal } from '../lib/util.js'
 import { TransitionType } from 'casparcg-connection/dist/enums'
 
 test('Load a video, then play it', () => {

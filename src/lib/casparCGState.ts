@@ -9,13 +9,13 @@ import {
 } from 'casparcg-connection'
 import rfdc from 'rfdc'
 
-import { StateObjectStorage, InternalLayer, InternalState, InternalChannel } from './stateObjectStorage'
-import { ChannelInfo, State } from './api'
-import { addContext, addCommands, literal } from './util'
-import { resolveEmptyState } from './resolvers/empty'
-import { resolveForegroundState } from './resolvers/foreground'
-import { resolveBackgroundState } from './resolvers/background'
-import { resolveMixerState } from './resolvers/mixer'
+import { StateObjectStorage, InternalLayer, InternalState, InternalChannel } from './stateObjectStorage.js'
+import { Channel, ChannelInfo, LayerBase, State } from './api.js'
+import { addContext, addCommands, literal } from './util.js'
+import { resolveEmptyState } from './resolvers/empty.js'
+import { resolveForegroundState } from './resolvers/foreground.js'
+import { resolveBackgroundState } from './resolvers/background.js'
+import { resolveMixerState } from './resolvers/mixer.js'
 
 const clone = rfdc()
 const MIN_TIME_SINCE_PLAY = 150 // [ms]
@@ -166,7 +166,7 @@ export class CasparCGState0 {
 	 */
 	softClearState(): void {
 		const currentState = this._currentStateStorage.fetchState()
-		for (const channel of Object.values(currentState.channels)) {
+		for (const channel of Object.values<InternalChannel>(currentState.channels)) {
 			channel.layers = {}
 		}
 		// Save new state:
@@ -252,8 +252,8 @@ export class CasparCGState0 {
 		} = {}
 
 		// Added/updated things:
-		for (const [channelKey, newChannel] of Object.entries(newState.channels)) {
-			for (const [layerKey, newLayer] of Object.entries(newChannel.layers)) {
+		for (const [channelKey, newChannel] of Object.entries<Channel>(newState.channels)) {
+			for (const [layerKey, newLayer] of Object.entries<LayerBase>(newChannel.layers)) {
 				const fgChanges = resolveForegroundState(
 					oldState,
 					newState,
@@ -277,7 +277,7 @@ export class CasparCGState0 {
 			}
 		}
 		// Removed things:
-		for (const [channelKey, oldChannel] of Object.entries(oldState.channels)) {
+		for (const [channelKey, oldChannel] of Object.entries<InternalChannel>(oldState.channels)) {
 			for (const layerKey of Object.keys(oldChannel.layers)) {
 				const diff = resolveEmptyState(oldState, newState, channelKey, layerKey)
 				if (diff.commands.cmds.length) commands.push(diff.commands)
@@ -285,7 +285,7 @@ export class CasparCGState0 {
 		}
 
 		// bundled commands:
-		for (const bundle of Object.values(bundledCmds)) {
+		for (const bundle of Object.values<AMCPCommandWithContext[]>(bundledCmds)) {
 			const channels = new Set(bundle.map((c) => Number((c.params as any).channel)))
 
 			for (const channel of channels) {

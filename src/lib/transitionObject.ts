@@ -1,7 +1,7 @@
 import { Direction, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
 import { TransitionParameters } from 'casparcg-connection/dist/parameters'
-import { TransitionOptions } from './api'
-import { time2Frames } from './util'
+import { TransitionOptions } from './api.js'
+import { time2Frames } from './util.js'
 
 export class TransitionObject {
 	_transition: true
@@ -67,7 +67,7 @@ export class Transition implements TransitionOptions {
 		let type: TransitionType
 
 		if (typeOrTransition && typeof typeOrTransition === 'object') {
-			const t: TransitionOptions = typeOrTransition as TransitionOptions
+			const t: TransitionOptions = typeOrTransition
 			type = t.type as TransitionType
 
 			const isSting = (type + '').match(/sting/i)

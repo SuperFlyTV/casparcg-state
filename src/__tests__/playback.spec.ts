@@ -13,8 +13,8 @@ import {
 	TransitionObject,
 	Transition,
 	NextUpMedia,
-} from '../'
-import { getCasparCGState, initState, getDiff, stripContext, initStateMS } from './util'
+} from '../index.js'
+import { getCasparCGState, initState, getDiff, stripContext, initStateMS } from './util.js'
 import { AMCPCommand, Commands } from 'casparcg-connection'
 import { Direction, RouteMode, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
 
@@ -555,7 +555,8 @@ test('Play a template, update the data & cgstop', () => {
 	expect(cc[0].cmds).toHaveLength(0)
 
 	// Update the data:
-	;(layer10.templateData = { var0: 'two' }), (cc = getDiff(c, targetState))
+	layer10.templateData = { var0: 'two' }
+	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 	expect(stripContext(cc[0].cmds[0])).toEqual(
