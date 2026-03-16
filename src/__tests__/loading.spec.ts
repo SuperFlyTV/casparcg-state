@@ -14,7 +14,7 @@ import {
 import { AMCPCommand, Commands, LoadCommand } from 'casparcg-connection'
 import * as _ from 'underscore'
 import { literal } from '../lib/util'
-import { TransitionType } from 'casparcg-connection/dist/enums'
+import { TransitionType, ProducerScaleMode } from 'casparcg-connection/dist/enums'
 
 test('Load a video, then play it', () => {
 	const c = getCasparCGState()
@@ -1075,6 +1075,106 @@ test('Loadbg an input, then play it', () => {
 			params: {
 				channel: 1,
 				layer: 10,
+			},
+		})
+	)
+})
+test('Loadbg with scaleMode sends scaleMode in LOADBG command', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	let cc: ReturnType<typeof getDiff>
+
+	const layer10: EmptyLayer = {
+		id: 'e0',
+		content: LayerContentType.NOTHING,
+		media: '',
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			id: 'n0',
+			content: LayerContentType.MEDIA,
+			media: 'AMB',
+			auto: false,
+			scaleMode: ProducerScaleMode.FIT,
+		},
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				scaleMode: ProducerScaleMode.FIT,
+			},
+		})
+	)
+
+	// Changing scaleMode should clear the old nextUp first, then set the new one
+	;(layer10.nextUp as MediaLayer).scaleMode = ProducerScaleMode.FILL
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY',
+			},
+		})
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				scaleMode: ProducerScaleMode.FILL,
+			},
+		})
+	)
+
+	// Removing scaleMode should clear the old nextUp first, then set the new one
+	;(layer10.nextUp as MediaLayer).scaleMode = undefined
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY',
+			},
+		})
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
 			},
 		})
 	)

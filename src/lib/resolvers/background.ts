@@ -60,7 +60,7 @@ function diffBackground(
 
 			setDefaultValue([nl, ol], ['seek', 'length', 'inPoint'], 0)
 
-			bgDiff = compareAttrs(nl, ol, ['media', 'seek', 'length', 'inPoint', 'afilter', 'vfilter'])
+			bgDiff = compareAttrs(nl, ol, ['media', 'seek', 'length', 'inPoint', 'afilter', 'vfilter', 'scaleMode'])
 		}
 
 		if (!bgDiff && newLayer.nextUp.content === LayerContentType.ROUTE) {
@@ -177,6 +177,7 @@ function resolveBackgroundState(
 								clearOn404: layer.clearOn404,
 								aFilter: layer.afilter,
 								vFilter: layer.vfilter,
+								scaleMode: layer.scaleMode,
 							}),
 						}),
 						`Nextup media (${newLayer.nextUp.media})`,

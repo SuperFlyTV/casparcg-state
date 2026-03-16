@@ -1,5 +1,6 @@
 import { TransitionObject, Transition } from './transitionObject'
 import { Mixer as MixerBase } from './mixer'
+import { ProducerScaleMode } from 'casparcg-connection/dist/enums'
 
 export interface Mappings {
 	layers: { [GLayer: string]: Mapping }
@@ -87,6 +88,10 @@ export interface MediaLayerBase {
 
 	afilter?: string
 	vfilter?: string
+	/**
+	 * FFmpeg and image producer scale mode. Since 2.5.0
+	 */
+	scaleMode?: ProducerScaleMode
 }
 export interface MediaLayer extends LayerBase, MediaLayerBase {
 	content: LayerContentType.MEDIA

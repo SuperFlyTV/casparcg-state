@@ -16,7 +16,13 @@ import {
 } from '../'
 import { getCasparCGState, initState, getDiff, stripContext, initStateMS } from './util'
 import { AMCPCommand, Commands } from 'casparcg-connection'
-import { Direction, RouteMode, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
+import {
+	Direction,
+	RouteMode,
+	TransitionTween,
+	TransitionType,
+	ProducerScaleMode,
+} from 'casparcg-connection/dist/enums'
 
 test('bad initializations', () => {
 	expect(() => {
@@ -555,7 +561,7 @@ test('Play a template, update the data & cgstop', () => {
 	expect(cc[0].cmds).toHaveLength(0)
 
 	// Update the data:
-	;(layer10.templateData = { var0: 'two' }), (cc = getDiff(c, targetState))
+	;((layer10.templateData = { var0: 'two' }), (cc = getDiff(c, targetState)))
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(1)
 	expect(stripContext(cc[0].cmds[0])).toEqual(
@@ -1489,6 +1495,79 @@ test('Play a video, then preload and play the same one again', () => {
 			params: {
 				channel: 1,
 				layer: 10,
+			},
+		})
+	)
+})
+test('Play a video with scaleMode FIT', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	let cc: ReturnType<typeof getDiff>
+	const layer10: MediaLayer = {
+		id: 'l0',
+		content: LayerContentType.MEDIA,
+		layerNo: 10,
+		media: 'AMB',
+		playing: true,
+		playTime: 1000,
+		seek: 0,
+		scaleMode: ProducerScaleMode.FIT,
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
+
+	// Play with scaleMode FIT
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Play,
+			params: {
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				scaleMode: ProducerScaleMode.FIT,
+			},
+		})
+	)
+
+	// Changing scaleMode should trigger a new PLAY command
+	layer10.scaleMode = ProducerScaleMode.FILL
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Play,
+			params: {
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				scaleMode: ProducerScaleMode.FILL,
+			},
+		})
+	)
+
+	// No scaleMode - should not include scaleMode in params
+	layer10.scaleMode = undefined
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Play,
+			params: {
+				channel: 1,
+				layer: 10,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
 			},
 		})
 	)
