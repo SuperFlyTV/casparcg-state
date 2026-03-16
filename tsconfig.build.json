@@ -3,15 +3,10 @@
 	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules/**", "src/**/*spec.ts", "src/**/__tests__/*", "src/**/__mocks__/*"],
 	"compilerOptions": {
+		"rootDir": "./src",
 		"outDir": "./dist",
 		"baseUrl": "./",
-		"paths": {
-			"*": ["./node_modules/*"],
-			"casparcg-state": ["./src/index.ts"]
-		},
 		"types": ["node"],
-		"esModuleInterop": true,
-		"target": "es2022",
-		"lib": ["ES2022"]
+		"esModuleInterop": true
 	}
 }

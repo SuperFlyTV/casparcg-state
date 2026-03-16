@@ -9,14 +9,14 @@ import {
 	Transition,
 	State,
 	TransitionOptions,
-} from './api'
-import * as _ from 'underscore'
-import { Mixer } from './mixer'
-import { AMCPCommandWithContext, DiffCommands } from './casparCGState'
+} from './api.js'
+import _ from 'underscore'
+import { Mixer } from './mixer.js'
+import { AMCPCommandWithContext, DiffCommands } from './casparCGState.js'
 // import { Command as CommandNS } from 'casparcg-connection'
 import { AMCPCommand, Commands } from 'casparcg-connection'
 
-import { InternalLayer, InternalState } from './stateObjectStorage'
+import { InternalLayer, InternalState } from './stateObjectStorage.js'
 
 export function frames2Time(frames: number, fps: number | undefined): number {
 	fps = fps || 25 // Set default:
@@ -234,7 +234,7 @@ export function setTransition(
 	oldLayer: LayerBase,
 	content: unknown,
 	isRemove: boolean,
-	isBg?: boolean
+	isBg?: boolean,
 ): void {
 	if (!options) options = {}
 	const comesFromBG = (transitionObj: TransitionOptions) => {
@@ -274,7 +274,7 @@ export function setMixerTransition(
 	channel: Channel,
 	oldLayer: LayerBase,
 	content: unknown,
-	isRemove: boolean
+	isRemove: boolean,
 ): void {
 	if (!options) options = {}
 	const comesFromBG = (transitionObj: TransitionOptions) => {
@@ -330,7 +330,7 @@ export function compareMixerValues(
 	layer: LayerBase,
 	oldLayer: InternalLayer,
 	attr: string,
-	attrs?: Array<string>
+	attrs?: Array<string>,
 ): string | null {
 	const val0: any = Mixer.getValue((layer.mixer || {})[attr])
 	const val1: any = Mixer.getValue((oldLayer.mixer || {})[attr])
