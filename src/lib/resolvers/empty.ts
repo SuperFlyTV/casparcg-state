@@ -1,9 +1,8 @@
-import { getChannel, getLayer, addContext, compareAttrs, addCommands, literal } from '../util'
-import { InternalState } from '../stateObjectStorage'
-import { State, LayerContentType, Transition, TemplateLayer } from '../api'
-import { AMCPCommandWithContext, DiffCommands } from '../casparCGState'
+import { getChannel, getLayer, addContext, compareAttrs, addCommands, literal } from '../util.js'
+import { InternalState } from '../stateObjectStorage.js'
+import { State, LayerContentType, Transition, TemplateLayer } from '../api.js'
+import { AMCPCommandWithContext, DiffCommands } from '../casparCGState.js'
 import { AMCPCommand, Commands } from 'casparcg-connection'
-import _ = require('underscore')
 
 export { resolveEmptyState }
 
@@ -118,7 +117,8 @@ function resolveEmptyState(
 				}
 			}
 
-			if (oldLayer.mixer && !_.isEmpty(oldLayer.mixer)) {
+			const mixerProps = oldLayer.mixer
+			if (mixerProps && Object.values<unknown>(mixerProps).filter((v) => v !== undefined).length > 0) {
 				// reset the mixer because otherwise we lose info about the state it is in. (Should the lib user want to keep them, they should use an empty layer)
 				addCommands(
 					diffCmds,
@@ -138,7 +138,7 @@ function resolveEmptyState(
 		}
 	}
 	if (oldLayer.nextUp && !newLayer.nextUp && compareAttrs<any>(oldLayer.nextUp, newLayer, ['media'])) {
-		const prevClearCommand = _.find(diffCmds.cmds, (cmd) => {
+		const prevClearCommand = diffCmds.cmds.find((cmd) => {
 			return cmd.command === Commands.Clear
 		})
 		if (!prevClearCommand) {

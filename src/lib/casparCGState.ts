@@ -1,4 +1,3 @@
-import * as _ from 'underscore'
 import {
 	AMCPCommand,
 	Command,
@@ -8,17 +7,17 @@ import {
 	PlayRouteCommand,
 	PlayHtmlCommand,
 } from 'casparcg-connection'
-// eslint-disable-next-line
-const clone = require('fast-clone')
+import rfdc from 'rfdc'
 
-import { StateObjectStorage, InternalLayer, InternalState, InternalChannel } from './stateObjectStorage'
-import { ChannelInfo, State } from './api'
-import { addContext, addCommands, literal } from './util'
-import { resolveEmptyState } from './resolvers/empty'
-import { resolveForegroundState } from './resolvers/foreground'
-import { resolveBackgroundState } from './resolvers/background'
-import { resolveMixerState } from './resolvers/mixer'
+import { StateObjectStorage, InternalLayer, InternalState, InternalChannel } from './stateObjectStorage.js'
+import { Channel, ChannelInfo, LayerBase, State } from './api.js'
+import { addContext, addCommands, literal } from './util.js'
+import { resolveEmptyState } from './resolvers/empty.js'
+import { resolveForegroundState } from './resolvers/foreground.js'
+import { resolveBackgroundState } from './resolvers/background.js'
+import { resolveMixerState } from './resolvers/mixer.js'
 
+const clone = rfdc()
 const MIN_TIME_SINCE_PLAY = 150 // [ms]
 const CasparCGStateVersion = '2017-11-06 19:15'
 
@@ -104,13 +103,13 @@ export class CasparCGState0 {
 	 */
 	initStateFromChannelInfo(channels: Array<ChannelInfo>, currentTime: number): void {
 		const currentState = this._currentStateStorage.fetchState()
-		_.each(channels, (channel: ChannelInfo, i: number) => {
+		channels.forEach((channel: ChannelInfo, i: number) => {
 			if (!channel.videoMode) {
 				throw Error('State: Missing channel.videoMode!')
 			}
 			if (!channel.fps) throw Error('State: Missing channel.fps!')
 
-			if (!(_.isNumber(channel.fps) && channel.fps > 0)) {
+			if (!(typeof channel.fps === 'number' && channel.fps > 0)) {
 				throw Error('State:Bad channel.fps, it should be a number > 0 (got ' + channel.fps + ')!')
 			}
 
@@ -167,9 +166,9 @@ export class CasparCGState0 {
 	 */
 	softClearState(): void {
 		const currentState = this._currentStateStorage.fetchState()
-		_.each(currentState.channels, (channel) => {
+		for (const channel of Object.values<InternalChannel>(currentState.channels)) {
 			channel.layers = {}
-		})
+		}
 		// Save new state:
 		this._currentStateStorage.storeState(currentState)
 	}
@@ -253,8 +252,8 @@ export class CasparCGState0 {
 		} = {}
 
 		// Added/updated things:
-		for (const [channelKey, newChannel] of Object.entries(newState.channels)) {
-			for (const [layerKey, newLayer] of Object.entries(newChannel.layers)) {
+		for (const [channelKey, newChannel] of Object.entries<Channel>(newState.channels)) {
+			for (const [layerKey, newLayer] of Object.entries<LayerBase>(newChannel.layers)) {
 				const fgChanges = resolveForegroundState(
 					oldState,
 					newState,
@@ -278,7 +277,7 @@ export class CasparCGState0 {
 			}
 		}
 		// Removed things:
-		for (const [channelKey, oldChannel] of Object.entries(oldState.channels)) {
+		for (const [channelKey, oldChannel] of Object.entries<InternalChannel>(oldState.channels)) {
 			for (const layerKey of Object.keys(oldChannel.layers)) {
 				const diff = resolveEmptyState(oldState, newState, channelKey, layerKey)
 				if (diff.commands.cmds.length) commands.push(diff.commands)
@@ -286,11 +285,12 @@ export class CasparCGState0 {
 		}
 
 		// bundled commands:
-		_.each(bundledCmds, (bundle) => {
-			const channels = _.uniq(bundle.map((c) => (c.params as any).channel))
-			// const channels = _.uniq(_.pluck(bundle, 'channel'))
+		for (const bundle of Object.values<AMCPCommandWithContext[]>(bundledCmds)) {
+			const channels = new Set(bundle.map((c) => Number((c.params as any).channel)))
 
-			_.each(channels, (channel) => {
+			for (const channel of channels) {
+				if (isNaN(channel)) continue
+
 				bundle.push(
 					addContext(
 						literal<AMCPCommand>({
@@ -303,14 +303,14 @@ export class CasparCGState0 {
 						null
 					)
 				)
-			})
+			}
 
 			const diffCmds: DiffCommands = {
 				cmds: [],
 			}
 			addCommands(diffCmds, ...bundle)
 			commands.push(diffCmds)
-		})
+		}
 
 		return commands
 	}

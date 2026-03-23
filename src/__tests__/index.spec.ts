@@ -1,5 +1,6 @@
 import { AMCPCommand, Commands } from 'casparcg-connection'
-import { literal } from '../lib/util'
+import { literal } from '../lib/util.js'
+import { test, expect } from 'vitest'
 
 import {
 	CasparCGState,
@@ -13,8 +14,8 @@ import {
 	RecordLayer,
 	// FunctionLayer,
 	Mixer,
-} from '../'
-import { getCasparCGState, initState, getDiff, initStateMS, stripContext } from './util'
+} from '../index.js'
+import { getCasparCGState, initState, getDiff, initStateMS, stripContext } from './util.js'
 
 // function initState0 (s: CasparCGState, time: number) {
 // 	s.initStateFromChannelInfo([{
@@ -45,6 +46,7 @@ test('get version', () => {
 
 	expect(c.ccgState.version).toMatch(/\d+-\d+-\d+ \d+:\d+\d/)
 })
+// eslint-disable-next-line vitest/no-commented-out-tests
 // test('get & set state', () => {
 // 	let c = getCasparCGState()
 // 	initState(c)
@@ -158,6 +160,7 @@ test('Record to a file', () => {
 		})
 	)
 })
+// eslint-disable-next-line vitest/no-commented-out-tests
 // test('Run a function', () => {
 // 	const c = getCasparCGState()
 // 	initState(c)
@@ -195,6 +198,7 @@ test('Record to a file', () => {
 // 	cc = getDiff(c, targetState)
 // 	expect(cc).toHaveLength(0)
 // })
+// eslint-disable-next-line vitest/no-commented-out-tests
 // test('Apply commands before init', () => {
 // 	let c = getCasparCGState()
 // 	initState(c)
@@ -346,27 +350,27 @@ test('Bundle commands', () => {
 				// bundleWithCommands: 1234
 			},
 		})
-	),
-		expect(stripContext(cc[2].cmds[1])).toEqual(
-			literal<AMCPCommand>({
-				command: Commands.MixerSaturation,
-				params: {
-					channel: 2,
-					layer: 10,
-					value: 0.5,
-					defer: true,
-					// bundleWithCommands: 1234
-				},
-			})
-		),
-		expect(stripContext(cc[2].cmds[2])).toEqual(
-			literal<AMCPCommand>({
-				command: Commands.MixerCommit,
-				params: {
-					channel: 1,
-				},
-			})
-		)
+	)
+	expect(stripContext(cc[2].cmds[1])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.MixerSaturation,
+			params: {
+				channel: 2,
+				layer: 10,
+				value: 0.5,
+				defer: true,
+				// bundleWithCommands: 1234
+			},
+		})
+	)
+	expect(stripContext(cc[2].cmds[2])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.MixerCommit,
+			params: {
+				channel: 1,
+			},
+		})
+	)
 	expect(stripContext(cc[2].cmds[3])).toEqual(
 		literal<AMCPCommand>({
 			command: Commands.MixerCommit,

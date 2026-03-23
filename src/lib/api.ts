@@ -1,5 +1,5 @@
-import { TransitionObject, Transition } from './transitionObject'
-import { Mixer as MixerBase } from './mixer'
+import { TransitionObject, Transition } from './transitionObject.js'
+import { Mixer as MixerBase } from './mixer.js'
 
 export interface Mappings {
 	layers: { [GLayer: string]: Mapping }

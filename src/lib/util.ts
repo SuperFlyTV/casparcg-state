@@ -8,14 +8,15 @@ import {
 	TransitionObject,
 	Transition,
 	State,
-} from './api'
-import * as _ from 'underscore'
-import { Mixer } from './mixer'
-import { AMCPCommandWithContext, DiffCommands } from './casparCGState'
+	TransitionOptions,
+} from './api.js'
+import _ from 'underscore'
+import { Mixer } from './mixer.js'
+import { AMCPCommandWithContext, DiffCommands } from './casparCGState.js'
 // import { Command as CommandNS } from 'casparcg-connection'
 import { AMCPCommand, Commands } from 'casparcg-connection'
 
-import { InternalLayer, InternalState } from './stateObjectStorage'
+import { InternalLayer, InternalState } from './stateObjectStorage.js'
 
 export function frames2Time(frames: number, fps: number | undefined): number {
 	fps = fps || 25 // Set default:
@@ -119,7 +120,7 @@ export function getTimeSincePlay(layer: MediaLayer, currentTime: number, minTime
 		timeSincePlay = 0
 	}
 
-	if (_.isNull(layer.playTime)) {
+	if (layer.playTime === null) {
 		// null indicates the start time is not relevant, like for a LOGICAL object, or an image
 		timeSincePlay = null
 	}
@@ -162,7 +163,7 @@ export function compareAttrs<T extends { [key: string]: any }>(
 	}
 	if (obj0 && obj1) {
 		if (strict) {
-			_.each(attrs, (a) => {
+			for (const a of attrs) {
 				if (obj0[a].valueOf() !== obj1[a].valueOf()) {
 					diff0 = obj0[a].valueOf() + ''
 					diff1 = obj1[a].valueOf() + ''
@@ -176,9 +177,9 @@ export function compareAttrs<T extends { [key: string]: any }>(
 
 					difference = a.toString() + ': ' + diff0 + '!==' + diff1
 				}
-			})
+			}
 		} else {
-			_.each(attrs, (a) => {
+			for (const a of attrs) {
 				if (cmp(getValue(obj0[a]), getValue(obj1[a]), a)) {
 					diff0 = getValue(obj0[a]) + ''
 					diff1 = getValue(obj1[a]) + ''
@@ -192,7 +193,7 @@ export function compareAttrs<T extends { [key: string]: any }>(
 
 					difference = a.toString() + ': ' + diff0 + '!=' + diff1
 				}
-			})
+			}
 		}
 	} else {
 		if ((obj0 && !obj1) || (!obj0 && obj1)) {
@@ -233,11 +234,11 @@ export function setTransition(
 	oldLayer: LayerBase,
 	content: unknown,
 	isRemove: boolean,
-	isBg?: boolean
+	isBg?: boolean,
 ): void {
 	if (!options) options = {}
-	const comesFromBG = (transitionObj: TransitionObject) => {
-		if (oldLayer.nextUp && _.isObject(oldLayer.nextUp.media)) {
+	const comesFromBG = (transitionObj: TransitionOptions) => {
+		if (oldLayer.nextUp?.media && typeof oldLayer.nextUp.media === 'object') {
 			const t0 = new Transition(transitionObj)
 			const t1 = new Transition(oldLayer.nextUp.media.inTransition)
 			return t0.getString() === t1.getString()
@@ -245,23 +246,24 @@ export function setTransition(
 		return false
 	}
 
-	if (_.isObject(content)) {
+	if (content && typeof content === 'object') {
+		const transContent = content as TransitionObject
 		let transition: Transition | undefined
 
 		if (isRemove) {
-			if (content.outTransition) {
-				transition = new Transition(content.outTransition)
+			if (transContent.outTransition) {
+				transition = new Transition(transContent.outTransition)
 			}
 		} else {
-			if (oldLayer.playing && content.changeTransition) {
-				transition = new Transition(content.changeTransition)
-			} else if (content.inTransition && (isBg || !comesFromBG(content.inTransition))) {
-				transition = new Transition(content.inTransition)
+			if (oldLayer.playing && transContent.changeTransition) {
+				transition = new Transition(transContent.changeTransition)
+			} else if (transContent.inTransition && (isBg || !comesFromBG(transContent.inTransition))) {
+				transition = new Transition(transContent.inTransition)
 			}
 		}
 
 		if (transition) {
-			_.extend(options, transition.getOptions(channel.fps))
+			Object.assign(options, transition.getOptions(channel.fps))
 		}
 	}
 
@@ -272,11 +274,11 @@ export function setMixerTransition(
 	channel: Channel,
 	oldLayer: LayerBase,
 	content: unknown,
-	isRemove: boolean
+	isRemove: boolean,
 ): void {
 	if (!options) options = {}
-	const comesFromBG = (transitionObj: TransitionObject) => {
-		if (oldLayer.nextUp && _.isObject(oldLayer.nextUp.media)) {
+	const comesFromBG = (transitionObj: TransitionOptions) => {
+		if (oldLayer.nextUp?.media && typeof oldLayer.nextUp.media === 'object') {
 			const t0 = new Transition(transitionObj)
 			const t1 = new Transition(oldLayer.nextUp.media.inTransition)
 			return t0.getString() === t1.getString()
@@ -284,18 +286,19 @@ export function setMixerTransition(
 		return false
 	}
 
-	if (_.isObject(content)) {
+	if (content && typeof content === 'object') {
+		const transContent = content as TransitionObject
 		let transition: Transition | undefined
 
 		if (isRemove) {
-			if (content.outTransition) {
-				transition = new Transition(content.outTransition)
+			if (transContent.outTransition) {
+				transition = new Transition(transContent.outTransition)
 			}
 		} else {
-			if (oldLayer.playing && content.changeTransition) {
-				transition = new Transition(content.changeTransition)
-			} else if (content.inTransition && !comesFromBG(content.inTransition)) {
-				transition = new Transition(content.inTransition)
+			if (oldLayer.playing && transContent.changeTransition) {
+				transition = new Transition(transContent.changeTransition)
+			} else if (transContent.inTransition && !comesFromBG(transContent.inTransition)) {
+				transition = new Transition(transContent.inTransition)
 			}
 		}
 
@@ -309,15 +312,15 @@ export function setMixerTransition(
 	return options
 }
 export function setDefaultValue(obj: any | Array<any>, key: string | Array<string>, value: unknown): void {
-	if (_.isArray(obj)) {
-		_.each(obj, (o) => {
+	if (Array.isArray(obj)) {
+		for (const o of obj) {
 			setDefaultValue(o, key, value)
-		})
+		}
 	} else {
-		if (_.isArray(key)) {
-			_.each(key, (k) => {
+		if (Array.isArray(key)) {
+			for (const k of key) {
 				setDefaultValue(obj, k, value)
-			})
+			}
 		} else {
 			if (!obj[key]) obj[key] = value
 		}
@@ -327,7 +330,7 @@ export function compareMixerValues(
 	layer: LayerBase,
 	oldLayer: InternalLayer,
 	attr: string,
-	attrs?: Array<string>
+	attrs?: Array<string>,
 ): string | null {
 	const val0: any = Mixer.getValue((layer.mixer || {})[attr])
 	const val1: any = Mixer.getValue((oldLayer.mixer || {})[attr])
@@ -336,22 +339,28 @@ export function compareMixerValues(
 		let diff: string | null = null
 
 		if (val0 && val1) {
-			_.each(attrs, function (a) {
+			for (const a of attrs) {
 				if (val0[a] !== val1[a]) {
 					diff = `${a}: ${val0[a]} != ${val1[a]}`
 				}
-			})
+			}
 			return diff
 		} else {
 			if ((val0 && !val1) || (!val0 && val1)) {
 				return `${attr}: ${val0} != ${val1}`
 			}
 		}
-	} else if (_.isObject(val0) || _.isObject(val1)) {
+		return null
+	}
+
+	const isVal0Object = val0 && typeof val0 === 'object'
+	const isVal1Object = val1 && typeof val1 === 'object'
+
+	if (isVal0Object || isVal1Object) {
 		// @todo is this used anymore?
-		if (!_.isObject(val0) && _.isObject(val1)) {
+		if (!isVal0Object && isVal1Object) {
 			return `${attr}: val0 is object, but val1 is not`
-		} else if (_.isObject(val0) && !_.isObject(val1)) {
+		} else if (isVal0Object && !isVal1Object) {
 			return `${attr}: val1 is object, but val0 is not`
 		} else {
 			const omitAttrs = ['inTransition', 'changeTransition', 'outTransition']

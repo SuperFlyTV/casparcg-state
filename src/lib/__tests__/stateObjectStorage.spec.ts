@@ -1,5 +1,6 @@
-import { StateObjectStorage, InternalState } from '../stateObjectStorage'
-import { LayerContentType } from '../api'
+import { StateObjectStorage, InternalState } from '../stateObjectStorage.js'
+import { LayerContentType } from '../api.js'
+import { test, expect, vi } from 'vitest'
 
 test('StateObjectStorage', () => {
 	const sos = new StateObjectStorage()
@@ -53,7 +54,7 @@ test('externalStorage', () => {
 	const sos = new StateObjectStorage()
 
 	let myExternalStorage: any = {}
-	const fcn = jest.fn((action: string, data?: Record<string, any> | null) => {
+	const fcn = vi.fn((action: string, data?: Record<string, any> | null) => {
 		if (action === 'store') {
 			myExternalStorage = data
 		} else if (action === 'fetch') {
