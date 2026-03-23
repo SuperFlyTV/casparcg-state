@@ -1,6 +1,6 @@
 import { Enum as CCGEnum } from 'casparcg-connection'
-import { TransitionObject } from './transitionObject.js'
-import { TransitionOptions } from './api.js'
+import type { TransitionObject } from './transitionObject.js'
+import type { TransitionOptions } from './types.js'
 
 export interface Chroma {
 	enable: boolean

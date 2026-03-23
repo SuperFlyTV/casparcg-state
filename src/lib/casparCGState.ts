@@ -10,7 +10,7 @@ import {
 import rfdc from 'rfdc'
 
 import { StateObjectStorage, InternalLayer, InternalState, InternalChannel } from './stateObjectStorage.js'
-import { Channel, ChannelInfo, LayerBase, State } from './api.js'
+import type { Channel, ChannelInfo, LayerBase, State } from './types.js'
 import { addContext, addCommands, literal } from './util.js'
 import { resolveEmptyState } from './resolvers/empty.js'
 import { resolveForegroundState } from './resolvers/foreground.js'

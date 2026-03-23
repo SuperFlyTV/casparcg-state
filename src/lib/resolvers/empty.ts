@@ -1,8 +1,9 @@
 import { getChannel, getLayer, addContext, compareAttrs, addCommands, literal } from '../util.js'
 import { InternalState } from '../stateObjectStorage.js'
-import { State, LayerContentType, Transition, TemplateLayer } from '../api.js'
+import { State, LayerContentType, TemplateLayer } from '../types.js'
 import { AMCPCommandWithContext, DiffCommands } from '../casparCGState.js'
 import { AMCPCommand, Commands } from 'casparcg-connection'
+import { Transition } from '../transitionObject.js'
 
 export { resolveEmptyState }
 

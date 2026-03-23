@@ -1,21 +1,11 @@
-import { InternalState } from '../stateObjectStorage.js'
-import {
-	State,
-	LayerContentType,
-	MediaLayer,
-	NextUp,
-	InputLayer,
-	RouteLayer,
-	TransitionObject,
-	NextUpMedia,
-} from '../api.js'
+import type { InternalState } from '../stateObjectStorage.js'
+import { State, LayerContentType, MediaLayer, NextUp, InputLayer, RouteLayer, NextUpMedia } from '../types.js'
 import {
 	getLayer,
 	compareAttrs,
 	setDefaultValue,
 	getChannel,
 	addContext,
-	setTransition,
 	calculatePlayAttributes,
 	fixPlayCommandInput,
 	time2FramesChannel,
@@ -24,6 +14,7 @@ import {
 } from '../util.js'
 import { OptionsInterface, DiffCommands } from '../casparCGState.js'
 import { AMCPCommand, Commands, LoadbgParameters, LoadbgRouteCommand, Enum } from 'casparcg-connection'
+import { TransitionObject, setTransition } from '../transitionObject.js'
 
 export { diffBackground, resolveBackgroundState }
 

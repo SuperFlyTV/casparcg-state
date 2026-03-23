@@ -1,8 +1,8 @@
-import { InternalState } from '../stateObjectStorage.js'
-import { State } from '../api.js'
-import { AMCPCommandWithContext, DiffCommands } from '../casparCGState.js'
+import type { InternalState } from '../stateObjectStorage.js'
+import type { State } from '../types.js'
+import type { AMCPCommandWithContext, DiffCommands } from '../casparCGState.js'
 import { Mixer } from '../mixer.js'
-import { compareMixerValues, addContext, getChannel, getLayer, addCommands, setMixerTransition } from '../util.js'
+import { compareMixerValues, addContext, getChannel, getLayer, addCommands } from '../util.js'
 import {
 	AMCPCommand,
 	Commands,
@@ -24,6 +24,7 @@ import {
 	MixerStraightAlphaOutputCommand,
 	MixerVolumeCommand,
 } from 'casparcg-connection'
+import { setMixerTransition } from '../transitionObject.js'
 
 export function resolveMixerState(
 	oldState: InternalState,

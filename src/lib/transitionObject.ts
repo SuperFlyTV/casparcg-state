@@ -1,4 +1,4 @@
-import { TransitionOptions } from './api.js'
+import type { Channel, LayerBase, TransitionOptions } from './types.js'
 import { time2Frames } from './util.js'
 import { TransitionParameters, Enum } from 'casparcg-connection'
 
@@ -172,4 +172,89 @@ export class Transition implements TransitionOptions {
 	private time2Frames(time: number, fps?: number): number {
 		return time2Frames(time, fps)
 	}
+}
+
+export function setTransition(
+	options: any | null,
+	channel: Channel,
+	oldLayer: LayerBase,
+	content: unknown,
+	isRemove: boolean,
+	isBg?: boolean
+): void {
+	if (!options) options = {}
+	const comesFromBG = (transitionObj: TransitionOptions) => {
+		if (oldLayer.nextUp?.media && typeof oldLayer.nextUp.media === 'object') {
+			const t0 = new Transition(transitionObj)
+			const t1 = new Transition(oldLayer.nextUp.media.inTransition)
+			return t0.getString() === t1.getString()
+		}
+		return false
+	}
+
+	if (content && typeof content === 'object') {
+		const transContent = content as TransitionObject
+		let transition: Transition | undefined
+
+		if (isRemove) {
+			if (transContent.outTransition) {
+				transition = new Transition(transContent.outTransition)
+			}
+		} else {
+			if (oldLayer.playing && transContent.changeTransition) {
+				transition = new Transition(transContent.changeTransition)
+			} else if (transContent.inTransition && (isBg || !comesFromBG(transContent.inTransition))) {
+				transition = new Transition(transContent.inTransition)
+			}
+		}
+
+		if (transition) {
+			Object.assign(options, transition.getOptions(channel.fps))
+		}
+	}
+
+	return options
+}
+
+export function setMixerTransition(
+	options: any | null,
+	channel: Channel,
+	oldLayer: LayerBase,
+	content: unknown,
+	isRemove: boolean
+): void {
+	if (!options) options = {}
+	const comesFromBG = (transitionObj: TransitionOptions) => {
+		if (oldLayer.nextUp?.media && typeof oldLayer.nextUp.media === 'object') {
+			const t0 = new Transition(transitionObj)
+			const t1 = new Transition(oldLayer.nextUp.media.inTransition)
+			return t0.getString() === t1.getString()
+		}
+		return false
+	}
+
+	if (content && typeof content === 'object') {
+		const transContent = content as TransitionObject
+		let transition: Transition | undefined
+
+		if (isRemove) {
+			if (transContent.outTransition) {
+				transition = new Transition(transContent.outTransition)
+			}
+		} else {
+			if (oldLayer.playing && transContent.changeTransition) {
+				transition = new Transition(transContent.changeTransition)
+			} else if (transContent.inTransition && !comesFromBG(transContent.inTransition)) {
+				transition = new Transition(transContent.inTransition)
+			}
+		}
+
+		if (transition) {
+			const transOpts = transition.getOptions(channel.fps)
+			options.duration = transOpts.transition.duration
+			options.tween = transOpts.transition.tween
+		}
+	}
+
+	return options
 }

@@ -1,5 +1,5 @@
 import { StateObjectStorage, InternalState } from '../stateObjectStorage.js'
-import { LayerContentType } from '../api.js'
+import { LayerContentType } from '../types.js'
 import { test, expect, vi } from 'vitest'
 
 test('StateObjectStorage', () => {

@@ -1,18 +1,7 @@
-import {
-	Channel,
-	MediaLayer,
-	NextUpMedia,
-	NextUp,
-	LayerContentType,
-	LayerBase,
-	TransitionObject,
-	Transition,
-	State,
-	TransitionOptions,
-} from './api.js'
+import { Channel, MediaLayer, NextUpMedia, NextUp, LayerContentType, LayerBase, State } from './types.js'
 import _ from 'underscore'
 import { Mixer } from './mixer.js'
-import { AMCPCommandWithContext, DiffCommands } from './casparCGState.js'
+import type { AMCPCommandWithContext, DiffCommands } from './casparCGState.js'
 // import { Command as CommandNS } from 'casparcg-connection'
 import { AMCPCommand, Commands } from 'casparcg-connection'
 
@@ -228,89 +217,6 @@ export function addContext<T extends AMCPCommand>(
 export function isIAMCPCommand(cmd: any): cmd is AMCPCommand {
 	return cmd && 'command' in cmd && cmd.command in Commands && cmd.params
 }
-export function setTransition(
-	options: any | null,
-	channel: Channel,
-	oldLayer: LayerBase,
-	content: unknown,
-	isRemove: boolean,
-	isBg?: boolean,
-): void {
-	if (!options) options = {}
-	const comesFromBG = (transitionObj: TransitionOptions) => {
-		if (oldLayer.nextUp?.media && typeof oldLayer.nextUp.media === 'object') {
-			const t0 = new Transition(transitionObj)
-			const t1 = new Transition(oldLayer.nextUp.media.inTransition)
-			return t0.getString() === t1.getString()
-		}
-		return false
-	}
-
-	if (content && typeof content === 'object') {
-		const transContent = content as TransitionObject
-		let transition: Transition | undefined
-
-		if (isRemove) {
-			if (transContent.outTransition) {
-				transition = new Transition(transContent.outTransition)
-			}
-		} else {
-			if (oldLayer.playing && transContent.changeTransition) {
-				transition = new Transition(transContent.changeTransition)
-			} else if (transContent.inTransition && (isBg || !comesFromBG(transContent.inTransition))) {
-				transition = new Transition(transContent.inTransition)
-			}
-		}
-
-		if (transition) {
-			Object.assign(options, transition.getOptions(channel.fps))
-		}
-	}
-
-	return options
-}
-export function setMixerTransition(
-	options: any | null,
-	channel: Channel,
-	oldLayer: LayerBase,
-	content: unknown,
-	isRemove: boolean,
-): void {
-	if (!options) options = {}
-	const comesFromBG = (transitionObj: TransitionOptions) => {
-		if (oldLayer.nextUp?.media && typeof oldLayer.nextUp.media === 'object') {
-			const t0 = new Transition(transitionObj)
-			const t1 = new Transition(oldLayer.nextUp.media.inTransition)
-			return t0.getString() === t1.getString()
-		}
-		return false
-	}
-
-	if (content && typeof content === 'object') {
-		const transContent = content as TransitionObject
-		let transition: Transition | undefined
-
-		if (isRemove) {
-			if (transContent.outTransition) {
-				transition = new Transition(transContent.outTransition)
-			}
-		} else {
-			if (oldLayer.playing && transContent.changeTransition) {
-				transition = new Transition(transContent.changeTransition)
-			} else if (transContent.inTransition && !comesFromBG(transContent.inTransition)) {
-				transition = new Transition(transContent.inTransition)
-			}
-		}
-
-		if (transition) {
-			const transOpts = transition.getOptions(channel.fps)
-			options.duration = transOpts.transition.duration
-			options.tween = transOpts.transition.tween
-		}
-	}
-
-	return options
-}
 export function setDefaultValue(obj: any | Array<any>, key: string | Array<string>, value: unknown): void {
 	if (Array.isArray(obj)) {
 		for (const o of obj) {
@@ -330,7 +236,7 @@ export function compareMixerValues(
 	layer: LayerBase,
 	oldLayer: InternalLayer,
 	attr: string,
-	attrs?: Array<string>,
+	attrs?: Array<string>
 ): string | null {
 	const val0: any = Mixer.getValue((layer.mixer || {})[attr])
 	const val1: any = Mixer.getValue((oldLayer.mixer || {})[attr])

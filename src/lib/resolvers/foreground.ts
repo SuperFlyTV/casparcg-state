@@ -3,7 +3,6 @@ import {
 	getLayer,
 	compareAttrs,
 	setDefaultValue,
-	setTransition,
 	getTimeSincePlay,
 	calculatePlayAttributes,
 	frames2TimeChannel,
@@ -25,9 +24,8 @@ import {
 	RecordLayer,
 	FunctionLayer,
 	NextUp,
-	Transition,
 	MediaLayerBase,
-} from '../api.js'
+} from '../types.js'
 import { OptionsInterface, DiffCommands } from '../casparCGState.js'
 import {
 	AMCPCommand,
@@ -38,6 +36,7 @@ import {
 	ResumeCommand,
 	Enum,
 } from 'casparcg-connection'
+import { Transition, setTransition } from '../transitionObject.js'
 
 export { resolveForegroundState, diffForeground }
 
