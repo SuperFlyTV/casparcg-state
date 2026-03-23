@@ -1,4 +1,4 @@
-import { InternalState } from '../stateObjectStorage'
+import { InternalState } from '../stateObjectStorage.js'
 import {
 	State,
 	LayerContentType,
@@ -8,7 +8,7 @@ import {
 	RouteLayer,
 	TransitionObject,
 	NextUpMedia,
-} from '../api'
+} from '../api.js'
 import {
 	getLayer,
 	compareAttrs,
@@ -21,11 +21,9 @@ import {
 	time2FramesChannel,
 	addCommands,
 	literal,
-} from '../util'
-import { OptionsInterface, DiffCommands } from '../casparCGState'
-import { AMCPCommand, Commands, LoadbgParameters, LoadbgRouteCommand } from 'casparcg-connection'
-// import _ = require('underscore')
-import { RouteMode } from 'casparcg-connection/dist/enums'
+} from '../util.js'
+import { OptionsInterface, DiffCommands } from '../casparCGState.js'
+import { AMCPCommand, Commands, LoadbgParameters, LoadbgRouteCommand, Enum } from 'casparcg-connection'
 
 export { diffBackground, resolveBackgroundState }
 
@@ -232,7 +230,7 @@ function resolveBackgroundState(
 								...options,
 
 								route: layer.route as LoadbgRouteCommand['params']['route'],
-								mode: layer.mode as RouteMode,
+								mode: layer.mode as Enum.RouteMode,
 								channelLayout: layer.route ? layer.route.channelLayout : undefined,
 								framesDelay: layer.delay
 									? Math.floor(time2FramesChannel(layer.delay, newChannel, oldChannel))
@@ -241,7 +239,7 @@ function resolveBackgroundState(
 								vFilter: layer.vfilter,
 							},
 						}),
-						`Nextup Route (${layer.route})`,
+						`Nextup Route (${JSON.stringify(layer.route)})`,
 						newLayer
 					)
 				)

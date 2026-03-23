@@ -1,7 +1,6 @@
-import * as _ from 'underscore'
 import { Enum as CCGEnum } from 'casparcg-connection'
-import { TransitionObject } from './transitionObject'
-import { TransitionOptions } from './api'
+import { TransitionObject } from './transitionObject.js'
+import { TransitionOptions } from './api.js'
 
 export interface Chroma {
 	enable: boolean
@@ -57,7 +56,7 @@ export class Mixer {
 	bundleWithCommands?: number // special function: bundle and DEFER with other mixer-commands
 
 	public static getValue(val: unknown): unknown {
-		if (_.isObject(val) && val.valueOf) return val.valueOf()
+		if (val && typeof val === 'object' && val.valueOf) return val.valueOf()
 		return val
 	}
 	public static supportedAttributes(): Array<string> {

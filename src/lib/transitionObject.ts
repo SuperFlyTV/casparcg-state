@@ -1,8 +1,6 @@
-import { Direction, TransitionTween, TransitionType } from 'casparcg-connection/dist/enums'
-import { TransitionParameters } from 'casparcg-connection/dist/parameters'
-import * as _ from 'underscore'
-import { TransitionOptions } from './api'
-import { time2Frames } from './util'
+import { TransitionOptions } from './api.js'
+import { time2Frames } from './util.js'
+import { TransitionParameters, Enum } from 'casparcg-connection'
 
 export class TransitionObject {
 	_transition: true
@@ -21,7 +19,7 @@ export class TransitionObject {
 		}
 	) {
 		this._transition = true
-		if (!_.isUndefined(value)) {
+		if (value !== undefined) {
 			this._value = value
 		}
 		if (options) {
@@ -44,10 +42,10 @@ export class TransitionObject {
 }
 
 export class Transition implements TransitionOptions {
-	type = TransitionType.Mix
+	type = Enum.TransitionType.Mix
 	duration = 0
-	easing = TransitionTween.LINEAR
-	direction = Direction.Right
+	easing = Enum.TransitionTween.LINEAR
+	direction = Enum.Direction.Right
 
 	maskFile = ''
 	delay = 0
@@ -58,30 +56,30 @@ export class Transition implements TransitionOptions {
 	customOptions: any = undefined
 
 	constructor(
-		typeOrTransition?: TransitionType | object,
+		typeOrTransition?: Enum.TransitionType | TransitionOptions,
 		durationOrMaskFile?: number | string,
-		easingOrDelay?: TransitionTween | number,
-		directionOrOverlayFile?: Direction | string,
+		easingOrDelay?: Enum.TransitionTween | number,
+		directionOrOverlayFile?: Enum.Direction | string,
 		audioFadeStart?: number,
 		audioFadeDuration?: number
 	) {
-		let type: TransitionType
+		let type: Enum.TransitionType
 
-		if (_.isObject(typeOrTransition)) {
-			const t: TransitionOptions = typeOrTransition as TransitionOptions
-			type = t.type as TransitionType
+		if (typeOrTransition && typeof typeOrTransition === 'object') {
+			const t: TransitionOptions = typeOrTransition
+			type = t.type as Enum.TransitionType
 
 			const isSting = (type + '').match(/sting/i)
 
 			durationOrMaskFile = isSting ? t.maskFile : t.duration
-			easingOrDelay = isSting ? (t.delay as number) : (t.easing as TransitionTween)
+			easingOrDelay = isSting ? (t.delay as number) : (t.easing as Enum.TransitionTween)
 			directionOrOverlayFile = isSting ? t.overlayFile : t.direction
 			audioFadeStart = isSting ? t.audioFadeStart : undefined
 			audioFadeDuration = isSting ? t.audioFadeDuration : undefined
 
 			this.customOptions = t.customOptions
 		} else {
-			type = typeOrTransition as TransitionType
+			type = typeOrTransition as Enum.TransitionType
 		}
 
 		// @todo: for all: string literal
@@ -109,10 +107,10 @@ export class Transition implements TransitionOptions {
 				this.duration = durationOrMaskFile as number
 			}
 			if (easingOrDelay) {
-				this.easing = easingOrDelay as TransitionTween
+				this.easing = easingOrDelay as Enum.TransitionTween
 			}
 			if (directionOrOverlayFile) {
-				this.direction = directionOrOverlayFile as Direction
+				this.direction = directionOrOverlayFile as Enum.Direction
 			}
 		}
 	}
@@ -133,7 +131,7 @@ export class Transition implements TransitionOptions {
 
 			return {
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties,
 				},

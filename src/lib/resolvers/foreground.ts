@@ -12,8 +12,8 @@ import {
 	time2FramesChannel,
 	addCommands,
 	literal,
-} from '../util'
-import { InternalState } from '../stateObjectStorage'
+} from '../util.js'
+import { InternalState } from '../stateObjectStorage.js'
 import {
 	State,
 	LayerContentType,
@@ -27,11 +27,17 @@ import {
 	NextUp,
 	Transition,
 	MediaLayerBase,
-} from '../api'
-import { OptionsInterface, DiffCommands } from '../casparCGState'
-import { AMCPCommand, CallCommand, Commands, PlayCommand, PlayParameters, ResumeCommand } from 'casparcg-connection'
-import _ = require('underscore')
-import { RouteMode } from 'casparcg-connection/dist/enums'
+} from '../api.js'
+import { OptionsInterface, DiffCommands } from '../casparCGState.js'
+import {
+	AMCPCommand,
+	CallCommand,
+	Commands,
+	PlayCommand,
+	PlayParameters,
+	ResumeCommand,
+	Enum,
+} from 'casparcg-connection'
 
 export { resolveForegroundState, diffForeground }
 
@@ -339,10 +345,10 @@ function resolveForegroundState(
 					}
 				} else {
 					let context = ''
-					if (_.isNull(timeSincePlay)) {
+					if (timeSincePlay === null) {
 						context = `TimeSincePlay is null (${diff})`
 					}
-					if (nl.pauseTime && timeSincePlay! > minTimeSincePlay) {
+					if (nl.pauseTime && typeof timeSincePlay === 'number' && timeSincePlay > minTimeSincePlay) {
 						context = `pauseTime is set (${diff})`
 					}
 					if (context && !compareAttrs(nl, ol, ['media'])) {
@@ -521,7 +527,7 @@ function resolveForegroundState(
 											channel: nl.route.channel,
 											layer: nl.route.layer === null ? undefined : nl.route.layer, // todo - replace with "?? undefined"
 										},
-										mode: mode as RouteMode,
+										mode: mode as Enum.RouteMode,
 										framesDelay,
 
 										aFilter: nl.afilter,
@@ -587,13 +593,13 @@ function resolveForegroundState(
 				// 		externalFunction: true
 				// 	}
 				// 	if (nl.executeFcn === 'special_osc') {
-				// 		cmd = _.extend(cmd, {
+				// 		cmd = Object.assign(cmd, {
 				// 			specialFunction: 'osc',
 				// 			oscDevice: nl.oscDevice,
 				// 			message: nl.inMessage
 				// 		})
 				// 	} else {
-				// 		cmd = _.extend(cmd, {
+				// 		cmd = Object.assign(cmd, {
 				// 			functionName: nl.executeFcn,
 				// 			functionData: nl.executeData,
 				// 			functionLayer: nl
@@ -611,7 +617,7 @@ function resolveForegroundState(
 					oldLayer.content === LayerContentType.ROUTE
 					// || oldLayer.content === CasparCG.LayerContentType.MEDIA ???
 				) {
-					if (_.isObject(oldLayer.media) && oldLayer.media.outTransition) {
+					if (oldLayer.media && typeof oldLayer.media === 'object' && oldLayer.media.outTransition) {
 						addCommands(
 							diffCmds,
 							addContext(

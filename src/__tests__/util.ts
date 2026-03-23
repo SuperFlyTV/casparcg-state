@@ -1,6 +1,6 @@
-import { CasparCGState, State } from '../'
-import * as _ from 'underscore'
-import { DiffCommandGroups } from '../lib/casparCGState'
+import { InternalChannel } from '../lib/stateObjectStorage.js'
+import { CasparCGState, Channel, LayerBase, State } from '../index.js'
+import { DiffCommandGroups } from '../lib/casparCGState.js'
 
 export interface CGState {
 	time: number
@@ -56,13 +56,13 @@ export function getDiff(c: CGState, targetState: State, _loggingAfter?: boolean)
 	const cc = c.ccgState.getDiff(targetState, c.time)
 
 	const s = c.ccgState.getState()
-	for (const [channelNo, channel] of Object.entries(targetState.channels)) {
-		for (const [layerNo, layer] of Object.entries(channel.layers)) {
+	for (const [channelNo, channel] of Object.entries<Channel>(targetState.channels)) {
+		for (const [layerNo, layer] of Object.entries<LayerBase>(channel.layers)) {
 			s.channels[channelNo].layers[layerNo] = layer
 		}
 	}
-	for (const [channelNo, channel] of Object.entries(s.channels)) {
-		for (const [layerNo] of Object.entries(channel.layers)) {
+	for (const [channelNo, channel] of Object.entries<InternalChannel>(s.channels)) {
+		for (const [layerNo] of Object.entries<LayerBase>(channel.layers)) {
 			if (!targetState.channels[channelNo]) {
 				delete s.channels[channelNo]
 			} else if (!targetState.channels[channelNo].layers[layerNo]) {
@@ -85,6 +85,8 @@ export function getDiff(c: CGState, targetState: State, _loggingAfter?: boolean)
 	// if (loggingAfter) c.log = false
 	return cc
 }
-export function stripContext<T extends { context: any }>(c: T): _._Omit<T, 'context'> {
-	return _.omit(c, 'context')
+export function stripContext<T extends { context: any }>(c: T): Omit<T, 'context'> {
+	const cloned = { ...c }
+	delete cloned.context
+	return cloned as Omit<T, 'context'>
 }

@@ -1,4 +1,5 @@
-import { getCasparCGState, initState, getDiff, stripContext } from './util'
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { getCasparCGState, initState, getDiff, stripContext } from './util.js'
 import {
 	MediaLayer,
 	LayerContentType,
@@ -10,11 +11,10 @@ import {
 	InputLayer,
 	RouteLayerBase,
 	RouteLayer,
-} from '../'
-import { AMCPCommand, Commands, LoadCommand } from 'casparcg-connection'
-import * as _ from 'underscore'
-import { literal } from '../lib/util'
-import { TransitionType, ProducerScaleMode } from 'casparcg-connection/dist/enums'
+} from '../index.js'
+import { AMCPCommand, Commands, LoadCommand, Enum } from 'casparcg-connection'
+import { literal } from '../lib/util.js'
+import { test, expect } from 'vitest'
 
 test('Load a video, then play it', () => {
 	const c = getCasparCGState()
@@ -274,7 +274,7 @@ test('Loadbg a video, then remove it', () => {
 	)
 
 	// Remove the nextup
-	const layer10noNext = _.clone(layer10)
+	const layer10noNext = structuredClone(layer10)
 	delete layer10noNext.nextUp
 
 	channel1.layers['10'] = layer10noNext
@@ -423,7 +423,7 @@ test('Loadbg a video with a transition, then play it', () => {
 			id: 'n0',
 			content: LayerContentType.MEDIA,
 			media: new TransitionObject('AMB', {
-				inTransition: new Transition(TransitionType.Sting, 'mask_file'),
+				inTransition: new Transition(Enum.TransitionType.Sting, 'mask_file'),
 			}),
 			auto: false,
 		},
@@ -443,7 +443,7 @@ test('Loadbg a video with a transition, then play it', () => {
 				auto: false,
 				clip: 'AMB',
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask_file',
@@ -460,7 +460,7 @@ test('Loadbg a video with a transition, then play it', () => {
 		id: 'l1',
 		content: LayerContentType.MEDIA,
 		media: new TransitionObject('AMB', {
-			inTransition: new Transition(TransitionType.Sting, 'mask_file'),
+			inTransition: new Transition(Enum.TransitionType.Sting, 'mask_file'),
 		}),
 		playing: true,
 		playTime: 1000,
@@ -541,7 +541,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 		id: 'v0',
 		content: LayerContentType.MEDIA,
 		media: new TransitionObject('AMB', {
-			inTransition: new Transition(TransitionType.Sting, 'mask_file'),
+			inTransition: new Transition(Enum.TransitionType.Sting, 'mask_file'),
 		}),
 		playing: true,
 		playTime: 1000,
@@ -558,7 +558,7 @@ test('Loadbg a video with no transition, then play it with a transition', () => 
 				layer: 10,
 				clip: 'AMB',
 				transition: {
-					transitionType: TransitionType.Sting,
+					transitionType: Enum.TransitionType.Sting,
 					duration: 0,
 					stingProperties: {
 						maskFile: 'mask_file',
@@ -1096,7 +1096,7 @@ test('Loadbg with scaleMode sends scaleMode in LOADBG command', () => {
 			content: LayerContentType.MEDIA,
 			media: 'AMB',
 			auto: false,
-			scaleMode: ProducerScaleMode.FIT,
+			scaleMode: Enum.ProducerScaleMode.FIT,
 		},
 	}
 	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
@@ -1115,13 +1115,13 @@ test('Loadbg with scaleMode sends scaleMode in LOADBG command', () => {
 				clip: 'AMB',
 				loop: false,
 				seek: 0,
-				scaleMode: ProducerScaleMode.FIT,
+				scaleMode: Enum.ProducerScaleMode.FIT,
 			},
 		})
 	)
 
 	// Changing scaleMode should clear the old nextUp first, then set the new one
-	;(layer10.nextUp as MediaLayer).scaleMode = ProducerScaleMode.FILL
+	;(layer10.nextUp as MediaLayer).scaleMode = Enum.ProducerScaleMode.FILL
 	cc = getDiff(c, targetState)
 	expect(cc).toHaveLength(1)
 	expect(cc[0].cmds).toHaveLength(2)
@@ -1145,7 +1145,7 @@ test('Loadbg with scaleMode sends scaleMode in LOADBG command', () => {
 				clip: 'AMB',
 				loop: false,
 				seek: 0,
-				scaleMode: ProducerScaleMode.FILL,
+				scaleMode: Enum.ProducerScaleMode.FILL,
 			},
 		})
 	)
