@@ -3,7 +3,7 @@ import { State, Channel, LayerBase } from './api.js'
 /**
  * StateObjectStorage is used for exposing the internal state variable
  * By default, it is storing the state as an internal variable,
- * byt may be using an external storage function for fetching/storing the state.
+ * but may be using an external storage function for fetching/storing the state.
  */
 export class StateObjectStorage {
 	private _internalState: InternalState = {

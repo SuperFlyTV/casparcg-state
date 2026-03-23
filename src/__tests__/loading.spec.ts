@@ -1079,6 +1079,106 @@ test('Loadbg an input, then play it', () => {
 		})
 	)
 })
+test('Loadbg with scaleMode sends scaleMode in LOADBG command', () => {
+	const c = getCasparCGState()
+	initState(c)
+
+	let cc: ReturnType<typeof getDiff>
+
+	const layer10: EmptyLayer = {
+		id: 'e0',
+		content: LayerContentType.NOTHING,
+		media: '',
+		playing: false,
+		layerNo: 10,
+		nextUp: {
+			id: 'n0',
+			content: LayerContentType.MEDIA,
+			media: 'AMB',
+			auto: false,
+			scaleMode: Enum.ProducerScaleMode.FIT,
+		},
+	}
+	const channel1: Channel = { channelNo: 1, layers: { '10': layer10 } }
+	const targetState: State = { channels: { '1': channel1 } }
+
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(1)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				scaleMode: Enum.ProducerScaleMode.FIT,
+			},
+		})
+	)
+
+	// Changing scaleMode should clear the old nextUp first, then set the new one
+	;(layer10.nextUp as MediaLayer).scaleMode = Enum.ProducerScaleMode.FILL
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY',
+			},
+		})
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+				scaleMode: Enum.ProducerScaleMode.FILL,
+			},
+		})
+	)
+
+	// Removing scaleMode should clear the old nextUp first, then set the new one
+	;(layer10.nextUp as MediaLayer).scaleMode = undefined
+	cc = getDiff(c, targetState)
+	expect(cc).toHaveLength(1)
+	expect(cc[0].cmds).toHaveLength(2)
+	expect(stripContext(cc[0].cmds[0])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				clip: 'EMPTY',
+			},
+		})
+	)
+	expect(stripContext(cc[0].cmds[1])).toEqual(
+		literal<AMCPCommand>({
+			command: Commands.Loadbg,
+			params: {
+				channel: 1,
+				layer: 10,
+				auto: false,
+				clip: 'AMB',
+				loop: false,
+				seek: 0,
+			},
+		})
+	)
+})
 test('Loadbg a Route, then change it', () => {
 	const c = getCasparCGState()
 	initState(c)

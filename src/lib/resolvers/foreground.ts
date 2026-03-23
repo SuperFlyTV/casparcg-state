@@ -73,6 +73,7 @@ function diffForeground(
 				'channelLayout',
 				'vfilter',
 				'afilter',
+				'scaleMode',
 			]
 			// Only diff playTime if the new state cares about the value
 			if (nl.playTime !== null) attrs.push('playTime')
@@ -245,6 +246,9 @@ function resolveForegroundState(
 						if (oldUseLayer.content !== LayerContentType.MEDIA || oldUseLayer.vfilter !== nl.vfilter) {
 							context = `VFilter diff ("${ol.vfilter}", "${nl.vfilter}")`
 						}
+						if (oldUseLayer.content !== LayerContentType.MEDIA || oldUseLayer.scaleMode !== nl.scaleMode) {
+							context = `ScaleMode diff ("${ol.scaleMode}", "${nl.scaleMode}")`
+						}
 						if (context) {
 							context += ` (${diff})`
 
@@ -264,6 +268,7 @@ function resolveForegroundState(
 											clearOn404: nl.clearOn404,
 											aFilter: nl.afilter,
 											vFilter: nl.vfilter,
+											scaleMode: nl.scaleMode,
 										}),
 									}),
 									context,
@@ -384,6 +389,7 @@ function resolveForegroundState(
 
 											aFilter: nl.afilter,
 											vFilter: nl.vfilter,
+											scaleMode: nl.scaleMode,
 										},
 									}),
 									`Load / Pause otherwise (${diff})`,
@@ -401,6 +407,7 @@ function resolveForegroundState(
 
 											aFilter: nl.afilter,
 											vFilter: nl.vfilter,
+											scaleMode: nl.scaleMode,
 										},
 									}),
 									`No Media diff from bg (${nl.media})`,
