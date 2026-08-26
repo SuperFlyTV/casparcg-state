@@ -1,6 +1,23 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [Convential Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
+All notable changes to this project will be documented in this file. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification) for commit guidelines.
+
+## [4.0.0](http://superfly.tv/compare/v3.0.4...v4.0.0) (Wed Aug 26 2026)
+
+## Breaking changes
+
+### Features
+
+* **!** require node 22 [21390a7](http://superfly.tv/commit/21390a755f7b98898ad889a1634ac2574c752762)
+
+### Fixes
+
+* update casparcg-connection dep to latest [71ad1cb](http://superfly.tv/commit/71ad1cb66ae059fb750f867b7a9b106fc1603e88)
+* cyclical imports [378e8ed](http://superfly.tv/commit/378e8ed01e9e48ea4c5d83182ee627d9092e8e01)
+
+### Features
+
+* support casparcg SCALE_MODE argument (#96) [b0666d8](http://superfly.tv/commit/b0666d8f50fa35712e03a66a50e101ce29ec7f21)
 
 ## [3.0.4](http://superfly.tv/compare/v3.0.3...v3.0.4) (Thu Oct 23 2025)
 
