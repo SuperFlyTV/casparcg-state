@@ -143,8 +143,7 @@ export class CasparCGState0 {
 		this._currentStateStorage.storeState(state)
 	}
 	/**
-	 * Get the gurrent state
-	 * @param  {true}}   options [description]
+	 * Get the current state
 	 * @return {InternalState} The current state
 	 */
 	getState(): InternalState {
@@ -352,7 +351,6 @@ export class CasparCGState extends CasparCGState0 {
 	}
 	/**
 	 * Get the gurrent state
-	 * @param  {true}}   options [description]
 	 * @return {InternalState} The current state
 	 */
 	getState(): InternalState {
