@@ -1069,13 +1069,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"casparcg-connection@npm:7.0.0-0-nightly-main-20260323-110534-d8f740e6":
-  version: 7.0.0-0-nightly-main-20260323-110534-d8f740e6
-  resolution: "casparcg-connection@npm:7.0.0-0-nightly-main-20260323-110534-d8f740e6"
+"casparcg-connection@npm:7.0.0":
+  version: 7.0.0
+  resolution: "casparcg-connection@npm:7.0.0"
   dependencies:
     tslib: "npm:^2.8.1"
     xml2js: "npm:^0.6.2"
-  checksum: 10c0/3687003f1aa57ed247b3de57dbec39cfddc4d3ed98ca49855ce6cc031241588b5a5ba4a47ad5ff8580335daca5aa1454436342805436839944a6d885aa71bc74
+  checksum: 10c0/ba67d1254e5f163184b14f2abcbb8c2ebb832639bf5c839715040cbd378b48f9db178afe72b5e6c8bf38b1680432974c81d7fae4f61a1e5800170476889fdac2
   languageName: node
   linkType: hard
 
@@ -1087,7 +1087,7 @@ __metadata:
     "@types/node": "npm:^22.19.15"
     "@types/underscore": "npm:^1.13.0"
     "@vitest/coverage-v8": "npm:4.1.0"
-    casparcg-connection: "npm:7.0.0-0-nightly-main-20260323-110534-d8f740e6"
+    casparcg-connection: "npm:7.0.0"
     eslint: "npm:^9.39.4"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.4.0"
